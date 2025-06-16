@@ -31,20 +31,36 @@ const Landing = () => {
         <div className="max-w-5xl mx-auto text-center animate-fade-in">
           {/* Hero Section */}
           <div className="flex flex-col items-center mb-8">
-            <div className="flex items-center justify-center gap-4 sm:gap-6 md:gap-10 mb-4 sm:mb-6 md:mb-8 w-[90%] sm:w-[85%] md:w-[80%] lg:w-auto">
+            <div className="flex items-center justify-center gap-4 md:gap-12 mb-4 sm:mb-6 md:mb-8 w-full">
               <div className="relative group">
                 <div className="absolute inset-0 bg-primary/20 rounded-lg blur-xl group-hover:scale-110 transition-transform duration-300" />
-                <div className="relative aspect-square w-28 sm:w-32 md:w-36 lg:w-40 rounded-lg bg-primary/10 transition-all duration-300">
+                <div className="relative aspect-square w-24 sm:w-28 md:w-32 lg:w-36 rounded-lg bg-primary/10 transition-all duration-300 flex items-center justify-center">
                   <img 
-                    src={theme === "light" ? "/exDark.png" : "/exLight.png"} 
-                    alt="ex" 
+                    src="/dxLogo.png" 
+                    alt="dx" 
                     className="h-full w-full object-contain" 
                   />
                 </div>
               </div>
-
-              <h1 className="text-8xl md:text-9xl font-bold bg-clip-text">
-                dX
+              <h1
+                className="
+                  text-3xl
+                  sm:text-5xl
+                  md:text-6xl
+                  lg:text-7xl
+                  font-extrabold
+                  tracking-tight
+                  bg-clip-text
+                  text-transparent
+                  bg-gradient-to-r
+                  from-black
+                  to-gray-700
+                  drop-shadow-lg
+                  flex items-center
+                "
+                style={{ lineHeight: 1.1 }}
+              >
+                decentralizedX
               </h1>
             </div>
             

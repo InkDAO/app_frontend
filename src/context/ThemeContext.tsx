@@ -18,11 +18,6 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     if (savedTheme) {
       setTheme(savedTheme);
       document.documentElement.classList.toggle("dark", savedTheme === "dark");
-      // Update favicon
-      const favicon = document.getElementById("favicon") as HTMLLinkElement;
-      if (favicon) {
-        favicon.href = savedTheme === "light" ? "/exDark.png" : "/exLight.png";
-      }
     } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
       setTheme("dark");
       document.documentElement.classList.add("dark");
@@ -39,12 +34,6 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     setTheme(newTheme);
     document.documentElement.classList.toggle("dark");
     localStorage.setItem("theme", newTheme);
-
-    // Update favicon
-    const favicon = document.getElementById("favicon") as HTMLLinkElement;
-    if (favicon) {
-      favicon.href = newTheme === "light" ? "/exDark.png" : "/exLight.png";
-    }
   };
 
   return (

@@ -64,8 +64,8 @@ const Navbar = () => {
           <div className="flex items-center gap-2">
             <Link to="/" className="text-xl font-bold flex items-center gap-2">
               <img 
-                src={theme === "light" ? "/exDark.png" : "/exLight.png"} 
-                alt="ex" 
+                src="/dxLogo.png" 
+                alt="dx" 
                 className="h-10 w-10 object-contain" 
               /> 
             </Link>

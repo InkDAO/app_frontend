@@ -28,7 +28,7 @@ const Navbar = () => {
     {
       icon: <SiGitbook className="h-4 w-4" />,
       text: "Docs",
-      href: "#",
+      href: "https://decentralizedx.gitbook.io/dx",
       label: "Documentation"
     },
     {

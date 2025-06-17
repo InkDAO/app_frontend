@@ -34,7 +34,7 @@ const Landing = () => {
             <div className="flex items-center justify-center gap-4 md:gap-12 mb-4 sm:mb-6 md:mb-8 w-full">
               <div className="relative group">
                 <div className="absolute inset-0 bg-primary/20 rounded-lg blur-xl group-hover:scale-110 transition-transform duration-300" />
-                <div className="relative aspect-square w-24 sm:w-28 md:w-32 lg:w-36 rounded-lg bg-primary/10 transition-all duration-300 flex items-center justify-center">
+                <div className="relative aspect-square w-24 sm:w-28 md:w-32 lg:w-36 rounded-lg transition-all duration-300 flex items-center justify-center">
                   <img 
                     src="/dxLogo.png" 
                     alt="dx" 
@@ -53,9 +53,9 @@ const Landing = () => {
                   bg-clip-text
                   text-transparent
                   bg-gradient-to-r
-                  from-black
-                  to-gray-700
-                  drop-shadow-lg
+                  from-primary
+                  to-secondary
+                  drop-shadow-xs
                   flex items-center
                 "
                 style={{ lineHeight: 1.1 }}

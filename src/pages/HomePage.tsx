@@ -2,8 +2,6 @@ import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import { PostForm } from "@/components/PostForm";
 import { PostCard } from "@/components/PostCard";
-import { Post } from "@/types";
-import { toast } from "@/components/ui/sonner";
 import { Input } from "@/components/ui/input";
 import { Search, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,7 +15,7 @@ const HomePage = () => {
   // Filter posts that haven't expired yet
   const activePosts = allPosts.filter(post => {
     const currentTimestamp = Math.floor(Date.now() / 1000); // Convert to seconds
-    return currentTimestamp < parseInt(post.endTime);
+    return !post.archived && currentTimestamp < parseInt(post.endTime);
   });
 
   // Filter posts based on search term

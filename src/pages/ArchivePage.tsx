@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { PostCard } from "@/components/PostCard";
 import { Button } from "@/components/ui/button";
@@ -15,7 +14,7 @@ export const ArchivePage = () => {
   // Filter posts that have expired
   const archivedPosts = allPosts.filter((post) => {
     const currentTimestamp = Math.floor(Date.now() / 1000);
-    return currentTimestamp >= parseInt(post.endTime);
+    return post.archived || currentTimestamp >= parseInt(post.endTime);
   })
 
   // Filter posts based on search term

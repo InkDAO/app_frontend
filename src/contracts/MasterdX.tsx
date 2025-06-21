@@ -1,7 +1,7 @@
 export const admin = "0xEBA436aE4012D8194a5b44718a8ba6ec553241bE";
 
 export const maxterdXConfig = {
-  address: "0x8901298c6a163Db4B479E9cEEa1b65a49f2c6EF7",
+  address: "0x9da04916B62Ea5D31CBbF8e8e70F09E6aBFE9a32",
   abi: [
     { inputs: [], stateMutability: "nonpayable", type: "constructor" },
     { inputs: [], name: "EmptyPost", type: "error" },

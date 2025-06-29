@@ -78,13 +78,15 @@ const Landing = () => {
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
-              <Button
-                size="lg"
-                variant="outline"
-                className="w-1/2 px-2 py-3 text-sm font-medium hover:bg-primary/10 transition-colors sm:px-8 sm:py-6 sm:text-lg"
-              >
-                Learn More
-              </Button>
+              <Link to="https://decentralizedx.gitbook.io/dx" className="w-1/2" target="_blank" rel="noopener noreferrer">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="w-full px-2 py-3 text-sm font-medium hover:bg-primary/10 transition-colors sm:px-8 sm:py-6 sm:text-lg"
+                  >
+                  Learn More
+                </Button>
+              </Link>
             </div>
           </div>
 

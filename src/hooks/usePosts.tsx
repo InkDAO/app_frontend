@@ -6,7 +6,8 @@ import { maxterdXConfig } from "@/contracts/MasterdX";
 interface PostInfo {
   postId: `0x${string}`;
   postTitle: string;
-  postBody: string;
+  postcid: string;
+  imagecid: string;
   owner: `0x${string}`;
   endTime: bigint;
   archived: boolean;
@@ -26,10 +27,11 @@ export const usePosts = () => {
   useEffect(() => {
     if (!isAllPostInfoLoading) {
       if (allPostInfo) {
-        const convertedPosts: Post[] = (allPostInfo as PostInfo[]).map(post => ({
+        const convertedPosts: Post[] = (allPostInfo as unknown as PostInfo[]).map(post => ({
           postId: post.postId,
           postTitle: post.postTitle,
-          postBody: post.postBody,
+          postCid: post.postcid,
+          imageCid: post.imagecid,
           owner: post.owner,
           endTime: post.endTime.toString(),
           archived: post.archived

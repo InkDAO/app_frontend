@@ -2,6 +2,8 @@ import { Comment } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RichTextRenderer } from "./RichTextRenderer";
 import { Link } from "react-router-dom";
+import { fetchFromIPFS } from "@/services/pinataService";
+import { useEffect, useState } from "react";
 
 interface CommentCardProps {
   comment: Comment;
@@ -9,6 +11,18 @@ interface CommentCardProps {
 }
 
 export const CommentCard = ({ comment, postTitle }: CommentCardProps) => {
+  const [commentContent, setCommentContent] = useState<string>("");
+
+  useEffect(() => {
+    const fetchContent = async () => {
+      const content = await fetchFromIPFS(comment.commentCid);
+      if (content.success && content.content) {
+        setCommentContent(content.content);
+      }
+    }
+    fetchContent();
+  }, [comment.commentCid]);
+
   return (
     <Card className="mb-4 hover:shadow-lg transition-all duration-200 border-l-4 border-l-primary/20">
       {postTitle && (
@@ -21,7 +35,7 @@ export const CommentCard = ({ comment, postTitle }: CommentCardProps) => {
         </CardHeader>
       )}
       <CardContent className="pt-4 pb-6 px-3 md:px-6">
-        <RichTextRenderer content={comment.comment} />
+        <RichTextRenderer content={commentContent} />
       </CardContent>
     </Card>
   );

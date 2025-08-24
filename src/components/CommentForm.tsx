@@ -6,6 +6,7 @@ import { RichTextArea } from "./RichTextArea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/components/ui/sonner";
 import { MessageSquare } from "lucide-react";
+import { handleGetGroupByName, handleUpload } from "@/services/pinataService";
 
 interface CommentFormProps {
   postId: string;
@@ -76,9 +77,26 @@ export const CommentForm = ({ postId, onCommentAdded }: CommentFormProps) => {
     }
     
     try {
+      const groupResponse = await handleGetGroupByName(postId.slice(0, 50));
+      if (groupResponse.error) {
+        throw new Error(`Failed to get group by name: ${groupResponse.error}`);
+      }
+      const groupId = groupResponse.group?.id || "";
+
+      const commentFile = new File([comment.trim()], comment.trim(), {
+        type: "text/plain" 
+      });
+      const commentResult = await handleUpload(comment.trim(), groupId, commentFile);
+      let commentCid = "";
+      if (commentResult.success) {
+        commentCid = commentResult.cid || "";
+      } else {
+        throw new Error(`Comment upload failed: ${commentResult.error}`);
+      }
+      
       await addComment({ 
-        postId, 
-        comment: comment.trim() 
+        postId,
+        commentCid
       });
     } catch (error) {
       console.error("Error posting comment:", error);

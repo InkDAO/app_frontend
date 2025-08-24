@@ -7,6 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/components/ui/sonner";
 import { MessageSquare } from "lucide-react";
 import { Textarea } from "./ui/textarea";
+import { handleCreateGroup, handleUpload, UploadResult } from "@/services/pinataService";
+import { ImageUpload } from "./ImageUpload";
+import { ethers } from "ethers";
+import { v4 as uuidv4, v5 as uuidv5 } from "uuid";
 
 interface PostFormProps {
   onPostAdded?: () => void;
@@ -15,10 +19,26 @@ interface PostFormProps {
 export const PostForm = ({ onPostAdded }: PostFormProps) => {
   const [title, setTitle] = useState("");
   const [postBody, setPostBody] = useState("");
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const { isConnected } = useAccount();
   const [resetKey, setResetKey] = useState(0);
   const { addPost, isPending, isSuccess, isError, isConfirming, isConfirmed, hash } = useAddPost();
   const [hasShownSuccess, setHasShownSuccess] = useState(false);
+
+  // Utility function to convert file to base64
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const base64String = reader.result as string;
+        // Remove the data:image/jpeg;base64, prefix
+        const base64Data = base64String.split(',')[1];
+        resolve(base64Data);
+      };
+      reader.onerror = error => reject(error);
+    });
+  };
 
   // Reset success flag when starting a new transaction
   useEffect(() => {
@@ -32,6 +52,7 @@ export const PostForm = ({ onPostAdded }: PostFormProps) => {
     if (isConfirmed && !hasShownSuccess) {
       setTitle("");
       setPostBody("");
+      setSelectedImageFile(null);
       setResetKey(prev => prev + 1);
       toast.success("Post added successfully!", {
         description: (
@@ -64,6 +85,14 @@ export const PostForm = ({ onPostAdded }: PostFormProps) => {
     }
   }, [isError]);
 
+  const handleImageSelected = (file: File) => {
+    setSelectedImageFile(file);
+  };
+
+  const handleImageRemoved = () => {
+    setSelectedImageFile(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -88,12 +117,72 @@ export const PostForm = ({ onPostAdded }: PostFormProps) => {
     }
     
     try {
-      await addPost({ 
-        postTitle: title.trim(), 
-        postBody: postBody.trim(), 
+      let imageBase64 = "";
+      if (selectedImageFile) {
+        imageBase64 = await convertFileToBase64(selectedImageFile);
+      }
+
+      const postIdInput = selectedImageFile 
+        ? ethers.solidityPacked(['string', 'string', 'string'], [title.trim(), postBody.trim(), imageBase64])
+        : ethers.solidityPacked(['string', 'string'], [title.trim(), postBody.trim()]);
+      
+      const postId = ethers.keccak256(postIdInput);
+
+      const groupResponse = await handleCreateGroup(postId.slice(0, 50));
+      if (groupResponse.error) {
+        throw new Error(`Failed to create group: ${groupResponse.error}`);
+      }
+      const groupId = groupResponse.group?.id || "";
+
+      let imageCid = "";
+      let postBodyCid = "";
+
+      if (selectedImageFile && imageBase64) {
+        const binaryString = atob(imageBase64);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        const blob = new Blob([bytes], { type: selectedImageFile.type });
+        const imageFile = new File([blob], 'image.png', { 
+          type: selectedImageFile.type 
+        });
+        const imageResult = await handleUpload('image.png', groupId, imageFile);
+        
+        if (imageResult.success) {
+          imageCid = imageResult.cid || "";
+        } else {
+          throw new Error(`Image upload failed: ${imageResult.error}`);
+        }
+      }
+
+      const postContent = JSON.stringify({
+        title: title.trim(),
+        content: postBody.trim()
       });
+
+      // Create file with JSON content
+      const postFile = new File([postContent], title.trim().slice(0, 50), {
+        type: "application/json"
+      });
+      const postResult = await handleUpload(title.trim().slice(0, 50), groupId, postFile);
+      
+      if (postResult.success) {
+        postBodyCid = postResult.cid || "";
+      } else {
+        throw new Error(`Post upload failed: ${postResult.error}`);
+      }
+
+      await addPost({
+        postId,
+        postTitle: title.trim(),
+        postCid: postBodyCid,
+        imageCid: imageCid
+      });
+      
     } catch (error) {
-      console.error("Error posting post:", error);
+      console.error("Error in post submission flow:", error);
+      toast.error(`Post submission failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
 
@@ -106,25 +195,64 @@ export const PostForm = ({ onPostAdded }: PostFormProps) => {
       </CardHeader>
       <CardContent className="px-3 sm:px-6">
         <form onSubmit={handleSubmit}>
-            <Textarea
-              placeholder="Enter Title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              disabled={isButtonDisabled}
-              className="mb-1 text-xs md:text-xl h-auto overflow-hidden"
-              maxLength={100}
-            />
-            <div className={`flex justify-end text-sm mb-4 ${title.length >= 100 ? 'text-destructive' : 'text-muted-foreground'}`}>
-              {title.length}/100
+          {/* Top row: Image Upload and Title */}
+          <div className="flex flex-col md:flex-row gap-4 mb-4">
+                         {/* Title Section - Right Half */}
+             <div className="w-full md:w-2/3 flex flex-col h-[200px]">
+               {/* Title text area with integrated label */}
+               <div className="flex-1 flex flex-col relative">
+                 <div className="relative flex-1">
+                   {/* Title label inside the textarea */}
+                   <div className="absolute top-3 left-0 right-0 pointer-events-none z-10">
+                     <div className="text-center">
+                       <span className="text-3xl font-semibold text-muted-foreground bg-background px-3 py-1">
+                          Post Title
+                       </span>
+                     </div>
+                                            {/* Horizontal line */}
+                       <div className="mt-2 mx-4">
+                         <div className="h-px bg-border"></div>
+                       </div>
+                   </div>
+                   {/* Character count inside the textarea */}
+                   <div className="absolute bottom-2 right-3 pointer-events-none z-10">
+                     <span className={`text-xs px-2 py-1 rounded bg-background/80'}`}>
+                       {title.length}/100
+                     </span>
+                   </div>
+                   <Textarea
+                     value={title}
+                     onChange={(e) => setTitle(e.target.value)}
+                     disabled={isButtonDisabled}
+                     className="text-xs md:text-xl resize-none h-full pt-16 pb-8 pr-16"
+                     maxLength={100}
+                   />
+                 </div>
+               </div>
+             </div>
+
+            {/* Image Upload Section - Left Half */}
+            <div className="w-full md:w-1/3">
+              <ImageUpload
+                onImageSelected={handleImageSelected}
+                onImageRemoved={handleImageRemoved}
+                disabled={isButtonDisabled}
+                className="h-full min-h-[200px]"
+              />
             </div>
-          <RichTextArea
-            placeholder="Share anything anonymously..."
-            value={postBody}
-            onChange={setPostBody}
-            className="min-h-80 resize-none overflow-hidden mb-4"
-            disabled={isButtonDisabled}
-            key={resetKey}
-          />
+          </div>
+
+          {/* Bottom: Rich Text Editor - Full Width */}
+          <div className="mb-4">
+            <RichTextArea
+              placeholder="Share anything anonymously..."
+              value={postBody}
+              onChange={setPostBody}
+              className="min-h-80 resize-none overflow-hidden"
+              disabled={isButtonDisabled}
+              key={resetKey}
+            />
+          </div>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end">
             <Button 
               type="submit" 

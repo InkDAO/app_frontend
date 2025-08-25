@@ -20,8 +20,7 @@ const HomePage = () => {
 
   // Filter posts based on search term
   const filteredPosts = activePosts.filter(post => 
-    post.postTitle.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    post.postBody.toLowerCase().includes(searchTerm.toLowerCase())
+    post.postTitle.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Sort posts based on expiration time

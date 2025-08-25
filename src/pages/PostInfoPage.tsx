@@ -5,17 +5,25 @@ import { CommentForm } from "@/components/CommentForm";
 import { Post, Comment } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDistanceToNow } from "date-fns";
-import { Clock } from "lucide-react";
+import { Clock, Loader2 } from "lucide-react";
 import { CommentCard } from "@/components/CommentCard";
 import { RichTextRenderer } from "@/components/RichTextRenderer";
+import { fetchFromIPFS } from "@/services/pinataService";
 import { useReadContract } from "wagmi"
 import { maxterdXConfig } from "@/contracts/MasterdX";
 
 export const PostInfoPage = () => {
+  
   const { id } = useParams<{ id: string }>();
   const [post, setPost] = useState<Post | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [postContent, setPostContent] = useState<string>("");
+  const [postImage, setPostImage] = useState<string>("");
+  const [isLoadingContent, setIsLoadingContent] = useState(false);
+  const [isLoadingImage, setIsLoadingImage] = useState(false);
+  const [contentError, setContentError] = useState<string | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
 
   const { data: postInfo, isLoading: isPostLoading } = useReadContract({
     address: maxterdXConfig.address as `0x${string}`,
@@ -36,7 +44,8 @@ export const PostInfoPage = () => {
       const convertedPost: Post = {
         postId: postInfo.postId,
         postTitle: postInfo.postTitle,
-        postBody: postInfo.postBody,
+        postCid: postInfo.postcid,
+        imageCid: postInfo.imagecid,
         owner: postInfo.owner,
         endTime: postInfo.endTime.toString(), // Convert bigint to string
         archived: postInfo.archived
@@ -49,7 +58,7 @@ export const PostInfoPage = () => {
     if (commentsInfo) {
       const convertedComments: Comment[] = commentsInfo.map((comment: any) => ({
         postId: comment.postId,
-        comment: comment.comment,
+        commentCid: comment.commentcid,
         owner: comment.owner
       }));
       setComments(convertedComments);
@@ -59,6 +68,102 @@ export const PostInfoPage = () => {
   useEffect(() => {
     setIsLoading(isPostLoading || isCommentsLoading);
   }, [isPostLoading, isCommentsLoading]);
+
+  // Fetch IPFS content when post is loaded
+  useEffect(() => {
+    const fetchContent = async () => {
+      
+      // Force fetch for testing (ignore current postContent)
+      if (post) {
+        setIsLoadingContent(true);
+        setIsLoadingImage(true);
+        setContentError(null);
+        setImageError(null);
+        
+        try {
+          // Fetch image and content in parallel
+          const [imgResult, contentResult] = await Promise.all([
+            fetchFromIPFS(post.imageCid),
+            fetchFromIPFS(post.postCid)
+          ]);
+          
+          // Handle image result
+          if (imgResult.success && imgResult.content) {
+            // Create a data URL for the image
+            const gatewayUrl = import.meta.env.VITE_GATEWAY_URL;
+            const imageUrl = `https://${gatewayUrl}/ipfs/${post.imageCid}`;
+            setPostImage(imageUrl);
+          } else {
+            setImageError(imgResult.error || 'Failed to load image');
+          }
+
+          // Handle content result
+          if (contentResult.success && contentResult.content) {
+            try {
+              // Parse the JSON response that contains title and content
+              const parsedResponse = JSON.parse(contentResult.content);
+              if (parsedResponse.content) {
+                // Extract only the content part
+                setPostContent(parsedResponse.content);
+              } else {
+                // Fallback to the original content if structure is different
+                setPostContent(contentResult.content);
+              }
+            } catch (error) {
+              // If parsing fails, use the content as-is
+              setPostContent(contentResult.content);
+            }
+          } else {
+            setContentError(contentResult.error || 'Failed to load content');
+          }
+        } catch (error) {
+          setContentError('Failed to load content from IPFS');
+          setImageError('Failed to load image from IPFS');
+        } finally {
+          setIsLoadingContent(false);
+          setIsLoadingImage(false);
+        }
+      }
+    };
+
+    fetchContent();
+  }, [post, postContent]);
+
+  // Helper function to determine if content is JSON or plain text
+  const renderContent = (content: string) => {
+    // Handle empty content
+    if (!content || content.trim().length === 0) {
+      return (
+        <div className="text-muted-foreground italic py-4">
+          No content available
+        </div>
+      );
+    }
+    
+    try {
+      // Try to parse as JSON (rich text format)
+      const parsed = JSON.parse(content);
+      
+      // Verify it's an array (Slate.js format)
+      if (Array.isArray(parsed)) {
+        return <RichTextRenderer content={content} />;
+      } else {
+        // If it's JSON but not an array, treat as plain text
+        return (
+          <div className="text-sm md:text-lg whitespace-pre-wrap break-words">
+            {content}
+          </div>
+        );
+      }
+    } catch (error) {
+      // If not JSON, treat as plain text
+      return (
+        <div className="text-sm md:text-lg whitespace-pre-wrap break-words">
+          {content || 'No content'}
+        </div>
+      );
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -100,7 +205,45 @@ export const PostInfoPage = () => {
               </CardHeader>
 
               <CardContent className="pt-4 pb-6">
-                <RichTextRenderer content={post.postBody} />
+                {/* Image Section */}
+                {isLoadingImage ? (
+                  <div className="flex items-center justify-center py-8 mb-4">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    <span className="ml-2 text-muted-foreground">Loading image...</span>
+                  </div>
+                ) : imageError ? (
+                  <div className="text-red-500 py-4 mb-4">
+                    Error loading image: {imageError}
+                  </div>
+                              ) : postImage ? (
+                <div className="mb-6">
+                  <div className="w-full md:w-6/7 mx-auto aspect-video rounded-lg shadow-md overflow-hidden">
+                    <img 
+                      src={postImage} 
+                      alt="Post image" 
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                        setImageError('Failed to display image');
+                        setPostImage('');
+                      }}
+                    />
+                  </div>
+                </div>
+              ) : null}
+
+                {/* Content Section */}
+                {isLoadingContent ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    <span className="ml-2 text-muted-foreground">Loading content...</span>
+                  </div>
+                ) : contentError ? (
+                  <div className="text-red-500 py-4">
+                    Error loading content: {contentError}
+                  </div>
+                ) : (
+                  renderContent(postContent)
+                )}
               </CardContent>
             </Card>
 

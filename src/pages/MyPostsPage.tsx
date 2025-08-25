@@ -21,8 +21,7 @@ export const MyPostsPage = () => {
 
   // Filter posts based on search term
   const filteredPosts = myPosts.filter(post => 
-    post.postTitle.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    post.postBody.toLowerCase().includes(searchTerm.toLowerCase())
+    post.postTitle.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Sort posts based on expiration time

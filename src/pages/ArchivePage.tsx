@@ -19,8 +19,7 @@ export const ArchivePage = () => {
 
   // Filter posts based on search term
   const filteredPosts = archivedPosts.filter(post => 
-    post.postTitle.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    post.postBody.toLowerCase().includes(searchTerm.toLowerCase())
+    post.postTitle.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Sort posts based on expiration time

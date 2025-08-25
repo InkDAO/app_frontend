@@ -1,7 +1,8 @@
 export interface Post {
   postId: string,
   postTitle: string,
-  postBody: string,
+  postCid: string,
+  imageCid: string,
   owner: string,
   endTime: string,
   archived: boolean,
@@ -9,13 +10,13 @@ export interface Post {
 
 export interface Comment {
   postId: string;
-  comment: string;
+  commentCid: string;
   owner: string;
 }
 
 export interface CommentWithPostTitle {
   postId: string;
-  comment: string;
+  commentCid: string;
   owner: string;
   postTitle: string;
 }

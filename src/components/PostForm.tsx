@@ -11,6 +11,7 @@ import { handleCreateGroup, handleUpload, UploadResult } from "@/services/pinata
 import { ImageUpload } from "./ImageUpload";
 import { ethers } from "ethers";
 import { v4 as uuidv4, v5 as uuidv5 } from "uuid";
+import { useNavigate } from "react-router-dom";
 
 interface PostFormProps {
   onPostAdded?: () => void;
@@ -20,10 +21,13 @@ export const PostForm = ({ onPostAdded }: PostFormProps) => {
   const [title, setTitle] = useState("");
   const [postBody, setPostBody] = useState("");
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
+  const [currentPostId, setCurrentPostId] = useState<string>("");
   const { isConnected } = useAccount();
   const [resetKey, setResetKey] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
   const { addPost, isPending, isSuccess, isError, isConfirming, isConfirmed, hash } = useAddPost();
   const [hasShownSuccess, setHasShownSuccess] = useState(false);
+  const navigate = useNavigate();
 
   // Utility function to convert file to base64
   const convertFileToBase64 = (file: File): Promise<string> => {
@@ -54,6 +58,7 @@ export const PostForm = ({ onPostAdded }: PostFormProps) => {
       setPostBody("");
       setSelectedImageFile(null);
       setResetKey(prev => prev + 1);
+      setIsUploading(false);
       toast.success("Post added successfully!", {
         description: (
           <div>
@@ -75,12 +80,18 @@ export const PostForm = ({ onPostAdded }: PostFormProps) => {
       if (onPostAdded) {
         onPostAdded();
       }
+      
+      // Navigate to the newly created post
+      if (currentPostId) {
+        navigate(`/app/post/${currentPostId}`);
+      }
     }
-  }, [isConfirmed, onPostAdded, hash, hasShownSuccess]);
+  }, [isConfirmed, onPostAdded, hash, hasShownSuccess, navigate, currentPostId]);
 
   // Handle error state
   useEffect(() => {
     if (isError) {
+      setIsUploading(false);
       toast.error("Failed to post. Please try again.");
     }
   }, [isError]);
@@ -116,6 +127,9 @@ export const PostForm = ({ onPostAdded }: PostFormProps) => {
       return;
     }
     
+    // Set loading state immediately
+    setIsUploading(true);
+    
     try {
       let imageBase64 = "";
       if (selectedImageFile) {
@@ -127,6 +141,9 @@ export const PostForm = ({ onPostAdded }: PostFormProps) => {
         : ethers.solidityPacked(['string', 'string'], [title.trim(), postBody.trim()]);
       
       const postId = ethers.keccak256(postIdInput);
+      
+      // Store the postId for navigation after success
+      setCurrentPostId(postId);
 
       const groupResponse = await handleCreateGroup(postId.slice(0, 50));
       if (groupResponse.error) {
@@ -183,10 +200,11 @@ export const PostForm = ({ onPostAdded }: PostFormProps) => {
     } catch (error) {
       console.error("Error in post submission flow:", error);
       toast.error(`Post submission failed: ${error instanceof Error ? error.message : String(error)}`);
+      setIsUploading(false);
     }
   };
 
-  const isButtonDisabled = isPending || isConfirming || !isConnected;
+  const isButtonDisabled = isPending || isConfirming || !isConnected || isUploading;
 
   return (
     <Card className="mb-6">
@@ -220,24 +238,30 @@ export const PostForm = ({ onPostAdded }: PostFormProps) => {
                        {title.length}/100
                      </span>
                    </div>
-                   <Textarea
-                     value={title}
-                     onChange={(e) => setTitle(e.target.value)}
-                     disabled={isButtonDisabled}
-                     className="text-xs md:text-xl resize-none h-full pt-16 pb-8 pr-16"
-                     maxLength={100}
-                   />
+                                     <Textarea
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    disabled={isButtonDisabled}
+                    readOnly={isUploading || isPending || isConfirming}
+                    className={`text-xs md:text-xl resize-none h-full pt-16 pb-8 pr-16 ${
+                      (isUploading || isPending || isConfirming) ? 'cursor-not-allowed select-none pointer-events-none' : ''
+                    }`}
+                    maxLength={100}
+                  />
                  </div>
                </div>
              </div>
 
             {/* Image Upload Section - Left Half */}
-            <div className="w-full md:w-1/3">
+            <div className={`w-full md:w-1/3 ${
+              (isUploading || isPending || isConfirming) ? 'pointer-events-none opacity-75' : ''
+            }`}>
               <ImageUpload
                 onImageSelected={handleImageSelected}
                 onImageRemoved={handleImageRemoved}
                 disabled={isButtonDisabled}
                 className="h-full min-h-[200px]"
+                key={resetKey}
               />
             </div>
           </div>
@@ -248,7 +272,9 @@ export const PostForm = ({ onPostAdded }: PostFormProps) => {
               placeholder="Share anything anonymously..."
               value={postBody}
               onChange={setPostBody}
-              className="min-h-80 resize-none overflow-hidden"
+              className={`min-h-80 resize-none overflow-hidden ${
+                (isUploading || isPending || isConfirming) ? 'cursor-not-allowed select-none pointer-events-none opacity-75' : ''
+              }`}
               disabled={isButtonDisabled}
               key={resetKey}
             />
@@ -261,7 +287,7 @@ export const PostForm = ({ onPostAdded }: PostFormProps) => {
               className="w-full sm:w-auto"
             >
               <MessageSquare className="h-4 w-4" />
-              {isPending ? "Pending..." : isConfirming ? "Confirming..." : "Post"}
+              {isUploading ? "Uploading..." : isPending ? "Pending..." : isConfirming ? "Confirming..." : "Post"}
             </Button>
           </div>
         </form>

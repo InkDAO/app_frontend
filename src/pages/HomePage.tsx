@@ -11,7 +11,6 @@ const HomePage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const { allPosts, isAllPostLoading, refetchPosts } = usePosts();
-  console.log('allPosts', allPosts);
 
   // Filter posts that haven't expired yet
   const activePosts = allPosts.filter(post => {

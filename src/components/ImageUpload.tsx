@@ -3,7 +3,6 @@ import { Upload, X, Image } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { cn } from '@/lib/utils';
-import { handleUpload, UploadResult } from '@/services/pinataService';
 import { toast } from './ui/sonner';
 
 interface ImageUploadProps {
@@ -99,7 +98,7 @@ export const ImageUpload = ({
   }, [disabled]);
 
   return (
-    <Card className={cn("relative aspect-video overflow-hidden", className)}>
+    <Card className={cn("relative overflow-hidden", className)}>
       <input
         ref={fileInputRef}
         type="file"
@@ -139,23 +138,23 @@ export const ImageUpload = ({
           onClick={openFileDialog}
           className={cn(
             "w-full h-full border-2 border-dashed rounded-lg cursor-pointer transition-colors",
-            "flex flex-col items-center justify-center p-6 text-center",
+            "flex flex-col items-center justify-center p-3 sm:p-6 text-center",
             isDragOver
               ? "border-primary bg-primary/10"
               : "border-muted-foreground/25 hover:border-primary hover:bg-muted/50",
             disabled && "cursor-not-allowed opacity-50"
           )}
         >
-          <div className="space-y-4">
+          <div className="space-y-2 sm:space-y-4">
             <div className="mx-auto">
               {isDragOver ? (
-                <Upload className="h-8 w-8 text-primary" />
+                <Upload className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
               ) : (
-                <Image className="h-8 w-8 text-muted-foreground" />
+                <Image className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground" />
               )}
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-1 sm:space-y-2">
               <p className="text-xs font-medium">
                 {isDragOver ? 'Drop image here' : 'Upload an image'}
               </p>

@@ -20,6 +20,7 @@ interface PostFormProps {
 export const PostForm = ({ onPostAdded }: PostFormProps) => {
   const [title, setTitle] = useState("");
   const [postBody, setPostBody] = useState("");
+  const [hashtags, setHashtags] = useState("");
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const [currentPostId, setCurrentPostId] = useState<string>("");
   const { isConnected } = useAccount();
@@ -56,6 +57,7 @@ export const PostForm = ({ onPostAdded }: PostFormProps) => {
     if (isConfirmed && !hasShownSuccess) {
       setTitle("");
       setPostBody("");
+      setHashtags("");
       setSelectedImageFile(null);
       setResetKey(prev => prev + 1);
       setIsUploading(false);
@@ -175,7 +177,8 @@ export const PostForm = ({ onPostAdded }: PostFormProps) => {
 
       const postContent = JSON.stringify({
         title: title.trim(),
-        content: postBody.trim()
+        content: postBody.trim(),
+        hashtags: hashtags.trim().split(/\s+/).filter(tag => tag.length > 0).map(tag => tag.startsWith('#') ? tag : `#${tag}`)
       });
 
       // Create file with JSON content
@@ -213,44 +216,65 @@ export const PostForm = ({ onPostAdded }: PostFormProps) => {
       </CardHeader>
       <CardContent className="px-3 sm:px-6">
         <form onSubmit={handleSubmit}>
-          {/* Top row: Image Upload and Title */}
+          {/* Top row: Image Upload and Title/Hashtags */}
           <div className="flex flex-col md:flex-row gap-4 mb-4">
-                         {/* Title Section - Right Half */}
-             <div className="w-full md:w-2/3 flex flex-col h-[200px]">
-               {/* Title text area with integrated label */}
-               <div className="flex-1 flex flex-col relative">
-                 <div className="relative flex-1">
-                   {/* Title label inside the textarea */}
-                   <div className="absolute top-3 left-0 right-0 pointer-events-none z-10">
-                     <div className="text-center">
-                       <span className="text-3xl font-semibold text-muted-foreground bg-background px-3 py-1">
-                          Post Title
-                       </span>
-                     </div>
-                                            {/* Horizontal line */}
-                       <div className="mt-2 mx-4">
-                         <div className="h-px bg-border"></div>
-                       </div>
-                   </div>
-                   {/* Character count inside the textarea */}
-                   <div className="absolute bottom-2 right-3 pointer-events-none z-10">
-                     <span className={`text-xs px-2 py-1 rounded bg-background/80'}`}>
-                       {title.length}/100
-                     </span>
-                   </div>
-                                     <Textarea
+            {/* Left Side - Title and Hashtags */}
+            <div className="w-full md:w-2/3 flex flex-col h-[200px] gap-4">
+              {/* Title Section - Side by side layout */}
+              <div className="flex flex-row relative h-[105px] border rounded-md overflow-hidden focus-within:ring focus-within:ring-gray-900 dark:focus-within:ring-white focus-within:ring-opacity-50">
+                {/* Left partition - Label (smaller on mobile) */}
+                <div className="w-1/4 sm:w-1/3 flex items-center justify-center bg-muted/30 border-r px-1">
+                  <span className="font-semibold text-muted-foreground text-center leading-tight text-sm md:text-2xl">
+                    Post Title
+                  </span>
+                </div>
+                
+                {/* Right partition - Input (larger on mobile) */}
+                <div className="w-3/4 sm:w-2/3 relative flex-1">
+                  {/* Character count inside the textarea */}
+                  <div className="absolute bottom-2 right-3 pointer-events-none z-10">
+                    <span className={`text-xs px-2 py-1 rounded bg-background/80'}`}>
+                      {title.length}/100
+                    </span>
+                  </div>
+                  <Textarea
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     disabled={isButtonDisabled}
                     readOnly={isUploading || isPending || isConfirming}
-                    className={`text-xs md:text-xl resize-none h-full pt-16 pb-8 pr-16 ${
+                    placeholder="Enter your post title..."
+                    className={`text-sm sm:text-base resize-none h-full border-0 rounded-none rounded-r-md pb-6 pr-14 px-3 focus-visible:ring-0 ${
                       (isUploading || isPending || isConfirming) ? 'cursor-not-allowed select-none pointer-events-none' : ''
                     }`}
                     maxLength={100}
                   />
-                 </div>
-               </div>
-             </div>
+                </div>
+              </div>
+
+              {/* Hashtags Section - Side by side layout */}
+              <div className="flex flex-row relative h-[75px] border rounded-md overflow-hidden focus-within:ring focus-within:ring-gray-900 dark:focus-within:ring-white focus-within:ring-opacity-50">
+                {/* Left partition - Label (smaller on mobile) */}
+                <div className="w-1/4 sm:w-1/3 flex items-center justify-center bg-muted/30 border-r px-1">
+                  <span className="font-semibold text-muted-foreground text-center leading-tight text-sm md:text-2xl">
+                    # Hashtags
+                  </span>
+                </div>
+                
+                {/* Right partition - Input (larger on mobile) */}
+                <div className="w-3/4 sm:w-2/3 relative flex-1">
+                  <Textarea
+                    value={hashtags}
+                    onChange={(e) => setHashtags(e.target.value)}
+                    disabled={isButtonDisabled}
+                    readOnly={isUploading || isPending || isConfirming}
+                    placeholder="technology blockchain web3"
+                    className={`text-sm sm:text-base resize-none h-full border-0 rounded-none rounded-r-md pb-2 px-3 focus-visible:ring-0 ${
+                      (isUploading || isPending || isConfirming) ? 'cursor-not-allowed select-none pointer-events-none' : ''
+                    }`}
+                  />
+                </div>
+              </div>
+            </div>
 
             {/* Image Upload Section - Left Half */}
             <div className={`w-full md:w-1/3 ${
@@ -260,7 +284,7 @@ export const PostForm = ({ onPostAdded }: PostFormProps) => {
                 onImageSelected={handleImageSelected}
                 onImageRemoved={handleImageRemoved}
                 disabled={isButtonDisabled}
-                className="h-full min-h-[200px]"
+                className="h-[200px] w-full"
                 key={resetKey}
               />
             </div>

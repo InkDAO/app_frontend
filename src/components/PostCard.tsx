@@ -312,7 +312,7 @@ export const PostCard = ({ post }: PostCardProps) => {
                 </div>
               ) : postImage ? (
                 <div className="mb-6">
-                  <div className="w-full md:w-6/7 mx-auto aspect-video rounded-lg shadow-md overflow-hidden">
+                  <div className="w-full md:w-4/5 mx-auto aspect-video rounded-lg shadow-md overflow-hidden">
                     <img 
                       src={postImage} 
                       alt="Post image" 
@@ -484,21 +484,21 @@ export const PostCard = ({ post }: PostCardProps) => {
                   
                   {/* Image Thumbnail - Responsive size (hidden when expanded) */}
                   {!isOpen && (
-                    <div className="w-48 sm:w-56 md:w-64 h-32 sm:h-36 md:h-40 flex-shrink-0">
+                    <div className="w-52 sm:w-60 md:w-72 h-32 sm:h-36 md:h-40 flex-shrink-0">
                       {isLoadingImage ? (
-                        <div className="w-full h-full bg-muted flex items-center justify-center">
+                        <div className="w-full h-full bg-muted flex items-center justify-center rounded-lg">
                           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                         </div>
                       ) : imageError || !post.imageCid ? (
-                        <div className="w-full h-full bg-muted flex items-center justify-center">
+                        <div className="w-full h-full bg-muted flex items-center justify-center rounded-lg">
                           <span className="text-muted-foreground text-xs">No image</span>
                         </div>
                       ) : postImage ? (
-                        <div className="w-full h-full overflow-hidden">
+                        <div className="w-full h-full overflow-hidden rounded-lg">
                           <img 
                             src={postImage} 
                             alt="Post thumbnail" 
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover rounded-lg"
                           />
                         </div>
                       ) : null}
@@ -523,7 +523,7 @@ export const PostCard = ({ post }: PostCardProps) => {
                 </div>
               ) : postImage ? (
                 <div className="mb-6">
-                  <div className="w-full md:w-6/7 mx-auto aspect-video rounded-lg shadow-md overflow-hidden">
+                  <div className="w-full md:w-4/5 mx-auto aspect-video rounded-lg shadow-md overflow-hidden">
                     <img 
                       src={postImage} 
                       alt="Post image" 

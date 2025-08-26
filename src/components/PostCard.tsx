@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Post } from "@/types";
 import { useAddComment } from "@/services/dXService";
-import { fetchFromIPFS, handleGetGroupByName, handleUpload } from "@/services/pinataService";
+import { fetchFromIPFS, handleGetFileMetadataByCid, handleGetGroupByName, handleUpload } from "@/services/pinataService";
 import { formatDistanceToNow } from "date-fns";
 import { Eye, MessageSquare, X, Clock, Loader2, Calendar, User, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -34,6 +34,7 @@ export const PostCard = ({ post }: PostCardProps) => {
   const { addComment, isPending, isSuccess, isError, isConfirming, isConfirmed, hash } = useAddComment();
   const [hasShownSuccess, setHasShownSuccess] = useState(false);
   const [showFullTitle, setShowFullTitle] = useState(false);
+  const [hashtags, setHashtags] = useState<string[]>([]);
 
   // Fetch image immediately for thumbnail display
   useEffect(() => {
@@ -64,6 +65,27 @@ export const PostCard = ({ post }: PostCardProps) => {
     fetchImage();
   }, [post.imageCid, postImage]);
 
+  // Fetch hashtags immediately for display in collapsed state
+  useEffect(() => {
+    const fetchHashtags = async () => {
+      if (hashtags.length === 0) {
+        try {
+          const fileMetadata = await handleGetFileMetadataByCid(post.postCid);
+          
+          // Extract hashtags from metadata
+          if (fileMetadata.success && fileMetadata.keyvalues) {
+            const extractedHashtags = Object.keys(fileMetadata.keyvalues).filter(key => key.trim().length > 0);
+            setHashtags(extractedHashtags);
+          }
+        } catch (error) {
+          console.error('Failed to fetch hashtags:', error);
+        }
+      }
+    };
+
+    fetchHashtags();
+  }, [post.postCid, hashtags.length]);
+
   // Fetch IPFS content when post opens
   useEffect(() => {
     const fetchContent = async () => {
@@ -73,7 +95,7 @@ export const PostCard = ({ post }: PostCardProps) => {
         
         try {
           const contentResult = await fetchFromIPFS(post.postCid);
-          
+
           // Handle content result
           if (contentResult.success && contentResult.content) {
             try {
@@ -181,7 +203,7 @@ export const PostCard = ({ post }: PostCardProps) => {
       const commentFile = new File([comment.trim()], comment.trim(), {
         type: "text/plain" 
       });
-      const commentResult = await handleUpload(comment.trim(), groupId, commentFile);
+      const commentResult = await handleUpload(comment.trim(), groupId, commentFile, "comment");
       let commentCid = "";
       if (commentResult.success) {
         commentCid = commentResult.cid || "";
@@ -221,7 +243,7 @@ export const PostCard = ({ post }: PostCardProps) => {
 
   // Helper function to get title parts for inline display
   const getTitleParts = () => {
-    const maxLength = 60; // Character limit for smaller screens
+    const maxLength = 50; // Character limit for smaller screens
     
     // Always show full title when expanded or when user clicked show more
     if (showFullTitle || isOpen) {
@@ -275,6 +297,66 @@ export const PostCard = ({ post }: PostCardProps) => {
     }
   };
 
+  // Hashtags component for displaying tags with # prefix
+  const renderHashtags = (collapsed = false) => {
+    if (!hashtags || hashtags.length === 0) return null;
+
+    if (!collapsed) {
+      // Show all hashtags when expanded
+      return (
+        <div className="flex flex-wrap gap-1 mt-2">
+          {hashtags.map((tag, index) => (
+            <span
+              key={index}
+              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+            >
+              #{tag}
+            </span>
+          ))}
+        </div>
+      );
+    }
+
+    // For collapsed state: 2 tags on mobile, 3 on larger screens
+    return (
+      <div className="flex flex-wrap gap-1 mt-2">
+        {/* Mobile: Show first 2 tags */}
+        <div className="flex flex-wrap gap-1 md:hidden">
+          {hashtags.slice(0, 2).map((tag, index) => (
+            <span
+              key={index}
+              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+            >
+              #{tag}
+            </span>
+          ))}
+          {hashtags.length > 2 && (
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground">
+              +{hashtags.length - 2} more
+            </span>
+          )}
+        </div>
+
+        {/* Desktop: Show first 3 tags */}
+        <div className="hidden md:flex md:flex-wrap md:gap-1">
+          {hashtags.slice(0, 5).map((tag, index) => (
+            <span
+              key={index}
+              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+            >
+              #{tag}
+            </span>
+          ))}
+          {hashtags.length > 5 && (
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground">
+              +{hashtags.length - 5} more
+            </span>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   const renderCommentOverlay = () => (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-start justify-center z-50 overflow-y-auto py-8">
       <Card className="w-full max-w-4xl mx-4 my-auto">
@@ -296,6 +378,12 @@ export const PostCard = ({ post }: PostCardProps) => {
                 <CardTitle className="text-2xl md:text-3xl group-hover:text-primary transition-colors break-words leading-tight">
                   {post.postTitle}
                 </CardTitle>
+                {/* Hashtags in comment overlay */}
+                {hashtags.length > 0 && (
+                  <div className="mt-3">
+                    {renderHashtags(false)}
+                  </div>
+                )}
               </div>
             </CardHeader>
 
@@ -388,11 +476,11 @@ export const PostCard = ({ post }: PostCardProps) => {
               <CardHeader className="p-0">
                                   <div className={cn(
                     "flex w-full",
-                    !isOpen && "min-h-[128px] sm:min-h-[144px] md:min-h-[160px]"
+                    !isOpen && "min-h-[96px] sm:min-h-[144px] md:min-h-[160px]"
                   )}>
                     <div className={cn(
                       "flex-1 min-w-0 flex flex-col px-2 sm:px-3 md:px-6 py-2 sm:py-2.5 md:py-3",
-                      isOpen ? "space-y-2" : "justify-between"
+                      isOpen ? "space-y-2" : "space-y-2"
                     )}>
                       {/* Title content */}
                       <div>
@@ -429,9 +517,39 @@ export const PostCard = ({ post }: PostCardProps) => {
                           </span>
                         </CardTitle>
                         
+                        {/* Hashtags display */}
+                        {renderHashtags(!isOpen)}
+                        
+                        {/* Footer content - after hashtags when collapsed, right after title when expanded */}
+                        {!isOpen && (
+                          <div className={cn(
+                            "flex flex-row gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground justify-end mt-2",
+                            "hidden md:flex"
+                          )}>
+                            <div className="flex items-center gap-1 justify-end sm:justify-start">
+                              <Calendar className="h-3 w-3" />
+                              <span>created {formatDistanceToNow(new Date(Number(post.endTime) * 1000 - 7 * 24 * 60 * 60 * 1000), { addSuffix: true, includeSeconds: false }).replace('about ', '')}</span>
+                            </div>
+                            <div className="flex items-center gap-1 justify-end sm:justify-start">
+                              <User className="h-3 w-3" />
+                              <span className="font-mono text-xs">{post.owner.slice(0, 6)}...{post.owner.slice(-4)}</span>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  copyAddress(post.owner);
+                                }}
+                                className="ml-1 p-0.5 hover:bg-muted rounded transition-colors"
+                                title="Copy address"
+                              >
+                                <Copy className="h-3 w-3" />
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                        
                         {/* Footer content - right after title when expanded */}
                         {isOpen && (
-                          <div className="flex flex-row gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground justify-end">
+                          <div className="flex flex-row gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground justify-end mt-3">
                             <div className="flex items-center gap-1 justify-end sm:justify-start">
                               <Calendar className="h-3 w-3" />
                               <span>created {formatDistanceToNow(new Date(Number(post.endTime) * 1000 - 7 * 24 * 60 * 60 * 1000), { addSuffix: true, includeSeconds: false }).replace('about ', '')}</span>
@@ -453,38 +571,12 @@ export const PostCard = ({ post }: PostCardProps) => {
                           </div>
                         )}
                       </div>
-                      
-                      {/* Footer content - at bottom when collapsed */}
-                      {!isOpen && (
-                        <div className={cn(
-                          "flex flex-row gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground justify-end",
-                          "hidden md:flex"
-                        )}>
-                          <div className="flex items-center gap-1 justify-end sm:justify-start">
-                            <Calendar className="h-3 w-3" />
-                            <span>created {formatDistanceToNow(new Date(Number(post.endTime) * 1000 - 7 * 24 * 60 * 60 * 1000), { addSuffix: true, includeSeconds: false }).replace('about ', '')}</span>
-                          </div>
-                          <div className="flex items-center gap-1 justify-end sm:justify-start">
-                            <User className="h-3 w-3" />
-                            <span className="font-mono text-xs">{post.owner.slice(0, 6)}...{post.owner.slice(-4)}</span>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                copyAddress(post.owner);
-                              }}
-                              className="ml-1 p-0.5 hover:bg-muted rounded transition-colors"
-                              title="Copy address"
-                            >
-                              <Copy className="h-3 w-3" />
-                            </button>
-                          </div>
-                        </div>
-                      )}
+
                     </div>
                   
                   {/* Image Thumbnail - Responsive size (hidden when expanded) */}
                   {!isOpen && (
-                    <div className="w-52 sm:w-60 md:w-72 h-32 sm:h-36 md:h-40 flex-shrink-0">
+                    <div className="w-24 h-24 sm:w-60 sm:h-36 md:w-72 md:h-40 flex-shrink-0 self-end">
                       {isLoadingImage ? (
                         <div className="w-full h-full bg-muted flex items-center justify-center rounded-lg">
                           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />

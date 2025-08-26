@@ -64,7 +64,7 @@ export const handleCreateGroup = async (group_name: string): Promise<GroupRespon
   }
 }
 
-export const handleUpload = async (file_name: string, group_id: string, file: File): Promise<UploadResult> => {
+export const handleUpload = async (file_name: string, group_id: string, file: File, hashtags: string): Promise<UploadResult> => {
   if (!file || !file_name || !group_id) {
     return {
       success: false,
@@ -97,11 +97,19 @@ export const handleUpload = async (file_name: string, group_id: string, file: Fi
       throw new Error('No upload URL found in response')
     }
 
+    const hashtagsArray = hashtags.split(',').map(tag => tag.trim());
+    
+    const keyvalues = hashtagsArray.reduce((acc, tag) => {
+      acc[tag] = tag;
+      return acc;
+    }, {} as Record<string, string>);
+
     // Upload file to Pinata
     const upload = await pinata.upload.public
       .file(file)
       .name(file_name)
       .url(uploadUrl)
+      .keyvalues(keyvalues)
 
     if (upload.cid) {
       const ipfsLink = await pinata.gateways.public.convert(upload.cid)
@@ -126,7 +134,7 @@ export const handleUpload = async (file_name: string, group_id: string, file: Fi
 
 export const handleGetGroupByName = async (group_name: string): Promise<GroupResponse> => {
   try {
-    const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/get/${group_name}`, {
+    const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/groupByName/${group_name}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json"
@@ -162,6 +170,46 @@ export interface IPFSContentResult {
   success: boolean
   content?: string
   error?: string
+}
+
+export interface FileMetadata {
+  success: boolean
+  id?: string
+  name?: string
+  cid?: string
+  size?: number
+  number_of_files?: number
+  mime_type?: string
+  group_id?: string
+  keyvalues?: Record<string, string>
+  created_at?: string
+  error?: string
+}
+
+export const handleGetFileMetadataByCid = async (cid: string): Promise<FileMetadata> => {
+  try {
+    const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/fileByCid/${cid}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json"
+      }
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to get file by CID')
+    }
+
+    const result = await response.json()
+    return {
+      success: true,
+      ...result.files[0]
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error)
+    }
+  }
 }
 
 export const fetchFromIPFS = async (cid: string): Promise<IPFSContentResult> => {

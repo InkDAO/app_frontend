@@ -7,10 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/components/ui/sonner";
 import { MessageSquare } from "lucide-react";
 import { Textarea } from "./ui/textarea";
-import { handleCreateGroup, handleUpload, UploadResult } from "@/services/pinataService";
+import { handleCreateGroup, handleUpload } from "@/services/pinataService";
 import { ImageUpload } from "./ImageUpload";
 import { ethers } from "ethers";
-import { v4 as uuidv4, v5 as uuidv5 } from "uuid";
 import { useNavigate } from "react-router-dom";
 
 interface PostFormProps {
@@ -166,7 +165,7 @@ export const PostForm = ({ onPostAdded }: PostFormProps) => {
         const imageFile = new File([blob], 'image.png', { 
           type: selectedImageFile.type 
         });
-        const imageResult = await handleUpload('image.png', groupId, imageFile);
+        const imageResult = await handleUpload('image.png', groupId, imageFile, hashtags);
         
         if (imageResult.success) {
           imageCid = imageResult.cid || "";
@@ -177,15 +176,14 @@ export const PostForm = ({ onPostAdded }: PostFormProps) => {
 
       const postContent = JSON.stringify({
         title: title.trim(),
-        content: postBody.trim(),
-        hashtags: hashtags.trim().split(/\s+/).filter(tag => tag.length > 0).map(tag => tag.startsWith('#') ? tag : `#${tag}`)
+        content: postBody.trim()
       });
 
       // Create file with JSON content
       const postFile = new File([postContent], title.trim().slice(0, 50), {
         type: "application/json"
       });
-      const postResult = await handleUpload(title.trim().slice(0, 50), groupId, postFile);
+      const postResult = await handleUpload(title.trim().slice(0, 50), groupId, postFile, hashtags);
       
       if (postResult.success) {
         postBodyCid = postResult.cid || "";
@@ -256,7 +254,7 @@ export const PostForm = ({ onPostAdded }: PostFormProps) => {
                 {/* Left partition - Label (smaller on mobile) */}
                 <div className="w-1/4 sm:w-1/3 flex items-center justify-center bg-muted/30 border-r px-1">
                   <span className="font-semibold text-muted-foreground text-center leading-tight text-sm md:text-2xl">
-                    # Hashtags
+                    # tags
                   </span>
                 </div>
                 
@@ -267,7 +265,7 @@ export const PostForm = ({ onPostAdded }: PostFormProps) => {
                     onChange={(e) => setHashtags(e.target.value)}
                     disabled={isButtonDisabled}
                     readOnly={isUploading || isPending || isConfirming}
-                    placeholder="technology blockchain web3"
+                    placeholder="technology, blockchain, web3"
                     className={`text-sm sm:text-base resize-none h-full border-0 rounded-none rounded-r-md pb-2 px-3 focus-visible:ring-0 ${
                       (isUploading || isPending || isConfirming) ? 'cursor-not-allowed select-none pointer-events-none' : ''
                     }`}

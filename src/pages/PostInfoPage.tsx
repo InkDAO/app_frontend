@@ -217,7 +217,7 @@ export const PostInfoPage = () => {
                   </div>
                               ) : postImage ? (
                 <div className="mb-6">
-                  <div className="w-full md:w-6/7 mx-auto aspect-video rounded-lg shadow-md overflow-hidden">
+                  <div className="w-full md:w-4/5 mx-auto aspect-video rounded-lg shadow-md overflow-hidden">
                     <img 
                       src={postImage} 
                       alt="Post image" 

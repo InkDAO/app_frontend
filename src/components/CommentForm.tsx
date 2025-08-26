@@ -92,7 +92,7 @@ export const CommentForm = ({ postId, onCommentAdded }: CommentFormProps) => {
       const commentFile = new File([comment.trim()], comment.trim(), {
         type: "text/plain" 
       });
-      const commentResult = await handleUpload(comment.trim(), groupId, commentFile);
+      const commentResult = await handleUpload(comment.trim(), groupId, commentFile, "comment");
       let commentCid = "";
       if (commentResult.success) {
         commentCid = commentResult.cid || "";

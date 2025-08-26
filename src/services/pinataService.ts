@@ -248,3 +248,24 @@ export const fetchFromIPFS = async (cid: string): Promise<IPFSContentResult> => 
     }
   }
 }
+
+export const handleGetFilesByTags = async (tags: string[]): Promise<FileMetadata[]> => {
+  try {
+    const tagsParam = tags.join(',');
+    const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/filesByTags?tags=${tagsParam}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json"
+      }
+    })
+
+    if (!response.ok) {
+      throw new Error('Failed to get files by tags')
+    }
+
+    const result = await response.json()
+    return result.files
+  } catch (error) {
+    return [];
+  }
+}

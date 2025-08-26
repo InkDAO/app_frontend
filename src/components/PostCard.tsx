@@ -201,7 +201,7 @@ export const PostCard = ({ post }: PostCardProps) => {
       const groupId = groupResponse.group?.id || "";
 
       const commentFile = new File([comment.trim()], comment.trim(), {
-        type: "text/plain" 
+        type: "application/json" 
       });
       const commentResult = await handleUpload(comment.trim(), groupId, commentFile, "comment");
       let commentCid = "";

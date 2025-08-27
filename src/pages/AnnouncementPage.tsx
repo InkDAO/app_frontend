@@ -51,7 +51,8 @@ export const AnnouncementPage = () => {
   // Get the posts to display based on search mode
   const getPostsToDisplay = () => {
     if (searchMode === 'tags') {
-      return taggedPosts;
+      // If no tags selected, show all announcement posts; otherwise show tagged posts
+      return taggedPosts.length === 0 ? announcementsPost : taggedPosts;
     } else {
       // Filter posts based on search term (title search)
       return announcementsPost.filter(post => 

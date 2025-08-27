@@ -52,7 +52,10 @@ const HomePage = () => {
   // Get the posts to display based on search mode
   const getPostsToDisplay = () => {
     if (searchMode === 'tags') {
-      // Filter tagged posts that are also active
+      // If no tags selected, show all active posts; otherwise filter tagged posts that are also active
+      if (taggedPosts.length === 0) {
+        return activePosts;
+      }
       return taggedPosts.filter(post => {
         const currentTimestamp = Math.floor(Date.now() / 1000);
         return !post.archived && currentTimestamp < parseInt(post.endTime);

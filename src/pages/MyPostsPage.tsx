@@ -53,7 +53,8 @@ export const MyPostsPage = () => {
   // Get the posts to display based on search mode
   const getPostsToDisplay = () => {
     if (searchMode === 'tags') {
-      return taggedPosts;
+      // If no tags selected, show all my posts; otherwise show tagged posts
+      return taggedPosts.length === 0 ? myPosts : taggedPosts;
     } else {
       // Filter posts based on search term (title search)
       return myPosts.filter(post => 

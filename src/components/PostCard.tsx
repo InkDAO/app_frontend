@@ -480,7 +480,7 @@ export const PostCard = ({ post }: PostCardProps) => {
                   )}>
                     <div className={cn(
                       "flex-1 min-w-0 flex flex-col px-2 sm:px-3 md:px-6 py-2 sm:py-2.5 md:py-3",
-                      isOpen ? "space-y-2" : "space-y-2"
+                      isOpen ? "space-y-2" : "justify-between"
                     )}>
                       {/* Title content */}
                       <div>
@@ -520,33 +520,6 @@ export const PostCard = ({ post }: PostCardProps) => {
                         {/* Hashtags display */}
                         {renderHashtags(!isOpen)}
                         
-                        {/* Footer content - after hashtags when collapsed, right after title when expanded */}
-                        {!isOpen && (
-                          <div className={cn(
-                            "flex flex-row gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground justify-end mt-2",
-                            "hidden md:flex"
-                          )}>
-                            <div className="flex items-center gap-1 justify-end sm:justify-start">
-                              <Calendar className="h-3 w-3" />
-                              <span>created {formatDistanceToNow(new Date(Number(post.endTime) * 1000 - 7 * 24 * 60 * 60 * 1000), { addSuffix: true, includeSeconds: false }).replace('about ', '')}</span>
-                            </div>
-                            <div className="flex items-center gap-1 justify-end sm:justify-start">
-                              <User className="h-3 w-3" />
-                              <span className="font-mono text-xs">{post.owner.slice(0, 6)}...{post.owner.slice(-4)}</span>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  copyAddress(post.owner);
-                                }}
-                                className="ml-1 p-0.5 hover:bg-muted rounded transition-colors"
-                                title="Copy address"
-                              >
-                                <Copy className="h-3 w-3" />
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                        
                         {/* Footer content - right after title when expanded */}
                         {isOpen && (
                           <div className="flex flex-row gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground justify-end mt-3">
@@ -571,6 +544,32 @@ export const PostCard = ({ post }: PostCardProps) => {
                           </div>
                         )}
                       </div>
+                      {/* Footer content - flushed to bottom when collapsed */}
+                      {!isOpen && (
+                        <div className={cn(
+                          "flex flex-row gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground justify-end",
+                          "hidden md:flex"
+                        )}>
+                          <div className="flex items-center gap-1 justify-end sm:justify-start">
+                            <Calendar className="h-3 w-3" />
+                            <span>created {formatDistanceToNow(new Date(Number(post.endTime) * 1000 - 7 * 24 * 60 * 60 * 1000), { addSuffix: true, includeSeconds: false }).replace('about ', '')}</span>
+                          </div>
+                          <div className="flex items-center gap-1 justify-end sm:justify-start">
+                            <User className="h-3 w-3" />
+                            <span className="font-mono text-xs">{post.owner.slice(0, 6)}...{post.owner.slice(-4)}</span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                copyAddress(post.owner);
+                              }}
+                              className="ml-1 p-0.5 hover:bg-muted rounded transition-colors"
+                              title="Copy address"
+                            >
+                              <Copy className="h-3 w-3" />
+                            </button>
+                          </div>
+                        </div>
+                      )}
 
                     </div>
                   

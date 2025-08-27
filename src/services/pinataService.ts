@@ -97,7 +97,7 @@ export const handleUpload = async (file_name: string, group_id: string, file: Fi
       throw new Error('No upload URL found in response')
     }
 
-    const hashtagsArray = hashtags.split(',').map(tag => tag.trim());
+    const hashtagsArray = hashtags.split(',').map(tag => tag.trim().toLowerCase());
     
     const keyvalues = hashtagsArray.reduce((acc, tag) => {
       acc[tag] = tag;

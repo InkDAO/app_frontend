@@ -297,6 +297,12 @@ export const PostCard = ({ post }: PostCardProps) => {
     }
   };
 
+  // Helper function to truncate tag text with ellipsis
+  const truncateTag = (tag: string, maxLength = 10) => {
+    if (tag.length <= maxLength) return tag;
+    return tag.slice(0, maxLength) + '...';
+  };
+
   // Hashtags component for displaying tags with # prefix
   const renderHashtags = (collapsed = false) => {
     if (!hashtags || hashtags.length === 0) return null;
@@ -308,9 +314,10 @@ export const PostCard = ({ post }: PostCardProps) => {
           {hashtags.map((tag, index) => (
             <span
               key={index}
-              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+              className="inline-flex items-center px-2 py-1 rounded-full text-[8px] sm:text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+              title={tag.length > 8 ? `#${tag}` : undefined}
             >
-              #{tag}
+              #{truncateTag(tag)}
             </span>
           ))}
         </div>
@@ -325,13 +332,14 @@ export const PostCard = ({ post }: PostCardProps) => {
           {hashtags.slice(0, 2).map((tag, index) => (
             <span
               key={index}
-              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+              className="inline-flex items-center px-2 py-1 rounded-full text-[8px] font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+              title={tag.length > 8 ? `#${tag}` : undefined}
             >
-              #{tag}
+              #{truncateTag(tag)}
             </span>
           ))}
           {hashtags.length > 2 && (
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground">
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-[8px] font-medium bg-muted text-muted-foreground">
               +{hashtags.length - 2} more
             </span>
           )}
@@ -343,8 +351,9 @@ export const PostCard = ({ post }: PostCardProps) => {
             <span
               key={index}
               className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+              title={tag.length > 8 ? `#${tag}` : undefined}
             >
-              #{tag}
+              #{truncateTag(tag)}
             </span>
           ))}
           {hashtags.length > 5 && (
@@ -484,7 +493,7 @@ export const PostCard = ({ post }: PostCardProps) => {
                     )}>
                       {/* Title content */}
                       <div>
-                        <CardTitle className="text-lg sm:text-xl md:text-2xl lg:text-3xl group-hover:text-primary transition-colors break-all hyphens-auto leading-tight mb-2">
+                        <CardTitle className="text-sm md:text-2xl lg:text-3xl group-hover:text-primary transition-colors hyphens-auto leading-tight mb-2">
                           {/* Full title on larger screens */}
                           <span className="hidden md:inline">
                             {post.postTitle}

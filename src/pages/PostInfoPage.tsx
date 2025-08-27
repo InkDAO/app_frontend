@@ -5,12 +5,13 @@ import { CommentForm } from "@/components/CommentForm";
 import { Post, Comment } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDistanceToNow } from "date-fns";
-import { Clock, Loader2 } from "lucide-react";
+import { Loader2, Calendar, User, Copy } from "lucide-react";
 import { CommentCard } from "@/components/CommentCard";
 import { RichTextRenderer } from "@/components/RichTextRenderer";
-import { fetchFromIPFS } from "@/services/pinataService";
+import { fetchFromIPFS, handleGetFileMetadataByCid } from "@/services/pinataService";
 import { useReadContract } from "wagmi"
 import { maxterdXConfig } from "@/contracts/MasterdX";
+import { toast } from "@/components/ui/sonner";
 
 export const PostInfoPage = () => {
   
@@ -24,6 +25,7 @@ export const PostInfoPage = () => {
   const [isLoadingImage, setIsLoadingImage] = useState(false);
   const [contentError, setContentError] = useState<string | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
+  const [hashtags, setHashtags] = useState<string[]>([]);
 
   const { data: postInfo, isLoading: isPostLoading } = useReadContract({
     address: maxterdXConfig.address as `0x${string}`,
@@ -68,6 +70,27 @@ export const PostInfoPage = () => {
   useEffect(() => {
     setIsLoading(isPostLoading || isCommentsLoading);
   }, [isPostLoading, isCommentsLoading]);
+
+  // Fetch hashtags when post is loaded
+  useEffect(() => {
+    const fetchHashtags = async () => {
+      if (post && hashtags.length === 0) {
+        try {
+          const fileMetadata = await handleGetFileMetadataByCid(post.postCid);
+          
+          // Extract hashtags from metadata
+          if (fileMetadata.success && fileMetadata.keyvalues) {
+            const extractedHashtags = Object.keys(fileMetadata.keyvalues).filter(key => key.trim().length > 0);
+            setHashtags(extractedHashtags);
+          }
+        } catch (error) {
+          console.error('Failed to fetch hashtags:', error);
+        }
+      }
+    };
+
+    fetchHashtags();
+  }, [post, hashtags.length]);
 
   // Fetch IPFS content when post is loaded
   useEffect(() => {
@@ -128,6 +151,41 @@ export const PostInfoPage = () => {
 
     fetchContent();
   }, [post, postContent]);
+
+  // Helper function to truncate tag text with ellipsis
+  const truncateTag = (tag: string, maxLength = 10) => {
+    if (tag.length <= maxLength) return tag;
+    return tag.slice(0, maxLength) + '...';
+  };
+
+  // Helper function to copy address to clipboard
+  const copyAddress = async (address: string) => {
+    try {
+      await navigator.clipboard.writeText(address);
+      toast.success("Address copied to clipboard!");
+    } catch (error) {
+      toast.error("Failed to copy address");
+    }
+  };
+
+  // Helper function to render hashtags
+  const renderHashtags = () => {
+    if (!hashtags || hashtags.length === 0) return null;
+
+    return (
+      <div className="flex flex-wrap gap-1 mt-2">
+        {hashtags.map((tag, index) => (
+          <span
+            key={index}
+            className="inline-flex items-center px-2 py-1 rounded-full text-[8px] sm:text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+            title={tag.length > 10 ? `#${tag}` : undefined}
+          >
+            #{truncateTag(tag)}
+          </span>
+        ))}
+      </div>
+    );
+  };
 
   // Helper function to determine if content is JSON or plain text
   const renderContent = (content: string) => {
@@ -193,13 +251,28 @@ export const PostInfoPage = () => {
             <Card className="mb-6 border-l-4 border-l-primary/20">
               <CardHeader className="pb-2">
                 <div className="flex flex-col gap-2">
-                  <CardTitle className="text-xl md:text-2xl font-semibold line-clamp-2">{post.postTitle}</CardTitle>
-                  <div className="text-sm text-muted-foreground flex items-center gap-1.5">
-                    <Clock className="h-4 w-4" />
-                    <span>
-                      {new Date(Number(post.endTime) * 1000) > new Date() ? 'Archive' : 'Archived'}{' '}
-                      {formatDistanceToNow(new Date(Number(post.endTime) * 1000), { addSuffix: true })}
-                    </span>
+                  <CardTitle className="text-2xl md:text-3xl group-hover:text-primary transition-colors break-words leading-tight">{post.postTitle}</CardTitle>
+                  
+                  {/* Hashtags display */}
+                  {renderHashtags()}
+                  
+                  {/* Footer content - right after title when expanded */}
+                  <div className="flex flex-row gap-2 sm:gap-4 text-[10px] sm:text-sm text-muted-foreground justify-end">
+                    <div className="flex items-center gap-1 justify-end sm:justify-start">
+                      <Calendar className="h-3 w-3" />
+                      <span>created {formatDistanceToNow(new Date(Number(post.endTime) * 1000 - 7 * 24 * 60 * 60 * 1000), { addSuffix: true, includeSeconds: false }).replace('about ', '')}</span>
+                    </div>
+                    <div className="flex items-center gap-1 justify-end sm:justify-start">
+                      <User className="h-3 w-3" />
+                      <span className="font-mono text-[10px] sm:text-xs">{post.owner.slice(0, 6)}...{post.owner.slice(-4)}</span>
+                      <button
+                        onClick={() => copyAddress(post.owner)}
+                        className="ml-1 p-0.5 hover:bg-muted rounded transition-colors"
+                        title="Copy address"
+                      >
+                        <Copy className="h-3 w-3" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </CardHeader>

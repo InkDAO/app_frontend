@@ -19,6 +19,7 @@ export const MyPostsPage = () => {
   const [searchMode, setSearchMode] = useState<'title' | 'tags'>('title');
   const [taggedPosts, setTaggedPosts] = useState<Post[]>([]);
   const [isTagSearchLoading, setIsTagSearchLoading] = useState(false);
+  const [hasSelectedTags, setHasSelectedTags] = useState(false);
   const { allPosts, isAllPostLoading } = usePosts();
 
   const myPosts = allPosts.filter((post) => {
@@ -27,6 +28,8 @@ export const MyPostsPage = () => {
 
   // Handle tag search
   const handleTagSearch = async (tags: string[]) => {
+    setHasSelectedTags(tags.length > 0);
+    
     if (tags.length === 0) {
       setTaggedPosts([]);
       return;
@@ -53,8 +56,13 @@ export const MyPostsPage = () => {
   // Get the posts to display based on search mode
   const getPostsToDisplay = () => {
     if (searchMode === 'tags') {
-      // If no tags selected, show all my posts; otherwise show tagged posts
-      return taggedPosts.length === 0 ? myPosts : taggedPosts;
+      // If no tags selected, show all my posts
+      if (!hasSelectedTags) {
+        return myPosts;
+      }
+      // If tags selected but no matches found, show empty array
+      // If tags selected and matches found, show tagged posts
+      return taggedPosts;
     } else {
       // Filter posts based on search term (title search)
       return myPosts.filter(post => 

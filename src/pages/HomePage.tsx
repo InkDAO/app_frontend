@@ -16,6 +16,7 @@ const HomePage = () => {
   const [searchMode, setSearchMode] = useState<'title' | 'tags'>('title');
   const [taggedPosts, setTaggedPosts] = useState<Post[]>([]);
   const [isTagSearchLoading, setIsTagSearchLoading] = useState(false);
+  const [hasSelectedTags, setHasSelectedTags] = useState(false);
   const { allPosts, isAllPostLoading, refetchPosts } = usePosts();
 
   // Filter posts that haven't expired yet
@@ -26,6 +27,8 @@ const HomePage = () => {
 
   // Handle tag search
   const handleTagSearch = async (tags: string[]) => {
+    setHasSelectedTags(tags.length > 0);
+    
     if (tags.length === 0) {
       setTaggedPosts([]);
       return;
@@ -52,10 +55,12 @@ const HomePage = () => {
   // Get the posts to display based on search mode
   const getPostsToDisplay = () => {
     if (searchMode === 'tags') {
-      // If no tags selected, show all active posts; otherwise filter tagged posts that are also active
-      if (taggedPosts.length === 0) {
+      // If no tags selected, show all active posts
+      if (!hasSelectedTags) {
         return activePosts;
       }
+      // If tags selected but no matches found, show empty array
+      // If tags selected and matches found, filter tagged posts that are also active
       return taggedPosts.filter(post => {
         const currentTimestamp = Math.floor(Date.now() / 1000);
         return !post.archived && currentTimestamp < parseInt(post.endTime);

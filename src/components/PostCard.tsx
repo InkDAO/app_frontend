@@ -383,16 +383,39 @@ export const PostCard = ({ post }: PostCardProps) => {
         <div className="px-3 md:px-6">
           <Card className="mb-6 border-l-4 border-l-primary/20">
             <CardHeader className="pb-2">
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-2">
                 <CardTitle className="text-2xl md:text-3xl group-hover:text-primary transition-colors break-words leading-tight">
                   {post.postTitle}
                 </CardTitle>
+                
                 {/* Hashtags in comment overlay */}
                 {hashtags.length > 0 && (
-                  <div className="mt-3">
+                  <div>
                     {renderHashtags(false)}
                   </div>
                 )}
+                
+                {/* Created by / at information in overlay - positioned after hashtags and right-aligned */}
+                <div className="flex flex-row gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground justify-end">
+                  <div className="flex items-center gap-1 justify-end sm:justify-start">
+                    <Calendar className="h-3 w-3" />
+                    <span>created {formatDistanceToNow(new Date(Number(post.endTime) * 1000 - 7 * 24 * 60 * 60 * 1000), { addSuffix: true, includeSeconds: false }).replace('about ', '')}</span>
+                  </div>
+                  <div className="flex items-center gap-1 justify-end sm:justify-start">
+                    <User className="h-3 w-3" />
+                    <span className="font-mono text-xs">{post.owner.slice(0, 6)}...{post.owner.slice(-4)}</span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        copyAddress(post.owner);
+                      }}
+                      className="ml-1 p-0.5 hover:bg-muted rounded transition-colors"
+                      title="Copy address"
+                    >
+                      <Copy className="h-3 w-3" />
+                    </button>
+                  </div>
+                </div>
               </div>
             </CardHeader>
 

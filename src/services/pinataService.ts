@@ -251,7 +251,9 @@ export const fetchFromIPFS = async (cid: string): Promise<IPFSContentResult> => 
 
 export const handleGetFilesByTags = async (tags: string[]): Promise<FileMetadata[]> => {
   try {
-    const tagsParam = tags.join(',');
+    // Convert all tags to lowercase for consistent searching
+    const lowercaseTags = tags.map(tag => tag.trim().toLowerCase());
+    const tagsParam = lowercaseTags.join(',');
     const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/filesByTags?tags=${tagsParam}`, {
       method: "GET",
       headers: {

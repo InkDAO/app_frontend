@@ -89,10 +89,10 @@ export const CommentForm = ({ postId, onCommentAdded }: CommentFormProps) => {
       }
       const groupId = groupResponse.group?.id || "";
 
-      const commentFile = new File([comment.trim()], comment.trim(), {
+      const commentFile = new File([comment.trim()], comment.trim().slice(0, 50), {
         type: "application/json" 
       });
-      const commentResult = await handleUpload(comment.trim(), groupId, commentFile, "comment");
+      const commentResult = await handleUpload(comment.trim().slice(0, 50), groupId, commentFile, "comment");
       let commentCid = "";
       if (commentResult.success) {
         commentCid = commentResult.cid || "";

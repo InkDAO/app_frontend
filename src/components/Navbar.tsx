@@ -2,7 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { CustomConnectButton } from './ConnectButton';
 import { useTheme } from "@/context/ThemeContext";
 import { Button } from "@/components/ui/button";
-import { Moon, Sun, ArchiveIcon, MessageSquare, Menu, HomeIcon, MessageCircle, Megaphone } from "lucide-react";
+import { Moon, Sun, ArchiveIcon, MessageSquare, Menu, HomeIcon, MessageCircle, Megaphone, Edit3 } from "lucide-react";
 import { FaXTwitter, FaLinkedinIn, FaGithub, FaTelegram, FaGlobe } from 'react-icons/fa6';
 import { SiGitbook } from 'react-icons/si';
 import {
@@ -94,6 +94,12 @@ const Navbar = () => {
                   <Link to="/app/my-comments" className="cursor-pointer w-full">
                     <MessageCircle className="mr-2 h-4 w-4" />
                     My Comments
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/app/editor" className="cursor-pointer w-full">
+                    <Edit3 className="mr-2 h-4 w-4" />
+                    Editor
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
@@ -194,6 +200,21 @@ const Navbar = () => {
                       }}>
                         <MessageCircle className="mr-2 h-6 w-6" />
                         My Comments
+                      </NavigationMenuLink>
+                    </Link>
+                  </NavigationMenuItem>
+                  <NavigationMenuItem>
+                    <Link to="/app/editor">
+                      <NavigationMenuLink className={navigationMenuTriggerStyle()} style={{
+                        backgroundColor: location.pathname === "/app/editor" ? (theme === "light" ? "#E0E0E0" : "#3A3A3A") : "",
+                        color: theme === "light" ? "#1A1A1A" : "#E0E0E0",
+                        borderRadius: "6px",
+                        padding: "6px 12px",
+                        height: "auto",
+                        transition: "all 0.3s ease",
+                      }}>
+                        <Edit3 className="mr-2 h-6 w-6" />
+                        Editor
                       </NavigationMenuLink>
                     </Link>
                   </NavigationMenuItem>

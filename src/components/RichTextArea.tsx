@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { AlignCenter, AlignLeft, AlignRight, Link, List, ListOrdered, AlignJustify, ChevronDown, Italic, Underline, Strikethrough, Heading, Bold, Code } from 'lucide-react';
 import { LinkModal } from './LinkModal';
+import { EmojiPicker } from './EmojiPicker';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -323,6 +324,17 @@ export const RichTextArea = ({
         }
     };
 
+    const handleEmojiInsert = (emoji: string) => {
+        // Ensure editor is focused
+        ReactEditor.focus(editor);
+        
+        // Insert just the emoji - no automatic space
+        Transforms.insertText(editor, emoji);
+        
+        // Move cursor to after the emoji without adding extra space
+        // This should resolve the spacing issue while maintaining cursor position
+    };
+
     return (
         <div 
             className={cn("border rounded-md py-3 flex flex-col", className, "focus-within:ring focus-within:ring-gray-900 dark:focus-within:ring-white focus-within:ring-opacity-50")}
@@ -343,41 +355,98 @@ export const RichTextArea = ({
                     }
                 }}
             >
-                <div className="border-b flex flex-wrap gap-1 md:gap-6 items-center md:pl-4 pb-2 mb-2 justify-center">
-                    <span
-                        onClick={(e) => { e.preventDefault(); toggleMark(editor, 'bold'); }}
-                        className={cn("cursor-pointer p-1 rounded-md hover:bg-accent hover:text-accent-foreground", isMarkActive(editor, 'bold') && 'bg-accent')}
-                        title="Bold"
-                    >
-                        <Bold className="h-4 w-4 md:h-5 md:w-5" />
-                    </span>
-                    <span
-                        onClick={(e) => {
-                            e.preventDefault();
-                            toggleMark(editor, 'italic');
-                        }}
-                        className={cn("cursor-pointer p-1 rounded-md hover:bg-accent hover:text-accent-foreground", isMarkActive(editor, 'italic') && 'bg-accent')}
-                        title="Italic"
-                    >
-                        <Italic className="h-4 w-4 md:h-5 md:w-5" />
-                    </span>
-                    <span
-                        onClick={(e) => {
-                            e.preventDefault();
-                            toggleMark(editor, 'underline');
-                        }}
-                        className={cn("cursor-pointer p-1 rounded-md hover:bg-accent hover:text-accent-foreground", isMarkActive(editor, 'underline') && 'bg-accent')}
-                        title="Underline"
-                    >
-                        <Underline className="h-4 w-4 md:h-5 md:w-5" />
-                    </span>
-                    <span
-                        onClick={(e) => { e.preventDefault(); toggleMark(editor, 'strikethrough'); }}
-                        className={cn("cursor-pointer p-1 rounded-md hover:bg-accent hover:text-accent-foreground", isMarkActive(editor, 'strikethrough') && 'bg-accent')}
-                        title="Strikethrough"
-                    >
-                        <Strikethrough className="h-4 w-4 md:h-5 md:w-5" />
-                    </span>
+                <div className="border-b flex flex-wrap gap-2 md:gap-6 items-center md:pl-4 pb-2 mb-2 justify-center">
+                    <div className="md:hidden">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="flex items-center gap-0.2"
+                                >
+                                    <Bold />
+                                    <span className="bg-gray-100 dark:bg-gray-800">
+                                        <ChevronDown />
+                                    </span>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start" className='md:gap-4'>
+                                <DropdownMenuItem
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        toggleMark(editor, 'bold');
+                                    }}
+                                >
+                                    <Bold />
+                                    Bold
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        toggleMark(editor, 'italic');
+                                    }}
+                                >
+                                    <Italic />
+                                    Italic
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        toggleMark(editor, 'underline');
+                                    }}
+                                >
+                                    <Underline />
+                                    Underline
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        toggleMark(editor, 'strikethrough');
+                                    }}
+                                >
+                                    <Strikethrough />
+                                    Strikethrough
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+
+                    <div className="hidden md:flex md:gap-4 items-center">
+                        <span
+                            onClick={(e) => { e.preventDefault(); toggleMark(editor, 'bold'); }}
+                            className={cn("cursor-pointer p-1 rounded-md hover:bg-accent hover:text-accent-foreground", isMarkActive(editor, 'bold') && 'bg-accent')}
+                            title="Bold"
+                        >
+                            <Bold className="h-4 w-4 md:h-5 md:w-5" />
+                        </span>
+                        <span
+                            onClick={(e) => {
+                                e.preventDefault();
+                                toggleMark(editor, 'italic');
+                            }}
+                            className={cn("cursor-pointer p-1 rounded-md hover:bg-accent hover:text-accent-foreground", isMarkActive(editor, 'italic') && 'bg-accent')}
+                            title="Italic"
+                        >
+                            <Italic className="h-4 w-4 md:h-5 md:w-5" />
+                        </span>
+                        <span
+                            onClick={(e) => {
+                                e.preventDefault();
+                                toggleMark(editor, 'underline');
+                            }}
+                            className={cn("cursor-pointer p-1 rounded-md hover:bg-accent hover:text-accent-foreground", isMarkActive(editor, 'underline') && 'bg-accent')}
+                            title="Underline"
+                        >
+                            <Underline className="h-4 w-4 md:h-5 md:w-5" />
+                        </span>
+                        <span
+                            onClick={(e) => { e.preventDefault(); toggleMark(editor, 'strikethrough'); }}
+                            className={cn("cursor-pointer p-1 rounded-md hover:bg-accent hover:text-accent-foreground", isMarkActive(editor, 'strikethrough') && 'bg-accent')}
+                            title="Strikethrough"
+                        >
+                            <Strikethrough className="h-4 w-4 md:h-5 md:w-5" />
+                        </span>
+                    </div>
 
                     <span
                         onClick={(e) => { e.preventDefault(); toggleHeading(editor); }}
@@ -557,6 +626,8 @@ export const RichTextArea = ({
                     >
                         <Link className="h-4 w-4 md:h-5 md:w-5"/>
                     </span>
+
+                    <EmojiPicker onEmojiSelect={handleEmojiInsert} />
                 </div>
 
                 <div className="flex-1 overflow-y-auto overflow-x-hidden">

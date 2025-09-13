@@ -6,6 +6,7 @@ import { RichTextArea } from "./RichTextArea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/components/ui/sonner";
 import { MessageSquare } from "lucide-react";
+import { handleGetGroupByName, handleUpload } from "@/services/pinataService";
 
 interface CommentFormProps {
   postId: string;
@@ -16,6 +17,7 @@ export const CommentForm = ({ postId, onCommentAdded }: CommentFormProps) => {
   const [comment, setComment] = useState("");
   const { isConnected } = useAccount();
   const [resetKey, setResetKey] = useState(0);
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const { addComment, isPending, isSuccess, isError, isConfirming, isConfirmed, hash } = useAddComment();
   const [hasShownSuccess, setHasShownSuccess] = useState(false);
 
@@ -31,6 +33,7 @@ export const CommentForm = ({ postId, onCommentAdded }: CommentFormProps) => {
     if (isConfirmed && !hasShownSuccess) {
       setComment("");
       setResetKey(prev => prev + 1);
+      setIsSubmittingComment(false);
       toast.success("Comment added successfully!", {
         description: (
           <div>
@@ -58,6 +61,7 @@ export const CommentForm = ({ postId, onCommentAdded }: CommentFormProps) => {
   // Handle error state
   useEffect(() => {
     if (isError) {
+      setIsSubmittingComment(false);
       toast.error("Failed to comment. Please try again.");
     }
   }, [isError]);
@@ -75,17 +79,38 @@ export const CommentForm = ({ postId, onCommentAdded }: CommentFormProps) => {
       return;
     }
     
+    // Set loading state immediately
+    setIsSubmittingComment(true);
+    
     try {
+      const groupResponse = await handleGetGroupByName(postId.slice(0, 50));
+      if (groupResponse.error) {
+        throw new Error(`Failed to get group by name: ${groupResponse.error}`);
+      }
+      const groupId = groupResponse.group?.id || "";
+
+      const commentFile = new File([comment.trim()], comment.trim().slice(0, 50), {
+        type: "application/json" 
+      });
+      const commentResult = await handleUpload(comment.trim().slice(0, 50), groupId, commentFile, "comment");
+      let commentCid = "";
+      if (commentResult.success) {
+        commentCid = commentResult.cid || "";
+      } else {
+        throw new Error(`Comment upload failed: ${commentResult.error}`);
+      }
+      
       await addComment({ 
-        postId, 
-        comment: comment.trim() 
+        postId,
+        commentCid
       });
     } catch (error) {
       console.error("Error posting comment:", error);
+      setIsSubmittingComment(false);
     }
   };
 
-  const isButtonDisabled = isPending || isConfirming || !isConnected;
+  const isButtonDisabled = isPending || isConfirming || !isConnected || isSubmittingComment;
   
   return (
     <Card className="mb-6">
@@ -98,7 +123,9 @@ export const CommentForm = ({ postId, onCommentAdded }: CommentFormProps) => {
             placeholder="Add Comments..."
             value={comment}
             onChange={setComment}
-            className="min-h-60 resize-none overflow-hidden mb-4"
+            className={`min-h-60 resize-none overflow-hidden mb-4 ${
+              (isSubmittingComment || isPending || isConfirming) ? 'cursor-not-allowed select-none pointer-events-none opacity-75' : ''
+            }`}
             disabled={isButtonDisabled}
             key={resetKey}
           />
@@ -109,7 +136,7 @@ export const CommentForm = ({ postId, onCommentAdded }: CommentFormProps) => {
               disabled={isButtonDisabled}
             >
               <MessageSquare className="h-4 w-4" />
-              {isPending ? "Pending..." : isConfirming ? "Confirming..." : "Comment"}
+              {isSubmittingComment ? "Uploading..." : isPending ? "Pending..." : isConfirming ? "Confirming..." : "Comment"}
             </Button>
           </div>
         </form>

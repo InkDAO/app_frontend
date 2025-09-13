@@ -11,7 +11,7 @@ export const useAddPost = () => {
     hash,
   });
 
-  const addPost = async (postData: { postTitle: string, postBody: string }) => {
+  const addPost = async (postData: { postId: string, postTitle: string, postCid: string, imageCid: string }) => {
     if (!address) {
       throw new Error("No account connected");
     }
@@ -21,7 +21,7 @@ export const useAddPost = () => {
         address: maxterdXConfig.address as `0x${string}`,
         abi: maxterdXConfig.abi,
         functionName: 'addPost',
-        args: [postData.postTitle, postData.postBody],
+        args: [postData.postId as `0x${string}`, postData.postTitle, postData.postCid, postData.imageCid],
         account: address,
         chain: sepolia,
       });
@@ -54,7 +54,7 @@ export const useAddComment = () => {
     hash,
   });
 
-  const addComment = async (commentData: { postId: string, comment: string }) => {
+  const addComment = async (commentData: { postId: string, commentCid: string }) => {
     if (!address) {
       throw new Error("No account connected");
     }
@@ -64,7 +64,7 @@ export const useAddComment = () => {
         address: maxterdXConfig.address as `0x${string}`,
         abi: maxterdXConfig.abi,
         functionName: 'addComment',
-        args: [commentData.postId as `0x${string}`, commentData.comment],
+        args: [commentData.postId as `0x${string}`, commentData.commentCid],
         account: address,
         chain: sepolia,
       });
@@ -126,13 +126,13 @@ export const useGetUserComments = (owner: string) => {
 
     // Process comments for the current post
     commentInfos.forEach((commentInfo: any) => {
-      const { postId: commentPostId, comment, owner: commentOwner } = commentInfo;
+      const { postId: commentPostId, commentcid, owner: commentOwner } = commentInfo;
       if (commentOwner && commentOwner.toLowerCase() === owner.toLowerCase()) {
         setUserComments(prev => [
           ...prev,
           {
             postId: commentPostId,
-            comment: comment,
+            commentCid: commentcid,
             owner: commentOwner,
             postTitle: postInfo?.postTitle,
           },

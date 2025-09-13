@@ -189,45 +189,6 @@ export const ArchivePage = () => {
               )}
             </div>
 
-            {/* Archive Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-              <div className="bg-card p-4 rounded-lg border">
-                <div className="flex items-center gap-2">
-                  <Archive className="h-5 w-5 text-gray-500" />
-                  <h3 className="font-semibold">Total Archived</h3>
-                </div>
-                <p className="text-2xl font-bold mt-2">{archivedPosts.length}</p>
-              </div>
-              <div className="bg-card p-4 rounded-lg border">
-                <div className="flex items-center gap-2">
-                  <FolderOpen className="h-5 w-5 text-orange-500" />
-                  <h3 className="font-semibold">Manually Archived</h3>
-                </div>
-                <p className="text-2xl font-bold mt-2">
-                  {archivedPosts.filter(post => post.archived).length}
-                </p>
-              </div>
-              <div className="bg-card p-4 rounded-lg border">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-red-500" />
-                  <h3 className="font-semibold">Expired</h3>
-                </div>
-                <p className="text-2xl font-bold mt-2">
-                  {archivedPosts.filter(post => {
-                    const currentTimestamp = Math.floor(Date.now() / 1000);
-                    return !post.archived && currentTimestamp >= parseInt(post.endTime);
-                  }).length}
-                </p>
-              </div>
-              <div className="bg-card p-4 rounded-lg border">
-                <div className="flex items-center gap-2">
-                  <Search className="h-5 w-5 text-blue-500" />
-                  <h3 className="font-semibold">Search Results</h3>
-                </div>
-                <p className="text-2xl font-bold mt-2">{sortedAndFilteredPosts.length}</p>
-              </div>
-            </div>
-
             {/* Archive Posts Results */}
             {(isTagSearchLoading) ? (
               <div className="flex justify-center items-center py-4 md:py-8">

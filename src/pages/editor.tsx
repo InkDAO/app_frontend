@@ -15,18 +15,129 @@ import Underline from '@editorjs/underline';
 import Delimiter from '@editorjs/delimiter';
 import '../styles/editor.css';
 
+const STORAGE_KEY = 'editorjs-content';
+const TITLE_STORAGE_KEY = 'editorjs-title';
+const IMAGE_SIZES_KEY = 'editorjs-image-sizes';
+
 const EditorPage = () => {
   const editorRef = useRef<EditorJS | null>(null);
   const holderRef = useRef<HTMLDivElement>(null);
   const [documentTitle, setDocumentTitle] = useState('');
+  const [lastSaved, setLastSaved] = useState<string>('');
+  const [autoSaveTimeout, setAutoSaveTimeout] = useState<NodeJS.Timeout | null>(null);
+
+  // Load saved content from localStorage
+  const loadSavedContent = () => {
+    try {
+      const savedContent = localStorage.getItem(STORAGE_KEY);
+      const savedTitle = localStorage.getItem(TITLE_STORAGE_KEY);
+      
+      if (savedTitle) {
+        setDocumentTitle(savedTitle);
+      }
+      
+      return savedContent ? JSON.parse(savedContent) : null;
+    } catch (error) {
+      console.error('Error loading saved content:', error);
+      return null;
+    }
+  };
+
+  // Image size management functions
+  const getImageSizes = () => {
+    try {
+      const sizes = localStorage.getItem(IMAGE_SIZES_KEY);
+      return sizes ? JSON.parse(sizes) : {};
+    } catch (error) {
+      console.error('Error loading image sizes:', error);
+      return {};
+    }
+  };
+
+  const saveImageSize = (imageId: string, width: number, height: number) => {
+    try {
+      const sizes = getImageSizes();
+      sizes[imageId] = { width, height };
+      localStorage.setItem(IMAGE_SIZES_KEY, JSON.stringify(sizes));
+      console.log(`Saved image size for ${imageId}:`, { width, height });
+    } catch (error) {
+      console.error('Error saving image size:', error);
+    }
+  };
+
+  const getImageId = (img: HTMLImageElement) => {
+    // Create a unique identifier using image src and some context
+    const src = img.src || img.getAttribute('data-src') || '';
+    const alt = img.alt || '';
+    const parent = img.closest('.ce-block');
+    const blockIndex = parent ? Array.from(parent.parentElement?.children || []).indexOf(parent) : 0;
+    return `${src}_${alt}_${blockIndex}`.replace(/[^a-zA-Z0-9_-]/g, '_');
+  };
+
+  const applySavedImageSizes = () => {
+    if (!holderRef.current) return;
+    
+    const sizes = getImageSizes();
+    const images = holderRef.current.querySelectorAll('img');
+    
+    images.forEach(img => {
+      const imageElement = img as HTMLImageElement;
+      const imageId = getImageId(imageElement);
+      
+      if (sizes[imageId]) {
+        const { width, height } = sizes[imageId];
+        imageElement.style.width = `${width}px`;
+        imageElement.style.height = `${height}px`;
+        imageElement.style.maxWidth = 'none';
+        console.log(`Applied saved size to image ${imageId}:`, { width, height });
+      }
+    });
+  };
+
+  // Save content to localStorage
+  const saveContent = async () => {
+    if (!editorRef.current) return;
+    
+    try {
+      const outputData = await editorRef.current.save();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(outputData));
+      localStorage.setItem(TITLE_STORAGE_KEY, documentTitle);
+      
+      const now = new Date().toLocaleTimeString();
+      setLastSaved(`Last saved at ${now}`);
+      
+      console.log('Content saved successfully', outputData);
+    } catch (error) {
+      console.error('Error saving content:', error);
+    }
+  };
+
+  // Auto-save with debouncing
+  const autoSave = () => {
+    // Clear existing timeout
+    if (autoSaveTimeout) {
+      clearTimeout(autoSaveTimeout);
+    }
+    
+    // Set new timeout for auto-save after 2 seconds of inactivity
+    const timeout = setTimeout(() => {
+      saveContent();
+    }, 2000);
+    
+    setAutoSaveTimeout(timeout);
+  };
 
   useEffect(() => {
     if (!holderRef.current) return;
+
+    // Load saved content
+    const savedData = loadSavedContent();
 
     const editor = new EditorJS({
       holder: holderRef.current,
       placeholder: "Write '/' for commands...",
       autofocus: true,
+      data: savedData || undefined,
       tools: {
         header: {
           class: Header,
@@ -127,13 +238,18 @@ const EditorPage = () => {
         }
       },
       onChange: () => {
-        console.log('Content changed');
+        console.log('Content changed - triggering auto-save');
+        autoSave();
       },
       onReady: () => {
         console.log('Editor.js is ready to work!');
         // Delay initialization to ensure DOM is ready
         setTimeout(() => {
           initializeImageResizing();
+          // Apply saved image sizes after initialization
+          setTimeout(() => {
+            applySavedImageSizes();
+          }, 200);
         }, 500);
       }
     });
@@ -144,8 +260,19 @@ const EditorPage = () => {
       if (editorRef.current && editorRef.current.destroy) {
         editorRef.current.destroy();
       }
+      // Clear auto-save timeout on cleanup
+      if (autoSaveTimeout) {
+        clearTimeout(autoSaveTimeout);
+      }
     };
   }, []);
+
+  // Save title when it changes (with debouncing)
+  useEffect(() => {
+    if (documentTitle) {
+      localStorage.setItem(TITLE_STORAGE_KEY, documentTitle);
+    }
+  }, [documentTitle]);
 
   const initializeImageResizing = () => {
     console.log('Initializing image resizing...');
@@ -175,6 +302,19 @@ const EditorPage = () => {
           if (!processedImages.has(imgId) && !img.closest('.image-resize-wrapper')) {
             processedImages.add(imgId);
             addResizeHandles(img);
+            
+            // Apply saved size to this image
+            const imageElement = img as HTMLImageElement;
+            const imageId = getImageId(imageElement);
+            const sizes = getImageSizes();
+            if (sizes[imageId]) {
+              const { width, height } = sizes[imageId];
+              imageElement.style.width = `${width}px`;
+              imageElement.style.height = `${height}px`;
+              imageElement.style.maxWidth = 'none';
+              console.log(`Applied saved size to new image ${imageId}:`, { width, height });
+            }
+            
             foundImages++;
           }
         });
@@ -227,7 +367,11 @@ const EditorPage = () => {
       });
       
       if (hasImageChanges) {
-        setTimeout(() => scanAndAddHandles(), 200);
+        setTimeout(() => {
+          scanAndAddHandles();
+          // Also apply saved sizes to any new images
+          applySavedImageSizes();
+        }, 200);
       }
       
       if (hasQuoteChanges) {
@@ -251,6 +395,7 @@ const EditorPage = () => {
       // Initial scan with retries
       const initialScanWithRetry = (attempts = 0) => {
         const foundImages = scanAndAddHandles();
+        applySavedImageSizes(); // Apply saved sizes to all images
         
         // Retry up to 5 times with increasing delays
         if (attempts < 5) {
@@ -263,6 +408,7 @@ const EditorPage = () => {
       // More frequent periodic scan to catch any missed elements
       const periodicScan = setInterval(() => {
         scanAndAddHandles();
+        applySavedImageSizes(); // Restore image sizes
         ensureQuoteCaptions(); // Ensure quote captions are visible
         autoResizeCodeBlocks(); // Handle code block auto-resize
       }, 1000); // Reduced from 3000ms to 1000ms
@@ -410,6 +556,12 @@ const EditorPage = () => {
       isResizing = false;
       document.removeEventListener('mousemove', handleResize);
       document.removeEventListener('mouseup', stopResize);
+      
+      // Save the new image size when resize is complete
+      const imageId = getImageId(imageElement);
+      const currentWidth = parseInt(imageElement.style.width) || imageElement.offsetWidth;
+      const currentHeight = parseInt(imageElement.style.height) || imageElement.offsetHeight;
+      saveImageSize(imageId, currentWidth, currentHeight);
     };
 
     leftHandle.addEventListener('mousedown', (e) => startResize(e, leftHandle));
@@ -532,15 +684,24 @@ const EditorPage = () => {
     <div className="min-h-screen bg-white dark:bg-gray-900">
       <Navbar />
       
-      {/* Simple title input */}
+      {/* Title input and auto-save indicator */}
       <div className="max-w-4xl mx-auto px-8 pt-12 pb-4">
-        <input
-          type="text"
-          value={documentTitle}
-          onChange={(e) => setDocumentTitle(e.target.value)}
-          className="text-5xl font-bold bg-transparent border-none outline-none w-full text-gray-900 dark:text-gray-100 placeholder-gray-400"
-          placeholder="Untitled"
-        />
+        <div className="flex items-center justify-between mb-4">
+          <input
+            type="text"
+            value={documentTitle}
+            onChange={(e) => setDocumentTitle(e.target.value)}
+            className="text-5xl font-bold bg-transparent border-none outline-none flex-1 text-gray-900 dark:text-gray-100 placeholder-gray-400"
+            placeholder="Untitled"
+          />
+          {lastSaved && (
+            <div className="ml-4">
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                {lastSaved}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Main editor */}

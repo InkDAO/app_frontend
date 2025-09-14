@@ -750,3 +750,435 @@ textarea[placeholder*="Author"]:focus,
   background: rgba(255, 255, 255, 0.1) !important;
   color: #ff6b6b !important;
 }
+
+/* Preview Mode Styles */
+.preview-container {
+  color: rgb(55, 53, 47) !important;
+  line-height: 1.6 !important;
+  font-size: 16px !important;
+  padding-bottom: 100px !important;
+  max-width: none !important;
+  width: 100% !important;
+}
+
+.preview-container > * {
+  margin-bottom: 16px !important;
+  margin-top: 0 !important;
+}
+
+.preview-container > *:first-child {
+  margin-top: 0 !important;
+}
+
+.preview-container > *:last-child {
+  margin-bottom: 0 !important;
+}
+
+.preview-header-1,
+.preview-header-2,
+.preview-header-3,
+.preview-header-4,
+.preview-header-5,
+.preview-header-6 {
+  font-weight: 600 !important;
+  color: rgb(55, 53, 47) !important;
+  margin: 0.6em 0 4px 0 !important;
+}
+
+.preview-header-1 {
+  font-size: 2em !important;
+  line-height: 1.6 !important;
+}
+
+.preview-header-2 {
+  font-size: 1.6em !important;
+  line-height: 1.6 !important;
+}
+
+.preview-header-3 {
+  font-size: 1.4em !important;
+  line-height: 1.6 !important;
+}
+
+.preview-header-4 {
+  font-size: 1.2em !important;
+  line-height: 1.6 !important;
+}
+
+.preview-header-5 {
+  font-size: 1.1em !important;
+  line-height: 1.6 !important;
+}
+
+.preview-header-6 {
+  font-size: 1em !important;
+  line-height: 1.6 !important;
+  font-weight: 700 !important;
+}
+
+.preview-paragraph {
+  line-height: 1.6 !important;
+  font-size: 16px !important;
+  color: rgb(55, 53, 47) !important;
+  margin: 6px 0 !important;
+}
+
+.preview-list {
+  margin: 0 !important;
+  padding-left: 1.5em !important;
+}
+
+.preview-list li {
+  line-height: 1.6 !important;
+  margin: 2px 0 !important;
+  color: rgb(55, 53, 47) !important;
+}
+
+.preview-quote {
+  border-left: 3px solid #e1e1e1 !important;
+  margin: 20px 0 !important;
+  padding-left: 14px !important;
+  background: transparent !important;
+  border-top: none !important;
+  border-right: none !important;
+  border-bottom: none !important;
+}
+
+.preview-quote .quote-text {
+  font-size: 1.1em !important;
+  line-height: 1.6 !important;
+  font-style: italic !important;
+  color: rgb(55, 53, 47) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.preview-quote .quote-caption {
+  text-align: right !important;
+  color: #666 !important;
+  font-size: 14px !important;
+  font-style: italic !important;
+  margin: 8px 0 0 0 !important;
+  padding: 0 !important;
+  display: block !important;
+  width: 100% !important;
+}
+
+.preview-code {
+  background: #f7f6f3 !important;
+  border: 1px solid #e1e1e1 !important;
+  border-radius: 6px !important;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace !important;
+  padding: 12px !important;
+  margin: 10px 0 !important;
+  overflow-x: auto !important;
+}
+
+.preview-code code {
+  background: transparent !important;
+  border: none !important;
+  font-family: inherit !important;
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+  color: rgb(55, 53, 47) !important;
+  padding: 0 !important;
+}
+
+.preview-delimiter {
+  margin: 30px 0 !important;
+  text-align: center !important;
+}
+
+.preview-delimiter span {
+  font-size: 18px !important;
+  color: #ccc !important;
+  letter-spacing: 8px !important;
+}
+
+.preview-image {
+  text-align: center !important;
+  margin: 20px 0 !important;
+  display: block !important;
+}
+
+.preview-image-img {
+  border-radius: 8px !important;
+  max-width: 100% !important;
+  height: auto !important;
+  display: block !important;
+  margin: 0 auto !important;
+}
+
+/* Override max-width when custom dimensions are applied */
+.preview-image-img[style*="width"] {
+  max-width: none !important;
+}
+
+.preview-image-caption {
+  color: #666 !important;
+  font-size: 14px !important;
+  text-align: center !important;
+  margin-top: 8px !important;
+  font-style: italic !important;
+}
+
+.preview-table {
+  border-collapse: collapse !important;
+  width: 100% !important;
+  margin: 20px 0 !important;
+}
+
+.preview-table td {
+  border: 1px solid #e1e1e1 !important;
+  padding: 8px 12px !important;
+  color: rgb(55, 53, 47) !important;
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+}
+
+.preview-link {
+  border: 1px solid #e1e1e1 !important;
+  border-radius: 8px !important;
+  padding: 12px !important;
+  margin: 10px 0 !important;
+  background: #fafafa !important;
+  display: block !important;
+}
+
+.preview-link a {
+  text-decoration: none !important;
+  color: inherit !important;
+  display: flex !important;
+  gap: 12px !important;
+  align-items: flex-start !important;
+}
+
+.preview-link .link-image {
+  width: 80px !important;
+  height: 80px !important;
+  object-fit: cover !important;
+  border-radius: 6px !important;
+  flex-shrink: 0 !important;
+}
+
+.preview-link .link-content {
+  flex: 1 !important;
+}
+
+.preview-link .link-title {
+  font-weight: 600 !important;
+  font-size: 16px !important;
+  line-height: 1.4 !important;
+  color: rgb(55, 53, 47) !important;
+  margin-bottom: 4px !important;
+}
+
+.preview-link .link-description {
+  color: #666 !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+  margin-bottom: 4px !important;
+}
+
+.preview-link .link-url {
+  color: #999 !important;
+  font-size: 12px !important;
+  text-decoration: underline !important;
+}
+
+.preview-unknown {
+  background: #f9f9f9 !important;
+  border: 1px dashed #ccc !important;
+  padding: 12px !important;
+  margin: 10px 0 !important;
+  border-radius: 4px !important;
+  color: #666 !important;
+  font-style: italic !important;
+}
+
+/* Dark mode for preview */
+.dark .preview-container {
+  color: rgb(255, 255, 255) !important;
+}
+
+.dark .preview-header-1,
+.dark .preview-header-2,
+.dark .preview-header-3,
+.dark .preview-header-4,
+.dark .preview-header-5,
+.dark .preview-header-6 {
+  color: rgb(255, 255, 255) !important;
+}
+
+.dark .preview-paragraph {
+  color: rgb(255, 255, 255) !important;
+}
+
+.dark .preview-list li {
+  color: rgb(255, 255, 255) !important;
+}
+
+.dark .preview-quote {
+  border-left: 3px solid rgb(55, 55, 55) !important;
+}
+
+.dark .preview-quote .quote-text {
+  color: rgb(255, 255, 255) !important;
+}
+
+.dark .preview-quote .quote-caption {
+  color: rgb(155, 155, 155) !important;
+}
+
+.dark .preview-code {
+  background: rgb(37, 37, 37) !important;
+  border: 1px solid rgb(55, 55, 55) !important;
+}
+
+.dark .preview-code code {
+  color: rgb(255, 255, 255) !important;
+}
+
+.dark .preview-delimiter span {
+  color: rgb(100, 100, 100) !important;
+}
+
+.dark .preview-image-caption {
+  color: rgb(155, 155, 155) !important;
+}
+
+.dark .preview-table td {
+  border: 1px solid rgb(55, 55, 55) !important;
+  background: rgb(25, 25, 25) !important;
+  color: rgb(255, 255, 255) !important;
+}
+
+.dark .preview-link {
+  background: rgb(37, 37, 37) !important;
+  border: 1px solid rgb(55, 55, 55) !important;
+}
+
+.dark .preview-link .link-title {
+  color: rgb(255, 255, 255) !important;
+}
+
+.dark .preview-link .link-description {
+  color: rgb(155, 155, 155) !important;
+}
+
+.dark .preview-link .link-url {
+  color: rgb(120, 120, 120) !important;
+}
+
+.dark .preview-unknown {
+  background: rgb(37, 37, 37) !important;
+  border: 1px dashed rgb(100, 100, 100) !important;
+  color: rgb(155, 155, 155) !important;
+}
+
+/* Tab Navigation Styles */
+.tab-nav {
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 24px;
+}
+
+.dark .tab-nav {
+  border-bottom: 1px solid #374151;
+}
+
+.tab-button {
+  position: relative;
+  padding: 12px 4px;
+  margin-right: 32px;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 20px;
+  transition: all 0.2s ease-in-out;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.tab-button:focus {
+  outline: none;
+}
+
+.tab-button.active {
+  color: #2563eb;
+  border-bottom-color: #2563eb;
+}
+
+.dark .tab-button.active {
+  color: #60a5fa;
+  border-bottom-color: #60a5fa;
+}
+
+.tab-button:not(.active) {
+  color: #6b7280;
+}
+
+.dark .tab-button:not(.active) {
+  color: #9ca3af;
+}
+
+.tab-button:not(.active):hover {
+  color: #374151;
+  border-bottom-color: #d1d5db;
+}
+
+.dark .tab-button:not(.active):hover {
+  color: #d1d5db;
+  border-bottom-color: #4b5563;
+}
+
+/* Enhanced focus states for tabs */
+.tab-button:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.dark .tab-button:focus-visible {
+  outline: 2px solid #60a5fa;
+}
+
+/* Tab content area */
+.tab-content {
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Hide editor completely when in preview mode */
+.preview-mode .ce-toolbar,
+.preview-mode .ce-block,
+.preview-mode .ce-popover,
+.preview-mode .ce-inline-toolbar,
+.preview-mode .ce-conversion-toolbar,
+.preview-mode #editorjs,
+.preview-mode [data-tool],
+.preview-mode .codex-editor,
+.preview-mode .ce-redactor {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Ensure preview container is fully visible when active */
+.preview-mode .preview-container {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import EditorJS from '@editorjs/editorjs';
 import Navbar from "@/components/Navbar";
+import EditorPreview from "@/components/EditorPreview";
 import Header from '@editorjs/header';
 import List from '@editorjs/list';
 import Paragraph from '@editorjs/paragraph';
@@ -25,6 +26,8 @@ const EditorPage = () => {
   const [documentTitle, setDocumentTitle] = useState('');
   const [lastSaved, setLastSaved] = useState<string>('');
   const [autoSaveTimeout, setAutoSaveTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const [previewData, setPreviewData] = useState<any>(null);
 
   // Load saved content from localStorage
   const loadSavedContent = () => {
@@ -127,17 +130,50 @@ const EditorPage = () => {
     setAutoSaveTimeout(timeout);
   };
 
+  // Toggle between edit and preview modes
+  const togglePreview = async () => {
+    if (isPreviewMode) {
+      // Switch back to edit mode - useEffect will handle editor recreation
+      setIsPreviewMode(false);
+    } else {
+      // Switch to preview mode - save current content first
+      if (editorRef.current) {
+        try {
+          const outputData = await editorRef.current.save();
+          setPreviewData(outputData);
+          // Also save to localStorage as backup
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(outputData));
+          setIsPreviewMode(true);
+        } catch (error) {
+          console.error('Error saving content for preview:', error);
+        }
+      }
+    }
+  };
+
+
   useEffect(() => {
-    if (!holderRef.current) return;
+    if (!holderRef.current || isPreviewMode) return;
 
-    // Load saved content
-    const savedData = loadSavedContent();
+    // Small delay to ensure DOM is ready
+    const timer = setTimeout(() => {
+      // Destroy existing editor if it exists
+      if (editorRef.current && editorRef.current.destroy) {
+        editorRef.current.destroy();
+        editorRef.current = null;
+      }
 
-    const editor = new EditorJS({
+      // Load saved content
+      const savedData = loadSavedContent();
+      
+      // Use preview data if available, otherwise use saved data
+      const initialData = previewData || savedData;
+
+      const editor = new EditorJS({
       holder: holderRef.current,
       placeholder: "Write '/' for commands...",
       autofocus: true,
-      data: savedData || undefined,
+      data: initialData || undefined,
       tools: {
         header: {
           class: Header,
@@ -254,9 +290,11 @@ const EditorPage = () => {
       }
     });
 
-    editorRef.current = editor;
+      editorRef.current = editor;
+    }, 100); // Small delay to ensure DOM is ready
 
     return () => {
+      clearTimeout(timer);
       if (editorRef.current && editorRef.current.destroy) {
         editorRef.current.destroy();
       }
@@ -265,7 +303,7 @@ const EditorPage = () => {
         clearTimeout(autoSaveTimeout);
       }
     };
-  }, []);
+  }, [isPreviewMode, previewData]);
 
   // Save title when it changes (with debouncing)
   useEffect(() => {
@@ -273,6 +311,7 @@ const EditorPage = () => {
       localStorage.setItem(TITLE_STORAGE_KEY, documentTitle);
     }
   }, [documentTitle]);
+
 
   const initializeImageResizing = () => {
     console.log('Initializing image resizing...');
@@ -681,38 +720,71 @@ const EditorPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
+    <div className={`min-h-screen bg-white dark:bg-gray-900 ${isPreviewMode ? 'preview-mode' : ''}`}>
       <Navbar />
       
       {/* Title input and auto-save indicator */}
       <div className="max-w-4xl mx-auto px-8 pt-12 pb-4">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-6">
           <input
             type="text"
             value={documentTitle}
             onChange={(e) => setDocumentTitle(e.target.value)}
             className="text-5xl font-bold bg-transparent border-none outline-none flex-1 text-gray-900 dark:text-gray-100 placeholder-gray-400"
             placeholder="Untitled"
+            disabled={isPreviewMode}
           />
-          {lastSaved && (
-            <div className="ml-4">
-              <span className="text-sm text-gray-500 dark:text-gray-400">
-                {lastSaved}
-              </span>
-            </div>
-          )}
+        </div>
+
+        {/* Tab Navigation */}
+        <div className="border-b border-gray-200 dark:border-gray-700">
+          <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+            <button
+              onClick={() => {
+                if (isPreviewMode) {
+                  setIsPreviewMode(false);
+                }
+              }}
+              className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                !isPreviewMode
+                  ? 'border-blue-500 text-blue-600 dark:text-blue-400 dark:border-blue-400'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:border-gray-600'
+              }`}
+            >
+              Edit
+            </button>
+            <button
+              onClick={togglePreview}
+              className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                isPreviewMode
+                  ? 'border-blue-500 text-blue-600 dark:text-blue-400 dark:border-blue-400'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:border-gray-600'
+              }`}
+            >
+              Preview
+            </button>
+          </nav>
         </div>
       </div>
 
-      {/* Main editor */}
-      <div className="max-w-4xl mx-auto px-8">
-        <div 
-          ref={holderRef}
-          className="min-h-[800px] focus:outline-none"
-          style={{
-            minHeight: '800px'
-          }}
-        />
+      {/* Main editor or preview */}
+      <div className="max-w-4xl mx-auto px-8 pt-6">
+        <div className="tab-content">
+          {isPreviewMode ? (
+            <EditorPreview 
+              data={previewData}
+              className="min-h-[800px]"
+            />
+          ) : (
+            <div 
+              ref={holderRef}
+              className="min-h-[800px] focus:outline-none"
+              style={{
+                minHeight: '800px'
+              }}
+            />
+          )}
+        </div>
       </div>
     </div>
   );

@@ -14,6 +14,12 @@ import Link from '@editorjs/link';
 import Marker from '@editorjs/marker';
 import Underline from '@editorjs/underline';
 import Delimiter from '@editorjs/delimiter';
+import { useAccount } from 'wagmi';
+import { createGroupPost, signMessageWithMetaMask } from '@/services/dXService';
+import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import { AuthGuard } from '@/components/AuthGuard';
 import '../styles/editor.css';
 
 const STORAGE_KEY = 'editorjs-content';
@@ -28,6 +34,16 @@ const EditorPage = () => {
   const [autoSaveTimeout, setAutoSaveTimeout] = useState<NodeJS.Timeout | null>(null);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [previewData, setPreviewData] = useState<any>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState<(() => void) | null>(null);
+  const [idleTimer, setIdleTimer] = useState<NodeJS.Timeout | null>(null);
+  
+  const { address } = useAccount();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const { ensureAuthenticated, isAuthenticated } = useAuth();
 
   // Load saved content from localStorage
   const loadSavedContent = () => {
@@ -128,6 +144,157 @@ const EditorPage = () => {
     }, 2000);
     
     setAutoSaveTimeout(timeout);
+  };
+
+  // Check if content has meaningful changes
+  const hasContentChanged = async () => {
+    if (!editorRef.current) return false;
+    
+    try {
+      const currentData = await editorRef.current.save();
+      const savedData = loadSavedContent();
+      
+      // Check if title is different
+      const savedTitle = localStorage.getItem(TITLE_STORAGE_KEY) || '';
+      if (documentTitle !== savedTitle) return true;
+      
+      // Check if content is different (simple comparison)
+      const currentBlocks = currentData?.blocks || [];
+      const savedBlocks = savedData?.blocks || [];
+      
+      if (currentBlocks.length !== savedBlocks.length) return true;
+      
+      // Check if any blocks have non-empty content
+      const hasNonEmptyContent = currentBlocks.some(block => {
+        if (block.type === 'paragraph' && block.data?.text?.trim()) return true;
+        if (block.type === 'header' && block.data?.text?.trim()) return true;
+        if (block.type === 'list' && block.data?.items?.length > 0) return true;
+        if (block.type === 'quote' && (block.data?.text?.trim() || block.data?.caption?.trim())) return true;
+        if (block.type === 'code' && block.data?.code?.trim()) return true;
+        return false;
+      });
+      
+      return hasNonEmptyContent;
+    } catch (error) {
+      console.error('Error checking content changes:', error);
+      return false;
+    }
+  };
+
+  // Save content to API
+  const saveToAPI = async () => {
+    if (!editorRef.current || !address) {
+      toast({
+        title: "Error",
+        description: "Please connect your wallet to save.",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    // Ensure user is authenticated before saving
+    const authenticated = await ensureAuthenticated();
+    if (!authenticated) {
+      toast({
+        title: "Authentication Required",
+        description: "Please authenticate with your wallet to save content.",
+        variant: "destructive"
+      });
+      return false;
+    }
+    
+    setIsSaving(true);
+    try {
+      const outputData = await editorRef.current.save();
+      
+      // Generate salt (current timestamp in seconds)
+      const timestamp = Math.floor(Date.now() / 1000);
+      const salt = timestamp.toString();
+      
+      console.log('=== SIGNING PROCESS START ===');
+      console.log('1. Generated salt (timestamp):', salt);
+      console.log('   - Salt type:', typeof salt);
+      console.log('   - Salt value as number:', parseInt(salt));
+      console.log('2. User address from wagmi:', address);
+      console.log('3. About to sign salt with MetaMask...');
+      
+      // Sign the salt directly (API requirement)
+      const signature = await signMessageWithMetaMask(salt);
+      
+      console.log('4. Received signature:', signature);
+      console.log('5. API payload will be:', {
+        salt,
+        address,
+        signature
+      });
+      console.log('=== SIGNING PROCESS END ===');
+      
+      // Post to API
+      await createGroupPost(outputData, documentTitle, address, signature, salt);
+      
+      // Save locally as well
+      await saveContent();
+      
+      // Handle successful save
+      handleSuccessfulSave();
+      
+      return true;
+    } catch (error: any) {
+      console.error('Error saving to API:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save content.",
+        variant: "destructive"
+      });
+      return false;
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Handle save action from dialog
+  const handleSave = async () => {
+    const success = await saveToAPI();
+    // Success handling is already done in saveToAPI via handleSuccessfulSave
+    if (pendingNavigation && success) {
+      setPendingNavigation(null);
+    }
+  };
+
+  // Clear all editor-related local storage
+  const clearEditorStorage = () => {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(TITLE_STORAGE_KEY);
+    localStorage.removeItem(IMAGE_SIZES_KEY);
+    console.log('✅ Editor storage cleared');
+  };
+
+  // Handle successful save - clear storage and redirect
+  const handleSuccessfulSave = () => {
+    setHasUnsavedChanges(false);
+    setShowUnsavedDialog(false);
+    clearEditorStorage();
+    
+    toast({
+      title: "Success", 
+      description: "Content saved! Redirecting to My Posts...",
+    });
+    
+    // Navigate to my posts page
+    setTimeout(() => {
+      navigate('/app/my-posts');
+    }, 1000); // Small delay to show the success message
+  };
+
+  // Handle discard action from dialog
+  const handleDiscard = () => {
+    setHasUnsavedChanges(false);
+    setShowUnsavedDialog(false);
+    
+    if (pendingNavigation) {
+      pendingNavigation();
+      setPendingNavigation(null);
+    }
   };
 
   // Toggle between edit and preview modes
@@ -273,9 +440,12 @@ const EditorPage = () => {
           class: Delimiter
         }
       },
-      onChange: () => {
+      onChange: async () => {
         console.log('Content changed - triggering auto-save');
         autoSave();
+        // Check if content has meaningful changes
+        const hasChanges = await hasContentChanged();
+        setHasUnsavedChanges(hasChanges);
       },
       onReady: () => {
         console.log('Editor.js is ready to work!');
@@ -310,6 +480,108 @@ const EditorPage = () => {
     if (documentTitle) {
       localStorage.setItem(TITLE_STORAGE_KEY, documentTitle);
     }
+  }, [documentTitle]);
+
+  // Set up custom dialog triggers (NO browser native dialogs)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      // When tab becomes hidden, show our custom dialog if there are unsaved changes
+      if (document.visibilityState === 'hidden' && hasUnsavedChanges) {
+        console.log('Tab hidden with unsaved changes - showing dialog');
+        setShowUnsavedDialog(true);
+      }
+    };
+
+    // When user returns to tab, show dialog if there are unsaved changes
+    const handleWindowFocus = () => {
+      if (hasUnsavedChanges && !showUnsavedDialog) {
+        console.log('Window focused with unsaved changes - showing dialog');
+        setShowUnsavedDialog(true);
+      }
+    };
+
+    // Detection for tab close attempts - show ONLY our custom dialog
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Detect Ctrl+W (close tab), Ctrl+Shift+W (close window), Alt+F4, Cmd+Q
+      if (hasUnsavedChanges && !showUnsavedDialog) {
+        const isCloseAttempt = 
+          ((e.ctrlKey || e.metaKey) && (e.key === 'w' || e.key === 'W')) || // Ctrl/Cmd+W
+          ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'w' || e.key === 'W')) || // Ctrl/Cmd+Shift+W
+          (e.altKey && e.key === 'F4') || // Alt+F4
+          (e.metaKey && e.key === 'q'); // Cmd+Q on Mac
+          
+        if (isCloseAttempt) {
+          console.log('Close attempt detected via keyboard shortcut - showing CUSTOM dialog only');
+          e.preventDefault();
+          setShowUnsavedDialog(true);
+        }
+      }
+    };
+
+    // Detect mouse movement towards close button area (experimental)
+    const handleMouseMove = (e: MouseEvent) => {
+      if (hasUnsavedChanges && !showUnsavedDialog) {
+        // Check if mouse is moving towards top-right area (where close button usually is)
+        const { clientX, clientY } = e;
+        const { innerWidth } = window;
+        
+        // Close button area: top 50px, right 100px
+        const isNearCloseButton = clientX > (innerWidth - 100) && clientY < 50;
+        
+        if (isNearCloseButton) {
+          console.log('Mouse near close button with unsaved changes - showing dialog');
+          setShowUnsavedDialog(true);
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleWindowFocus);
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('mousemove', handleMouseMove);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleWindowFocus);
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, [hasUnsavedChanges, showUnsavedDialog]);
+
+  // Show dialog after user is idle with unsaved changes
+  useEffect(() => {
+    if (hasUnsavedChanges && !showUnsavedDialog) {
+      // Clear existing timer
+      if (idleTimer) {
+        clearTimeout(idleTimer);
+      }
+      
+      // Show dialog after 15 seconds of inactivity with unsaved changes (reduced from 30s)
+      const timer = setTimeout(() => {
+        console.log('User idle with unsaved changes - showing dialog');
+        setShowUnsavedDialog(true);
+      }, 15000); // 15 seconds
+      
+      setIdleTimer(timer);
+    } else if (idleTimer) {
+      clearTimeout(idleTimer);
+      setIdleTimer(null);
+    }
+    
+    return () => {
+      if (idleTimer) {
+        clearTimeout(idleTimer);
+      }
+    };
+  }, [hasUnsavedChanges, showUnsavedDialog]);
+
+  // Check for changes when title changes
+  useEffect(() => {
+    const checkChanges = async () => {
+      const hasChanges = await hasContentChanged();
+      setHasUnsavedChanges(hasChanges);
+    };
+    checkChanges();
   }, [documentTitle]);
 
 
@@ -720,8 +992,9 @@ const EditorPage = () => {
   };
 
   return (
-    <div className={`min-h-screen bg-white dark:bg-gray-900 ${isPreviewMode ? 'preview-mode' : ''}`}>
-      <Navbar />
+    <AuthGuard requireAuth={false}>
+      <div className={`min-h-screen bg-white dark:bg-gray-900 ${isPreviewMode ? 'preview-mode' : ''}`}>
+        <Navbar />
       
       {/* Title input and auto-save indicator */}
       <div className="max-w-4xl mx-auto px-8 pt-12 pb-4">
@@ -738,31 +1011,64 @@ const EditorPage = () => {
 
         {/* Tab Navigation */}
         <div className="border-b border-gray-200 dark:border-gray-700">
-          <nav className="-mb-px flex space-x-8" aria-label="Tabs">
-            <button
-              onClick={() => {
-                if (isPreviewMode) {
-                  setIsPreviewMode(false);
-                }
-              }}
-              className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
-                !isPreviewMode
-                  ? 'border-blue-500 text-blue-600 dark:text-blue-400 dark:border-blue-400'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:border-gray-600'
-              }`}
-            >
-              Edit
-            </button>
-            <button
-              onClick={togglePreview}
-              className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
-                isPreviewMode
-                  ? 'border-blue-500 text-blue-600 dark:text-blue-400 dark:border-blue-400'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:border-gray-600'
-              }`}
-            >
-              Preview
-            </button>
+          <nav className="-mb-px flex justify-between items-center" aria-label="Tabs">
+            <div className="flex space-x-8">
+              <button
+                onClick={() => {
+                  if (isPreviewMode) {
+                    setIsPreviewMode(false);
+                  }
+                }}
+                className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                  !isPreviewMode
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400 dark:border-blue-400'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:border-gray-600'
+                }`}
+              >
+                Edit
+              </button>
+              <button
+                onClick={togglePreview}
+                className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                  isPreviewMode
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400 dark:border-blue-400'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:border-gray-600'
+                }`}
+              >
+                Preview
+              </button>
+            </div>
+            
+            {/* Status Indicators and Save Button */}
+            <div className="flex items-center space-x-4">
+              {hasUnsavedChanges && (
+                <div 
+                  className="flex items-center space-x-2 px-3 py-1 bg-amber-100 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 rounded-md cursor-pointer hover:bg-amber-200 dark:hover:bg-amber-900/30 transition-colors"
+                  onClick={() => setShowUnsavedDialog(true)}
+                  title="Click to save your changes"
+                >
+                  <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
+                  <span className="text-sm text-amber-700 dark:text-amber-300 font-medium">
+                    Unsaved changes
+                  </span>
+                </div>
+              )}
+              {lastSaved && (
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                  {lastSaved}
+                </span>
+              )}
+              
+              {/* Save Button */}
+              <button
+                onClick={saveToAPI}
+                disabled={isSaving || !address || !hasUnsavedChanges}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white text-sm font-medium rounded-md transition-colors duration-200"
+                title={!isAuthenticated ? "Authentication required to save" : "Save content to blockchain"}
+              >
+                {isSaving ? 'Saving...' : 'Save'}
+              </button>
+            </div>
           </nav>
         </div>
       </div>
@@ -786,7 +1092,9 @@ const EditorPage = () => {
           )}
         </div>
       </div>
-    </div>
+
+      </div>
+    </AuthGuard>
   );
 };
 

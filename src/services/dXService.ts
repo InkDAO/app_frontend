@@ -325,6 +325,68 @@ export const deleteFileById = async (cid: string, address: string): Promise<any>
   }
 };
 
+// API function to update a file by CID (with authentication)
+export const updateFileById = async (cid: string, content: any, title: string, address: string): Promise<any> => {
+  try {
+    console.log('🔄 Starting file update process for CID:', cid);
+    console.log('   - Title:', title);
+    console.log('   - Content structure:', Object.keys(content || {}));
+    
+    // Generate salt (current timestamp in seconds)
+    const timestamp = Math.floor(Date.now() / 1000);
+    const salt = timestamp.toString();
+    
+    console.log('🔐 Generated salt for update:', salt);
+    console.log('📝 User address:', address);
+    
+    // Sign the salt with MetaMask
+    console.log('✍️ Requesting signature from MetaMask...');
+    const signature = await signMessageWithMetaMask(salt);
+    
+    console.log('✅ Signature received for update');
+    
+    // Prepare the update payload with content
+    const payload = {
+      salt,
+      address,
+      signature,
+      content: JSON.stringify({
+        title,
+        content
+      }, null, 2)
+    };
+    
+    console.log('📡 Sending update request for CID:', cid);
+    console.log('📦 Update payload (content length):', payload.content.length, 'characters');
+    
+    // Make authenticated API call to update the file
+    const response = await fetch(`http://localhost:8888/update/file?cid=${cid}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authService.getAuthToken()}`
+      },
+      body: JSON.stringify(payload)
+    });
+    
+    console.log('📥 Update API response status:', response.status);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Update API error response:', errorText);
+      throw new Error(`Failed to update file: ${response.status} - ${errorText}`);
+    }
+    
+    const result = await response.json();
+    console.log('✅ File updated successfully:', result);
+    
+    return result;
+  } catch (error) {
+    console.error('❌ Error updating file for CID:', cid, error);
+    throw error;
+  }
+};
+
 // API function to fetch saved posts for a specific owner with full content
 export const fetchSavedPosts = async (owner: string): Promise<any[]> => {
   try {

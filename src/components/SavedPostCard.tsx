@@ -1,12 +1,11 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, FileText, User, ExternalLink, AlertCircle, Trash2, Loader2 } from "lucide-react";
+import { Trash2, Loader2, Edit, FileImage } from "lucide-react";
 import { useState } from "react";
 import { useAccount } from "wagmi";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 import { deleteFileById } from "@/services/dXService";
-import EditorJSRenderer from "@/components/EditorJSRenderer";
 
 interface SavedPostCardProps {
   savedPost: {
@@ -23,37 +22,37 @@ interface SavedPostCardProps {
 }
 
 export const SavedPostCard = ({ savedPost, onDelete }: SavedPostCardProps) => {
-  const { name, cid, size, created_at, keyvalues, content, contentError } = savedPost;
+  const { name, cid, content, contentError } = savedPost;
   const [isDeleting, setIsDeleting] = useState(false);
   const { address } = useAccount();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
-  // Parse content if it exists
-  let parsedContent = null;
-  let postTitle = name || 'Untitled Post';
-  let postBody = null;
+  // Parse content and extract title, image, and preview
+  let postTitle = (name && name.trim()) ? name.trim() : 'Untitled';
+  let postImage: string | null = null;
+  let postImageDimensions: { width?: number; height?: number } | null = null;
+  let postPreview: string | null = null;
+  let editorContent = null;
 
   if (content && !contentError) {
     try {
       // The content might be a JSON string or already parsed
       const contentData = typeof content === 'string' ? JSON.parse(content) : content;
       
-      // Handle nested structure where actual content is under content.content
-      if (contentData.title) {
-        postTitle = contentData.title;
+      // Extract title
+      if (contentData.title && contentData.title.trim()) {
+        postTitle = contentData.title.trim();
+      } else {
+        postTitle = 'Untitled';
       }
       
-      // Check for EditorJS content in different possible locations
-      let editorContent = null;
-      
+      // Extract EditorJS content from various possible locations
       if (contentData.content && contentData.content.blocks) {
-        // Content is nested under content.content
         editorContent = contentData.content;
       } else if (contentData.blocks) {
-        // Content is directly available with blocks
         editorContent = contentData;
       } else if (contentData.content && typeof contentData.content === 'object') {
-        // Try to parse content.content if it's a string
         try {
           const nestedContent = typeof contentData.content === 'string' 
             ? JSON.parse(contentData.content) 
@@ -65,28 +64,97 @@ export const SavedPostCard = ({ savedPost, onDelete }: SavedPostCardProps) => {
           console.warn('Failed to parse nested content:', e);
         }
       }
-      
-      if (editorContent && editorContent.blocks) {
-        postBody = editorContent;
-      } else {
-        // Try to extract any text content from the structure
-        let extractedText = '';
-        const extractTextFromObject = (obj: any): string => {
-          if (typeof obj === 'string' && obj.trim()) {
-            return obj;
+
+      // Extract first image from EditorJS blocks with dimensions
+      if (editorContent && editorContent.blocks && Array.isArray(editorContent.blocks)) {
+        const imageBlock = editorContent.blocks.find((block: any) => 
+          block.type === 'image' && block.data && (block.data.file?.url || block.data.url)
+        );
+        if (imageBlock) {
+          postImage = imageBlock.data.file?.url || imageBlock.data.url;
+          
+          // Extract custom dimensions set by user in editor
+          const customWidth = imageBlock.data.customWidth || imageBlock.data.width || imageBlock.data.file?.width;
+          const customHeight = imageBlock.data.customHeight || imageBlock.data.height || imageBlock.data.file?.height;
+          
+          console.log('🖼️ Image dimensions extracted:', {
+            url: postImage,
+            customWidth,
+            customHeight,
+            rawData: imageBlock.data
+          });
+          
+          if (customWidth || customHeight) {
+            postImageDimensions = {
+              width: customWidth,
+              height: customHeight
+            };
           }
-          if (typeof obj === 'object' && obj !== null) {
-            for (const [key, value] of Object.entries(obj)) {
-              const result = extractTextFromObject(value);
-              if (result) return result;
+        }
+      }
+
+      // Extract preview text from EditorJS blocks
+      if (editorContent && editorContent.blocks && Array.isArray(editorContent.blocks)) {
+        let previewText = '';
+        
+        for (const block of editorContent.blocks) {
+          if (previewText.length >= 200) break; // Stop when we have enough text
+          
+          let blockText = '';
+          
+          switch (block.type) {
+            case 'paragraph':
+              blockText = block.data?.text || '';
+              break;
+            case 'header':
+              blockText = block.data?.text || '';
+              break;
+            case 'quote':
+              blockText = block.data?.text || '';
+              break;
+            case 'list':
+              if (block.data?.items && Array.isArray(block.data.items)) {
+                blockText = block.data.items
+                  .map((item: any) => {
+                    if (typeof item === 'string') return item;
+                    return item.content || item.text || item.value || '';
+                  })
+                  .join(', ');
+              }
+              break;
+            case 'code':
+              blockText = block.data?.code || '';
+              break;
+            default:
+              // For other block types, try to extract any text
+              if (block.data?.text) {
+                blockText = block.data.text;
+              }
+              break;
+          }
+          
+          // Clean HTML tags and add to preview
+          if (blockText) {
+            const cleanText = blockText
+              .replace(/<[^>]*>/g, '') // Remove HTML tags
+              .replace(/&nbsp;/g, ' ') // Replace &nbsp; with spaces
+              .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+              .trim();
+            
+            if (cleanText) {
+              if (previewText) previewText += ' ';
+              previewText += cleanText;
             }
           }
-          return '';
-        };
+        }
         
-        extractedText = extractTextFromObject(contentData);
-        if (extractedText) {
-          postBody = extractedText;
+        // Truncate to approximately 200 characters with word boundary
+        if (previewText.length > 200) {
+          const truncated = previewText.substring(0, 200);
+          const lastSpace = truncated.lastIndexOf(' ');
+          postPreview = lastSpace > 160 ? truncated.substring(0, lastSpace) + '...' : truncated + '...';
+        } else if (previewText.trim()) {
+          postPreview = previewText.trim();
         }
       }
       
@@ -94,35 +162,6 @@ export const SavedPostCard = ({ savedPost, onDelete }: SavedPostCardProps) => {
       console.error('Failed to parse content:', error);
     }
   }
-
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'Unknown date';
-    try {
-      return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    } catch {
-      return 'Invalid date';
-    }
-  };
-
-  const formatSize = (bytes?: number) => {
-    if (!bytes) return 'Unknown size';
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  };
-
-  const openInIPFS = () => {
-    if (cid) {
-      // Open the IPFS link in a new tab
-      window.open(`https://gateway.pinata.cloud/ipfs/${cid}`, '_blank');
-    }
-  };
 
   const handleDelete = async () => {
     if (!cid || !address) {
@@ -167,186 +206,190 @@ export const SavedPostCard = ({ savedPost, onDelete }: SavedPostCardProps) => {
     }
   };
 
+  const handleViewMore = () => {
+    if (!content || !cid) {
+      toast({
+        title: "Error",
+        description: "No content or CID available to edit",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      // Parse and prepare content for editor
+      const contentData = typeof content === 'string' ? JSON.parse(content) : content;
+      
+      // Clear existing editor storage
+      localStorage.removeItem('editorjs-content');
+      localStorage.removeItem('editorjs-title');
+      localStorage.removeItem('editorjs-image-sizes');
+
+      // Store title
+      if (contentData.title) {
+        localStorage.setItem('editorjs-title', contentData.title);
+      }
+
+      // Store content based on structure with detailed logging
+      console.log('🔍 SavedPostCard: Preparing content for editor...');
+      console.log('📋 Content structure:', {
+        hasDirectBlocks: !!contentData.blocks,
+        hasNestedContent: !!contentData.content,
+        hasNestedBlocks: !!(contentData.content && contentData.content.blocks),
+        editorContent: !!editorContent
+      });
+      
+      if (editorContent) {
+        console.log('✅ Using editorContent with', editorContent.blocks?.length || 0, 'blocks');
+        console.log('🖼️ Image blocks in editorContent:', 
+          editorContent.blocks?.filter((b: any) => b.type === 'image').map((b: any, i: number) => ({
+            index: i,
+            url: b.data?.file?.url || b.data?.url,
+            customWidth: b.data?.customWidth,
+            customHeight: b.data?.customHeight,
+            width: b.data?.width,
+            height: b.data?.height
+          }))
+        );
+        localStorage.setItem('editorjs-content', JSON.stringify(editorContent));
+      } else if (contentData.blocks) {
+        console.log('✅ Using contentData.blocks with', contentData.blocks.length, 'blocks');
+        console.log('🖼️ Image blocks in contentData:', 
+          contentData.blocks.filter((b: any) => b.type === 'image').map((b: any, i: number) => ({
+            index: i,
+            url: b.data?.file?.url || b.data?.url,
+            customWidth: b.data?.customWidth,
+            customHeight: b.data?.customHeight,
+            width: b.data?.width,
+            height: b.data?.height
+          }))
+        );
+        localStorage.setItem('editorjs-content', JSON.stringify(contentData));
+      } else if (contentData.content) {
+        // Try to use nested content
+        const nestedContent = typeof contentData.content === 'string' 
+          ? JSON.parse(contentData.content) 
+          : contentData.content;
+        console.log('✅ Using nested content with', nestedContent.blocks?.length || 0, 'blocks');
+        console.log('🖼️ Image blocks in nested content:', 
+          nestedContent.blocks?.filter((b: any) => b.type === 'image').map((b: any, i: number) => ({
+            index: i,
+            url: b.data?.file?.url || b.data?.url,
+            customWidth: b.data?.customWidth,
+            customHeight: b.data?.customHeight,
+            width: b.data?.width,
+            height: b.data?.height
+          }))
+        );
+        localStorage.setItem('editorjs-content', JSON.stringify(nestedContent));
+      } else {
+        console.warn('⚠️ No suitable content structure found for editor');
+      }
+
+      // Navigate to editor with CID in URL
+      navigate(`/app/editor?cid=${cid}`);
+      
+      toast({
+        title: "Opening Editor",
+        description: "Loading content for editing...",
+      });
+    } catch (error) {
+      console.error('Failed to prepare content for editor:', error);
+      toast({
+        title: "Error",
+        description: "Failed to prepare content for editing",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
-    <Card className="w-full hover:shadow-md transition-shadow">
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <CardTitle className="text-lg font-semibold line-clamp-2 mb-2">
-              {postTitle}
-            </CardTitle>
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <Calendar className="h-4 w-4" />
-                {formatDate(created_at)}
-              </div>
-              <div className="flex items-center gap-1">
-                <FileText className="h-4 w-4" />
-                {formatSize(size)}
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 ml-2">
-            {cid && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={openInIPFS}
-                className="flex items-center gap-1"
-              >
-                <ExternalLink className="h-3 w-3" />
-                IPFS
-              </Button>
-            )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDelete}
-              disabled={isDeleting || !cid}
-              className="flex items-center gap-1 hover:bg-red-50 hover:border-red-200 hover:text-red-600 dark:hover:bg-red-950/20 dark:hover:border-red-800 dark:hover:text-red-400"
-            >
-              {isDeleting ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
-              ) : (
-                <Trash2 className="h-3 w-3" />
-              )}
-              {isDeleting ? 'Deleting...' : 'Delete'}
-            </Button>
-          </div>
-        </div>
-      </CardHeader>
-
-      <CardContent className="pt-0">
-        {contentError ? (
-          <div className="flex items-center gap-2 p-4 bg-red-50 dark:bg-red-950/20 rounded-lg text-red-700 dark:text-red-400">
-            <AlertCircle className="h-4 w-4" />
-            <span className="text-sm">Failed to load content: {contentError}</span>
-          </div>
-        ) : postBody ? (
-          <div className="space-y-4">
-            {/* Handle different content formats */}
-            {postBody && postBody.blocks && Array.isArray(postBody.blocks) ? (
-              // EditorJS format - use comprehensive renderer
-              <div>
-                <div className="text-xs text-muted-foreground mb-2 opacity-50">
-                  EditorJS Content ({postBody.blocks.length} block{postBody.blocks.length !== 1 ? 's' : ''})
-                </div>
-                <EditorJSRenderer data={postBody} />
-              </div>
-            ) : typeof postBody === 'string' ? (
-              // Plain text content
-              <div className="prose prose-sm dark:prose-invert max-w-none">
-                <div className="text-sm leading-relaxed whitespace-pre-wrap">{postBody}</div>
-              </div>
-            ) : postBody && typeof postBody === 'object' ? (
-              // Try to detect if it's EditorJS format in any form
-              postBody.time && postBody.version ? (
-                <div>
-                  <div className="text-xs text-muted-foreground mb-2 opacity-50">
-                    Legacy EditorJS Format (v{postBody.version})
-                  </div>
-                  <EditorJSRenderer data={postBody} />
-                </div>
-              ) : (
-                // Try to extract readable content from the object
-                (() => {
-                  // Attempt to extract text from various object structures
-                  const extractText = (obj: any): string => {
-                    if (typeof obj === 'string') return obj;
-                    if (typeof obj !== 'object' || !obj) return '';
-                    
-                    let text = '';
-                    if (obj.text) text += obj.text + '\n';
-                    if (obj.content) text += extractText(obj.content) + '\n';
-                    if (obj.blocks && Array.isArray(obj.blocks)) {
-                      obj.blocks.forEach((block: any) => {
-                        if (block.data && block.data.text) {
-                          text += block.data.text + '\n';
-                        }
-                      });
-                    }
-                    return text.trim();
-                  };
-
-                  const extractedText = extractText(postBody);
-                  
-                  return extractedText ? (
-                    <div className="space-y-3">
-                      <div className="text-xs text-muted-foreground mb-2 opacity-50">
-                        Extracted Text Content
-                      </div>
-                      <div className="prose prose-sm dark:prose-invert max-w-none">
-                        <div className="text-sm leading-relaxed whitespace-pre-wrap">{extractedText}</div>
-                      </div>
-                      <details className="cursor-pointer">
-                        <summary className="text-xs text-primary hover:text-primary/80">
-                          View raw data structure
-                        </summary>
-                        <pre className="text-xs text-muted-foreground whitespace-pre-wrap overflow-x-auto bg-muted/20 p-2 rounded border max-h-40 overflow-y-auto mt-2">
-                          {JSON.stringify(postBody, null, 2)}
-                        </pre>
-                      </details>
-                    </div>
-                  ) : (
-                    // Fallback to formatted JSON display
-                    <div className="bg-muted/30 p-3 rounded border-l-4 border-yellow-500">
-                      <p className="text-xs text-muted-foreground mb-2 font-medium">Unknown content format:</p>
-                      <details className="cursor-pointer">
-                        <summary className="text-xs text-primary hover:text-primary/80 mb-2">
-                          Click to view raw JSON data
-                        </summary>
-                        <pre className="text-xs text-muted-foreground whitespace-pre-wrap overflow-x-auto bg-background p-2 rounded border max-h-40 overflow-y-auto">
-                          {JSON.stringify(postBody, null, 2)}
-                        </pre>
-                      </details>
-                    </div>
-                  );
-                })()
-              )
-            ) : (
-              // Completely unknown format
-              <div className="bg-muted/30 p-3 rounded border-l-4 border-red-500">
-                <p className="text-xs text-muted-foreground">Unsupported content format</p>
-              </div>
-            )}
-          </div>
+    <Card className="w-full max-w-sm hover:shadow-lg transition-all duration-200 group overflow-hidden">
+      {/* Image Section */}
+      <div className="relative h-48 bg-muted/30 overflow-hidden flex items-center justify-center">
+        {postImage ? (
+          (() => {
+            console.log('🎨 Applying image dimensions to card:', {
+              dimensions: postImageDimensions,
+              title: postTitle
+            });
+            
+            return (
+              <img 
+                src={postImage} 
+                alt={postTitle}
+                className="group-hover:scale-105 transition-transform duration-300"
+                style={{
+                  width: postImageDimensions?.width ? `${postImageDimensions.width}px` : '100%',
+                  height: postImageDimensions?.height ? `${postImageDimensions.height}px` : '100%',
+                  maxWidth: '100%',
+                  maxHeight: '100%',
+                  objectFit: postImageDimensions ? 'contain' : 'cover'
+                }}
+              />
+            );
+          })()
         ) : (
-          <div className="space-y-3">
-            <div className="text-muted-foreground text-sm italic">
-              No content preview available
-            </div>
-            {/* Debug information for troubleshooting */}
-            <details className="text-xs">
-              <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
-                Debug Info (Click to expand)
-              </summary>
-              <div className="mt-2 p-2 bg-muted/20 rounded">
-                <p><strong>Content Error:</strong> {contentError || 'None'}</p>
-                <p><strong>Raw Content:</strong></p>
-                <pre className="text-xs bg-background p-2 rounded mt-1 overflow-x-auto max-h-32 overflow-y-auto">
-                  {JSON.stringify(content, null, 2)}
-                </pre>
-              </div>
-            </details>
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted/50 to-muted/80">
+            <FileImage className="h-16 w-16 text-muted-foreground/50" />
+          </div>
+        )}
+        
+        {/* Overlay gradient for better text readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+        
+        {/* Action Buttons Overlay */}
+        <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-y-1 group-hover:translate-y-0">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleViewMore}
+            className="h-8 w-8 p-0 bg-white/90 hover:bg-white dark:bg-gray-800/90 dark:hover:bg-gray-800 shadow-lg backdrop-blur-sm border-0"
+            title="Edit post"
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
+          
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleDelete}
+            disabled={isDeleting || !cid}
+            className="h-8 w-8 p-0 bg-white/90 hover:bg-red-50 dark:bg-gray-800/90 dark:hover:bg-red-950/50 shadow-lg backdrop-blur-sm border-0 hover:text-red-600 dark:hover:text-red-400"
+            title={isDeleting ? "Deleting..." : "Delete post"}
+          >
+            {isDeleting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Trash2 className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+      </div>
+
+      <CardContent className="p-4">
+        {/* Title */}
+        <div className="mb-2">
+          <h3 className="font-semibold text-base leading-tight line-clamp-2 text-foreground group-hover:text-primary transition-colors">
+            {postTitle}
+          </h3>
+        </div>
+
+        {/* Content Preview */}
+        {postPreview && (
+          <div className="mb-3">
+            <p className="text-sm text-muted-foreground leading-relaxed line-clamp-5">
+              {postPreview}
+            </p>
           </div>
         )}
 
-        {/* Metadata */}
-        <div className="mt-4 pt-4 border-t">
-          <div className="flex flex-wrap gap-2 mb-3">
-            {keyvalues && Object.entries(keyvalues).map(([key, value]) => (
-              <Badge key={key} variant="secondary" className="text-xs">
-                {key}: {value}
-              </Badge>
-            ))}
+        {/* Error state */}
+        {contentError && (
+          <div className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 p-2 rounded">
+            Failed to load content
           </div>
-          
-          {cid && (
-            <div className="text-xs text-muted-foreground font-mono">
-              CID: {cid}
-            </div>
-          )}
-        </div>
+        )}
       </CardContent>
     </Card>
   );

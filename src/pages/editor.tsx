@@ -16,7 +16,7 @@ import Marker from '@editorjs/marker';
 import Underline from '@editorjs/underline';
 import Delimiter from '@editorjs/delimiter';
 import { useAccount } from 'wagmi';
-import { createGroupPost, signMessageWithMetaMask } from '@/services/dXService';
+import { createGroupPost, updateFileById, signMessageWithMetaMask } from '@/services/dXService';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -45,6 +45,12 @@ const EditorPage = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { ensureAuthenticated, isAuthenticated } = useAuth();
+
+  // Get CID from URL parameters if present (for editing existing posts)
+  const getCidFromUrl = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('cid');
+  };
 
   // Load saved content from localStorage
   const loadSavedContent = () => {
@@ -112,6 +118,184 @@ const EditorPage = () => {
         console.log(`Applied saved size to image ${imageId}:`, { width, height });
       }
     });
+  };
+
+  // Apply image sizes from EditorJS block data (for loaded saved content)
+  const applyImageSizesFromBlockData = async () => {
+    if (!editorRef.current || !holderRef.current) {
+      console.log('⚠️ Editor or holder not ready for image size application');
+      return;
+    }
+    
+    try {
+      console.log('🔍 Starting image size application from block data...');
+      
+      // Get current editor data to access block information
+      const outputData = await editorRef.current.save();
+      const images = holderRef.current.querySelectorAll('img');
+      
+      console.log('📊 Found', images.length, 'images in DOM');
+      console.log('📋 Found', outputData.blocks?.length || 0, 'blocks in editor data');
+      
+      // Also check localStorage for the content that was stored
+      const storedContent = localStorage.getItem(STORAGE_KEY);
+      if (storedContent) {
+        try {
+          const parsedContent = JSON.parse(storedContent);
+          console.log('💾 localStorage content blocks:', parsedContent.blocks?.length || 0);
+          console.log('🖼️ Image blocks in localStorage:', 
+            parsedContent.blocks?.filter((b: any) => b.type === 'image').map((b: any, i: number) => ({
+              index: i,
+              url: b.data?.file?.url || b.data?.url,
+              customWidth: b.data?.customWidth,
+              customHeight: b.data?.customHeight,
+              width: b.data?.width,
+              height: b.data?.height
+            }))
+          );
+        } catch (e) {
+          console.warn('Failed to parse localStorage content:', e);
+        }
+      }
+      
+      let imageIndex = 0;
+      let sizesApplied = 0;
+      
+      // Iterate through blocks to find image blocks with custom dimensions
+      outputData.blocks?.forEach((block: any, blockIndex: number) => {
+        if (block.type === 'image' && block.data) {
+          const imageElement = images[imageIndex] as HTMLImageElement;
+          
+          console.log(`🔍 Processing image block ${blockIndex}:`, {
+            blockType: block.type,
+            hasImageElement: !!imageElement,
+            imageElementSrc: imageElement?.src,
+            blockData: {
+              url: block.data.file?.url || block.data.url,
+              customWidth: block.data.customWidth,
+              customHeight: block.data.customHeight,
+              width: block.data.width,
+              height: block.data.height,
+              file: block.data.file
+            }
+          });
+          
+          if (imageElement) {
+            // Extract custom dimensions from block data with fallbacks
+            const customWidth = block.data.customWidth || block.data.width || block.data.file?.width;
+            const customHeight = block.data.customHeight || block.data.height || block.data.file?.height;
+            
+            console.log(`🖼️ Image ${imageIndex} dimension analysis:`, {
+              customWidth,
+              customHeight,
+              currentElementWidth: imageElement.offsetWidth,
+              currentElementHeight: imageElement.offsetHeight,
+              currentStyleWidth: imageElement.style.width,
+              currentStyleHeight: imageElement.style.height
+            });
+            
+            if (customWidth && customHeight) {
+              // Force application with !important style properties
+              imageElement.style.setProperty('width', `${customWidth}px`, 'important');
+              imageElement.style.setProperty('height', `${customHeight}px`, 'important');
+              imageElement.style.setProperty('max-width', 'none', 'important');
+              imageElement.style.setProperty('object-fit', 'contain', 'important');
+              
+              // Also try setting attributes as backup
+              imageElement.setAttribute('width', customWidth.toString());
+              imageElement.setAttribute('height', customHeight.toString());
+              
+              // Save to localStorage for consistency with resize handles
+              const imageId = getImageId(imageElement);
+              saveImageSize(imageId, customWidth, customHeight);
+              
+              sizesApplied++;
+              
+              console.log(`✅ Applied forced size to image ${imageIndex}:`, { 
+                width: customWidth, 
+                height: customHeight,
+                imageId,
+                newStyleWidth: imageElement.style.width,
+                newStyleHeight: imageElement.style.height
+              });
+              
+              // Trigger a reflow to ensure changes are applied
+              imageElement.offsetHeight;
+            } else {
+              console.log(`⚠️ No custom dimensions found for image ${imageIndex}`);
+            }
+          } else {
+            console.log(`⚠️ No image element found for block ${blockIndex}`);
+          }
+          
+          imageIndex++;
+        }
+      });
+      
+      console.log(`🎯 Finished applying image sizes: ${sizesApplied}/${imageIndex} images processed`);
+      
+      // If no sizes were applied, try again with localStorage content
+      if (sizesApplied === 0 && storedContent) {
+        console.log('🔄 Retrying with localStorage content...');
+        setTimeout(() => {
+          applyImageSizesFromStoredContent();
+        }, 500);
+      }
+      
+    } catch (error) {
+      console.error('❌ Error applying image sizes from block data:', error);
+    }
+  };
+
+  // Fallback function to apply sizes from localStorage content
+  const applyImageSizesFromStoredContent = () => {
+    try {
+      const storedContent = localStorage.getItem(STORAGE_KEY);
+      if (!storedContent || !holderRef.current) return;
+      
+      const parsedContent = JSON.parse(storedContent);
+      const images = holderRef.current.querySelectorAll('img');
+      
+      console.log('🔄 Applying sizes from stored content fallback...');
+      
+      let imageIndex = 0;
+      let sizesApplied = 0;
+      
+      parsedContent.blocks?.forEach((block: any, blockIndex: number) => {
+        if (block.type === 'image' && block.data) {
+          const imageElement = images[imageIndex] as HTMLImageElement;
+          
+          if (imageElement) {
+            const customWidth = block.data.customWidth || block.data.width || block.data.file?.width;
+            const customHeight = block.data.customHeight || block.data.height || block.data.file?.height;
+            
+            if (customWidth && customHeight) {
+              imageElement.style.setProperty('width', `${customWidth}px`, 'important');
+              imageElement.style.setProperty('height', `${customHeight}px`, 'important');
+              imageElement.style.setProperty('max-width', 'none', 'important');
+              imageElement.style.setProperty('object-fit', 'contain', 'important');
+              
+              const imageId = getImageId(imageElement);
+              saveImageSize(imageId, customWidth, customHeight);
+              
+              sizesApplied++;
+              
+              console.log(`✅ Fallback applied size to image ${imageIndex}:`, { 
+                width: customWidth, 
+                height: customHeight
+              });
+            }
+          }
+          
+          imageIndex++;
+        }
+      });
+      
+      console.log(`🎯 Fallback finished: ${sizesApplied}/${imageIndex} images processed`);
+      
+    } catch (error) {
+      console.error('❌ Error in fallback image size application:', error);
+    }
   };
 
   // Save content to localStorage
@@ -268,38 +452,65 @@ const EditorPage = () => {
       // Inject current image sizes into the blocks before saving
       const enhancedOutputData = await injectImageSizes(outputData);
       
-      // Generate salt (current timestamp in seconds)
-      const timestamp = Math.floor(Date.now() / 1000);
-      const salt = timestamp.toString();
+      // Check if we're updating an existing post or creating a new one
+      const cidFromUrl = getCidFromUrl();
       
-      console.log('=== SIGNING PROCESS START ===');
-      console.log('1. Generated salt (timestamp):', salt);
-      console.log('   - Salt type:', typeof salt);
-      console.log('   - Salt value as number:', parseInt(salt));
-      console.log('2. User address from wagmi:', address);
-      console.log('3. About to sign salt with MetaMask...');
+      if (cidFromUrl) {
+        // UPDATE EXISTING POST
+        console.log('🔄 Updating existing post with CID:', cidFromUrl);
+        console.log('   - Title:', documentTitle);
+        console.log('   - Content structure:', Object.keys(enhancedOutputData || {}));
+        
+        await updateFileById(cidFromUrl, enhancedOutputData, documentTitle, address);
+        
+        // Save locally as well
+        await saveContent();
+        
+        toast({
+          title: "Success", 
+          description: "Content updated successfully!",
+        });
+        
+        return true;
+        
+      } else {
+        // CREATE NEW POST
+        console.log('✨ Creating new post');
+        
+        // Generate salt (current timestamp in seconds)
+        const timestamp = Math.floor(Date.now() / 1000);
+        const salt = timestamp.toString();
+        
+        console.log('=== SIGNING PROCESS START ===');
+        console.log('1. Generated salt (timestamp):', salt);
+        console.log('   - Salt type:', typeof salt);
+        console.log('   - Salt value as number:', parseInt(salt));
+        console.log('2. User address from wagmi:', address);
+        console.log('3. About to sign salt with MetaMask...');
+        
+        // Sign the salt directly (API requirement)
+        const signature = await signMessageWithMetaMask(salt);
+        
+        console.log('4. Received signature:', signature);
+        console.log('5. API payload will be:', {
+          salt,
+          address,
+          signature
+        });
+        console.log('=== SIGNING PROCESS END ===');
+        
+        // Post to API
+        await createGroupPost(enhancedOutputData, documentTitle, address, signature, salt);
+        
+        // Save locally as well
+        await saveContent();
+        
+        // Handle successful save
+        handleSuccessfulSave();
+        
+        return true;
+      }
       
-      // Sign the salt directly (API requirement)
-      const signature = await signMessageWithMetaMask(salt);
-      
-      console.log('4. Received signature:', signature);
-      console.log('5. API payload will be:', {
-        salt,
-        address,
-        signature
-      });
-      console.log('=== SIGNING PROCESS END ===');
-      
-      // Post to API
-      await createGroupPost(enhancedOutputData, documentTitle, address, signature, salt);
-      
-      // Save locally as well
-      await saveContent();
-      
-      // Handle successful save
-      handleSuccessfulSave();
-      
-      return true;
     } catch (error: any) {
       console.error('Error saving to API:', error);
       toast({
@@ -516,6 +727,17 @@ const EditorPage = () => {
           // Apply saved image sizes after initialization
           setTimeout(() => {
             applySavedImageSizes();
+            // If editing existing content, also apply sizes from block data with multiple retries
+            const cidFromUrl = getCidFromUrl();
+            if (cidFromUrl) {
+              console.log('🔄 Detected CID in URL, will apply saved image sizes with retries...');
+              
+              // Multiple attempts with increasing delays
+              setTimeout(() => applyImageSizesFromBlockData(), 500);
+              setTimeout(() => applyImageSizesFromBlockData(), 1000);
+              setTimeout(() => applyImageSizesFromBlockData(), 2000);
+              setTimeout(() => applyImageSizesFromBlockData(), 3000);
+            }
           }, 200);
         }, 500);
       }
@@ -743,6 +965,14 @@ const EditorPage = () => {
           scanAndAddHandles();
           // Also apply saved sizes to any new images
           applySavedImageSizes();
+          
+          // For editing existing content, also apply block data sizes
+          const cidFromUrl = getCidFromUrl();
+          if (cidFromUrl) {
+            setTimeout(() => {
+              applyImageSizesFromBlockData();
+            }, 100);
+          }
         }, 200);
       }
       
@@ -769,6 +999,15 @@ const EditorPage = () => {
         const foundImages = scanAndAddHandles();
         applySavedImageSizes(); // Apply saved sizes to all images
         
+        // If editing existing content, also apply sizes from block data
+        const cidFromUrl = getCidFromUrl();
+        if (cidFromUrl) {
+          // Apply on each retry attempt to be more aggressive
+          setTimeout(() => {
+            applyImageSizesFromBlockData();
+          }, 300 + (attempts * 200));
+        }
+        
         // Retry up to 5 times with increasing delays
         if (attempts < 5) {
           setTimeout(() => initialScanWithRetry(attempts + 1), 500 * (attempts + 1));
@@ -781,6 +1020,13 @@ const EditorPage = () => {
       const periodicScan = setInterval(() => {
         scanAndAddHandles();
         applySavedImageSizes(); // Restore image sizes
+        
+        // For editing existing content, periodically ensure block data sizes are applied
+        const cidFromUrl = getCidFromUrl();
+        if (cidFromUrl) {
+          applyImageSizesFromBlockData();
+        }
+        
         ensureQuoteCaptions(); // Ensure quote captions are visible
         autoResizeCodeBlocks(); // Handle code block auto-resize
       }, 1000); // Reduced from 3000ms to 1000ms

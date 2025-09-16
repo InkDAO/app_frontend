@@ -6,7 +6,6 @@ import { TagSearch } from "@/components/TagSearch";
 import { useAccount } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Search, ArrowUpDown, Wallet, MessageSquare, ArrowRight, Hash, Bookmark, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { usePosts } from "@/hooks/usePosts";
@@ -154,20 +153,38 @@ export const MyPostsPage = () => {
             </p>
           </div>
         ) : (
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full max-w-md grid-cols-2">
-              <TabsTrigger value="my-posts" className="flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                My Posts
-              </TabsTrigger>
-              <TabsTrigger value="saved-posts" className="flex items-center gap-2">
-                <Bookmark className="h-4 w-4" />
-                Saved Posts
-              </TabsTrigger>
-            </TabsList>
+          <div className="w-full">
+            {/* Custom Tab Navigation */}
+            <div className="mb-6">
+              <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1 shadow-sm w-fit">
+                <button
+                  onClick={() => setActiveTab("my-posts")}
+                  className={`flex items-center space-x-2 px-4 py-2.5 text-sm font-medium rounded-md transition-all duration-200 ${
+                    activeTab === "my-posts"
+                      ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm border border-gray-200 dark:border-gray-600'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-700/50'
+                  }`}
+                >
+                  <FileText className="w-4 h-4" />
+                  <span>My Posts</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab("saved-posts")}
+                  className={`flex items-center space-x-2 px-4 py-2.5 text-sm font-medium rounded-md transition-all duration-200 ${
+                    activeTab === "saved-posts"
+                      ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm border border-gray-200 dark:border-gray-600'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-700/50'
+                  }`}
+                >
+                  <Bookmark className="w-4 h-4" />
+                  <span>Saved Posts</span>
+                </button>
+              </div>
+            </div>
             
-            <TabsContent value="my-posts" className="mt-6">
-              {isAllPostLoading ? (
+            {/* Tab Content */}
+            {activeTab === "my-posts" && (
+              isAllPostLoading ? (
                 <div className="flex justify-center items-center py-4 md:py-8">
                   <div className="w-full space-y-4">
                     {[1, 2, 3].map((i) => (
@@ -303,11 +320,11 @@ export const MyPostsPage = () => {
                     <ArrowRight className="h-4 w-4" />
                   </div>
                 </div>
-              )}
-            </TabsContent>
+              )
+            )}
               
-            <TabsContent value="saved-posts" className="mt-6">
-                {isSavedPostsLoading ? (
+            {activeTab === "saved-posts" && (
+                isSavedPostsLoading ? (
                   <div className="flex justify-center items-center py-4 md:py-8">
                     <div className="w-full space-y-4">
                       {[1, 2, 3].map((i) => (
@@ -378,9 +395,9 @@ export const MyPostsPage = () => {
                       Refresh
                     </Button>
                   </div>
-                )}
-            </TabsContent>
-          </Tabs>
+                )
+            )}
+          </div>
         )}
       </main>
     </div>

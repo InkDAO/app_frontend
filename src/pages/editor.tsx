@@ -15,6 +15,7 @@ import Link from '@editorjs/link';
 import Marker from '@editorjs/marker';
 import Underline from '@editorjs/underline';
 import Delimiter from '@editorjs/delimiter';
+import { Edit3, Eye } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { createGroupPost, updateFileById, signMessageWithMetaMask } from '@/services/dXService';
 import { useToast } from '@/hooks/use-toast';
@@ -463,8 +464,8 @@ const EditorPage = () => {
         
         await updateFileById(cidFromUrl, enhancedOutputData, documentTitle, address);
         
-        // Save locally as well
-        await saveContent();
+        // Clear localStorage after successful update
+        clearEditorStorage();
         
         toast({
           title: "Success", 
@@ -502,10 +503,7 @@ const EditorPage = () => {
         // Post to API
         await createGroupPost(enhancedOutputData, documentTitle, address, signature, salt);
         
-        // Save locally as well
-        await saveContent();
-        
-        // Handle successful save
+        // Handle successful save (this will clear localStorage and redirect)
         handleSuccessfulSave();
         
         return true;
@@ -1317,63 +1315,34 @@ const EditorPage = () => {
         </div>
 
         {/* Tab Navigation */}
-        <div className="border-b border-gray-200 dark:border-gray-700">
-          <nav className="-mb-px flex justify-between items-center" aria-label="Tabs">
-            <div className="flex space-x-8">
+        <div className="mb-2">
+          <nav className="flex justify-between items-center" aria-label="Tabs">
+            <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1 shadow-sm">
               <button
                 onClick={() => {
                   if (isPreviewMode) {
                     setIsPreviewMode(false);
                   }
                 }}
-                className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                className={`flex items-center space-x-2 px-4 py-2.5 text-sm font-medium rounded-md transition-all duration-200 ${
                   !isPreviewMode
-                    ? 'border-blue-500 text-blue-600 dark:text-blue-400 dark:border-blue-400'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:border-gray-600'
+                    ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm border border-gray-200 dark:border-gray-600'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-700/50'
                 }`}
               >
-                Edit
+                <Edit3 className="w-4 h-4" />
+                <span>Edit</span>
               </button>
               <button
                 onClick={togglePreview}
-                className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                className={`flex items-center space-x-2 px-4 py-2.5 text-sm font-medium rounded-md transition-all duration-200 ${
                   isPreviewMode
-                    ? 'border-blue-500 text-blue-600 dark:text-blue-400 dark:border-blue-400'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:border-gray-600'
+                    ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm border border-gray-200 dark:border-gray-600'
+                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-700/50'
                 }`}
               >
-                Preview
-              </button>
-            </div>
-            
-            {/* Status Indicators and Save Button */}
-            <div className="flex items-center space-x-4">
-              {hasUnsavedChanges && (
-                <div 
-                  className="flex items-center space-x-2 px-3 py-1 bg-amber-100 dark:bg-amber-900/20 border border-amber-300 dark:border-amber-700 rounded-md cursor-pointer hover:bg-amber-200 dark:hover:bg-amber-900/30 transition-colors"
-                  onClick={() => setShowUnsavedDialog(true)}
-                  title="Click to save your changes"
-                >
-                  <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
-                  <span className="text-sm text-amber-700 dark:text-amber-300 font-medium">
-                    Unsaved changes
-                  </span>
-                </div>
-              )}
-              {lastSaved && (
-                <span className="text-sm text-gray-500 dark:text-gray-400">
-                  {lastSaved}
-                </span>
-              )}
-              
-              {/* Save Button */}
-              <button
-                onClick={saveToAPI}
-                disabled={isSaving || !address || !hasUnsavedChanges}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white text-sm font-medium rounded-md transition-colors duration-200"
-                title={!isAuthenticated ? "Authentication required to save" : "Save content to blockchain"}
-              >
-                {isSaving ? 'Saving...' : 'Save'}
+                <Eye className="w-4 h-4" />
+                <span>Preview</span>
               </button>
             </div>
           </nav>
@@ -1381,7 +1350,7 @@ const EditorPage = () => {
       </div>
 
       {/* Main editor or preview */}
-      <div className="max-w-4xl mx-auto px-8 pt-6">
+      <div className="max-w-4xl mx-auto px-8 pb-20">
         <div className="tab-content">
           {isPreviewMode ? (
             <EditorPreview 
@@ -1398,6 +1367,29 @@ const EditorPage = () => {
             />
           )}
         </div>
+      </div>
+
+      {/* Save and Post Buttons - Fixed at bottom right */}
+      <div className="fixed bottom-6 right-6 flex items-center space-x-3 z-50">
+        {/* Save Button */}
+        <button
+          onClick={saveToAPI}
+          disabled={isSaving || !address}
+          className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl"
+          title={!isAuthenticated ? "Authentication required to save" : "Save content to blockchain"}
+        >
+          {isSaving ? 'Saving...' : 'Save'}
+        </button>
+        
+        {/* Post Button */}
+        <button
+          onClick={saveToAPI}
+          disabled={isSaving || !address}
+          className="px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl"
+          title={!isAuthenticated ? "Authentication required to post" : "Post content to blockchain"}
+        >
+          {isSaving ? 'Posting...' : 'Post'}
+        </button>
       </div>
 
       </div>

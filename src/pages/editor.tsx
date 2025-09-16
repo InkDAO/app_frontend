@@ -10,6 +10,7 @@ import Code from '@editorjs/code';
 import InlineCode from '@editorjs/inline-code';
 import Table from '@editorjs/table';
 import Image from '@editorjs/image';
+import CustomImageTool from '@/components/CustomImageTool';
 import Link from '@editorjs/link';
 import Marker from '@editorjs/marker';
 import Underline from '@editorjs/underline';
@@ -181,6 +182,63 @@ const EditorPage = () => {
     }
   };
 
+  // Inject current image sizes into EditorJS blocks
+  const injectImageSizes = async (outputData: any) => {
+    if (!outputData?.blocks || !holderRef.current) {
+      return outputData;
+    }
+
+    console.log('🖼️ Injecting image sizes into blocks...');
+    
+    // Create a copy of the output data
+    const enhancedData = JSON.parse(JSON.stringify(outputData));
+    
+    // Find all image elements in the editor
+    const imageElements = holderRef.current.querySelectorAll('img');
+    let imageIndex = 0;
+    
+    // Process each block
+    enhancedData.blocks = enhancedData.blocks.map((block: any, blockIndex: number) => {
+      if (block.type === 'image') {
+        // Find the corresponding image element
+        const imageElement = imageElements[imageIndex] as HTMLImageElement;
+        
+        if (imageElement) {
+          // Get current dimensions from the DOM
+          const computedStyle = window.getComputedStyle(imageElement);
+          const currentWidth = parseInt(computedStyle.width);
+          const currentHeight = parseInt(computedStyle.height);
+          
+          // Get stored sizes from localStorage as fallback
+          const imageId = getImageId(imageElement);
+          const storedSizes = getImageSizes();
+          const storedSize = storedSizes[imageId];
+          
+          // Use current dimensions if valid, otherwise use stored dimensions
+          const finalWidth = currentWidth > 0 ? currentWidth : storedSize?.width;
+          const finalHeight = currentHeight > 0 ? currentHeight : storedSize?.height;
+          
+          if (finalWidth && finalHeight) {
+            block.data.customWidth = finalWidth;
+            block.data.customHeight = finalHeight;
+            
+            console.log(`📐 Block ${blockIndex}: Added size ${finalWidth}x${finalHeight} to image`, {
+              url: block.data.file?.url,
+              imageId
+            });
+          }
+        }
+        
+        imageIndex++;
+      }
+      
+      return block;
+    });
+    
+    console.log('✅ Enhanced output data with image sizes:', enhancedData);
+    return enhancedData;
+  };
+
   // Save content to API
   const saveToAPI = async () => {
     if (!editorRef.current || !address) {
@@ -207,6 +265,9 @@ const EditorPage = () => {
     try {
       const outputData = await editorRef.current.save();
       
+      // Inject current image sizes into the blocks before saving
+      const enhancedOutputData = await injectImageSizes(outputData);
+      
       // Generate salt (current timestamp in seconds)
       const timestamp = Math.floor(Date.now() / 1000);
       const salt = timestamp.toString();
@@ -230,7 +291,7 @@ const EditorPage = () => {
       console.log('=== SIGNING PROCESS END ===');
       
       // Post to API
-      await createGroupPost(outputData, documentTitle, address, signature, salt);
+      await createGroupPost(enhancedOutputData, documentTitle, address, signature, salt);
       
       // Save locally as well
       await saveContent();
@@ -395,7 +456,7 @@ const EditorPage = () => {
           }
         },
         image: {
-          class: Image,
+          class: CustomImageTool,
           config: {
             uploader: {
               uploadByFile: (file: File) => {

@@ -3,39 +3,80 @@ import { useWriteContract, useAccount, useWaitForTransactionReceipt, useReadCont
 import { sepolia } from "wagmi/chains";
 import { useState, useEffect } from "react";
 import { CommentWithPostTitle } from "@/types";
+import { apiService } from "./httpClient";
+import { authService } from "./authService";
+import { handleCreateGroup, handleUpload } from "./pinataService";
 
-// API Service for posting to group endpoint
+// API Service for posting to group endpoint with proper content upload
 export const createGroupPost = async (content: any, title: string, address: string, signature: string, salt: string) => {
   try {
+    console.log('📝 Starting content upload process...');
+    console.log('   - Title:', title);
+    console.log('   - Content structure:', Object.keys(content || {}));
+    console.log('   - Address:', address);
+    
+    // Step 1: Create a group for this post
+    const groupName = `${title}_${salt}`.slice(0, 50); // Limit to 50 chars
+    console.log('🏗️ Creating group:', groupName);
+    
+    // const groupResponse = await handleCreateGroup(groupName);
+    // if (groupResponse.error || !groupResponse.group) {
+    //   throw new Error(`Failed to create group: ${groupResponse.error}`);
+    // }
+    
+    // const groupId = groupResponse.group.id;
+    // console.log('✅ Group created with ID:', groupId);
+    
+    // Step 2: Convert content to a File object for upload
+    const contentJson = JSON.stringify({
+      title,
+      content,
+    }, null, 2);
+
+    console.log('📦 Content JSON:', contentJson);
+    
+    // const contentBlob = new Blob([contentJson], { type: 'application/json' });
+    // const contentFile = new File([contentBlob], `${title}_${salt}.json`, {
+    //   type: 'application/json'
+    // });
+    
+    // console.log('📦 Content file created:');
+    // console.log('   - Size:', contentFile.size, 'bytes');
+    // console.log('   - Type:', contentFile.type);
+    
+    // // Step 3: Upload content to IPFS
+    // console.log('⬆️ Uploading content to IPFS...');
+    // const uploadResult = await handleUpload(
+    //   contentFile.name,
+    //   groupId,
+    //   contentFile,
+    //   `editor-content,${address.toLowerCase()}` // Add some basic tags
+    // );
+    
+    // if (!uploadResult.success || !uploadResult.cid) {
+    //   throw new Error(`Content upload failed: ${uploadResult.error}`);
+    // }
+    
+    // console.log('✅ Content uploaded to IPFS:');
+    // console.log('   - CID:', uploadResult.cid);
+    // console.log('   - IPFS Link:', uploadResult.ipfsLink);
+    
+    // Step 4: Create payload with real uploaded data
     const payload = {
       salt,
       address,
       signature,
-      upload: {
-        id: "01994e08-bbce-7479-90a9-703362ae10da",
-        name: `${address}4012d8194a5b44718a8ba6ec553241b_${salt}`,
-        size: 44,
-        mime_type: "application/json",
-        cid: "bafkreicwrrmusmuprjxv5onfjnx2tr64uzsanhflcxs7babcrizke52jwa",
-        network: "private",
-        keyvalues: {
-          owner: address
-        },
-        group_id: "01994e08-b713-7a01-b412-a6a73e7ce014",
-        number_of_files: 1,
-        streamable: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        vectorized: false
-      }
+      content: contentJson
     };
 
-    console.log('📡 API Request Details:');
-    console.log('   - Endpoint: http://localhost:8888/create/group');
-    console.log('   - Salt (timestamp):', salt);
-    console.log('   - Address:', address);
-    console.log('   - Signature:', signature);
-    console.log('📦 Full API Payload:', JSON.stringify(payload, null, 2));
+    // console.log('📡 API Request Details:');
+    // console.log('   - Endpoint: http://localhost:8888/create/group');
+    // console.log('   - Salt (timestamp):', salt);
+    // console.log('   - Address:', address);
+    // console.log('   - Signature:', signature);
+    // console.log('   - Real CID:', uploadResult.cid);
+    // console.log('   - Content size:', contentFile.size, 'bytes');
+    // console.log('📦 Full API Payload:', JSON.stringify(payload, null, 2));
 
     const response = await fetch('http://localhost:8888/create/group', {
       method: 'POST',
@@ -55,9 +96,20 @@ export const createGroupPost = async (content: any, title: string, address: stri
 
     const result = await response.json();
     console.log('✅ API Success Response:', result);
-    return result;
+    
+    // Return enhanced result with upload info
+    return {
+      ...result,
+      uploadInfo: {
+        // cid: uploadResult.cid,
+        // ipfsLink: uploadResult.ipfsLink,
+        // groupId: groupId,
+        // fileName: contentFile.name,
+        // fileSize: contentFile.size
+      }
+    };
   } catch (error) {
-    console.error('Error creating group post:', error);
+    console.error('❌ Error in createGroupPost:', error);
     throw error;
   }
 };
@@ -189,6 +241,168 @@ export const useAddComment = () => {
     isConfirmed,
     hash
   };
+};
+
+// API function to fetch file content by CID (with JWT authentication)
+export const fetchFileContentByCid = async (cid: string): Promise<any> => {
+  try {
+    console.log('📄 Fetching file content for CID:', cid);
+    
+    // Make authenticated API call to get file content by CID
+    const data = await apiService.get(`/fileByCid?cid=${cid}`);
+    
+    // Check if the response has the content nested under a specific key
+    if (data && typeof data === 'object') {
+      if (data.content) {
+        return data.content;
+      } else if (data.file) {
+        return data.file;
+      } else if (data.data) {
+        return data.data;
+      }
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('❌ Error fetching file content for CID:', cid, error);
+    throw error;
+  }
+};
+
+// API function to delete a file by CID (with authentication)
+export const deleteFileById = async (cid: string, address: string): Promise<any> => {
+  try {
+    console.log('🗑️ Starting file deletion process for CID:', cid);
+    
+    // Generate salt (current timestamp in seconds)
+    const timestamp = Math.floor(Date.now() / 1000);
+    const salt = timestamp.toString();
+    
+    console.log('🔐 Generated salt for deletion:', salt);
+    console.log('📝 User address:', address);
+    
+    // Sign the salt with MetaMask
+    console.log('✍️ Requesting signature from MetaMask...');
+    const signature = await signMessageWithMetaMask(salt);
+    
+    console.log('✅ Signature received for deletion');
+    
+    // Prepare the deletion payload
+    const payload = {
+      salt,
+      address,
+      signature
+    };
+    
+    console.log('📡 Sending deletion request for CID:', cid);
+    console.log('📦 Deletion payload:', payload);
+    
+    // Make authenticated API call to delete the file
+    const response = await fetch(`http://localhost:8888/delete/file?cid=${cid}`, {
+      method: 'post',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authService.getAuthToken()}`
+      },
+      body: JSON.stringify(payload)
+    });
+    
+    console.log('📥 Deletion API response status:', response.status);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Deletion API error response:', errorText);
+      throw new Error(`Failed to delete file: ${response.status} - ${errorText}`);
+    }
+    
+    const result = await response.json();
+    console.log('✅ File deleted successfully:', result);
+    
+    return result;
+  } catch (error) {
+    console.error('❌ Error deleting file for CID:', cid, error);
+    throw error;
+  }
+};
+
+// API function to fetch saved posts for a specific owner with full content
+export const fetchSavedPosts = async (owner: string): Promise<any[]> => {
+  try {
+    console.log('📡 Fetching saved posts for owner:', owner);
+    
+    // Check if JWT token exists, if not, authenticate first
+    if (!authService.isAuthenticated()) {
+      console.log('🔐 No valid JWT token found, authenticating...');
+      // This will trigger the user to sign a message for authentication
+      await authService.login(owner);
+    }
+
+    // Make authenticated API call to fetch saved posts
+    const response = await apiService.get(`/pendingFilesByOwner?owner=${owner}`);
+    
+    console.log('✅ Saved posts fetched successfully:', response);
+    
+    // If response is an array, iterate over each file to get content
+    const savedFiles = Array.isArray(response) ? response : (response.files || []);
+    
+    if (savedFiles.length === 0) {
+      console.log('📝 No saved files found');
+      return [];
+    }
+
+    console.log(`🔄 Processing ${savedFiles.length} saved files...`);
+    
+    // Fetch content for each file by CID
+    const savedPostsWithContent = await Promise.allSettled(
+      savedFiles.map(async (file: any) => {
+        try {
+          if (!file.cid) {
+            console.warn('⚠️ File missing CID:', file);
+            return {
+              ...file,
+              content: null,
+              contentError: 'Missing CID'
+            };
+          }
+
+          // Fetch the actual file content
+          const contentData = await fetchFileContentByCid(file.cid);
+          
+          return {
+            ...file,
+            content: contentData,
+            contentError: null
+          };
+        } catch (error) {
+          console.error(`❌ Failed to fetch content for CID ${file.cid}:`, error);
+          return {
+            ...file,
+            content: null,
+            contentError: error instanceof Error ? error.message : 'Unknown error'
+          };
+        }
+      })
+    );
+
+    // Filter successful results and log any failures
+    const processedPosts = savedPostsWithContent
+      .map((result, index) => {
+        if (result.status === 'fulfilled') {
+          return result.value;
+        } else {
+          console.error(`❌ Failed to process saved post ${index}:`, result.reason);
+          return null;
+        }
+      })
+      .filter(Boolean);
+
+    console.log(`✅ Successfully processed ${processedPosts.length} saved posts with content`);
+    return processedPosts;
+    
+  } catch (error) {
+    console.error('❌ Error fetching saved posts:', error);
+    throw error;
+  }
 };
 
 export const useGetUserComments = (owner: string) => {

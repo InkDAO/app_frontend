@@ -201,15 +201,7 @@ export const SavedPostCard = ({ savedPost, onDelete }: SavedPostCardProps) => {
       // Parse and prepare content for editor
       const contentData = typeof content === 'string' ? JSON.parse(content) : content;
       
-      // Clear existing editor storage
-      localStorage.removeItem('editorjs-content');
-      localStorage.removeItem('editorjs-title');
-      localStorage.removeItem('editorjs-image-sizes');
-
-      // Store title
-      if (contentData.title) {
-        localStorage.setItem('editorjs-title', contentData.title);
-      }
+      // localStorage removed - no need to clear or store content
 
       // Store content based on structure with detailed logging
       console.log('🔍 SavedPostCard: Preparing content for editor...');
@@ -232,7 +224,7 @@ export const SavedPostCard = ({ savedPost, onDelete }: SavedPostCardProps) => {
             height: b.data?.height
           }))
         );
-        localStorage.setItem('editorjs-content', JSON.stringify(editorContent));
+        // localStorage removed - no need to store content
       } else if (contentData.blocks) {
         console.log('✅ Using contentData.blocks with', contentData.blocks.length, 'blocks');
         console.log('🖼️ Image blocks in contentData:', 
@@ -245,7 +237,7 @@ export const SavedPostCard = ({ savedPost, onDelete }: SavedPostCardProps) => {
             height: b.data?.height
           }))
         );
-        localStorage.setItem('editorjs-content', JSON.stringify(contentData));
+        // localStorage removed - no need to store content
       } else if (contentData.content) {
         // Try to use nested content
         const nestedContent = typeof contentData.content === 'string' 
@@ -262,13 +254,13 @@ export const SavedPostCard = ({ savedPost, onDelete }: SavedPostCardProps) => {
             height: b.data?.height
           }))
         );
-        localStorage.setItem('editorjs-content', JSON.stringify(nestedContent));
+        // localStorage removed - no need to store content
       } else {
         console.warn('⚠️ No suitable content structure found for editor');
       }
 
-      // Navigate to editor with CID in URL
-      navigate(`/app/editor?cid=${cid}`);
+      // Navigate to editor with CID in URL and refresh to ensure clean state
+      window.location.href = `/app/editor/${cid}`;
       
       toast({
         title: "Opening Editor",

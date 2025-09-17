@@ -19,21 +19,19 @@ import { Edit3, Eye } from 'lucide-react';
 import { useAccount } from 'wagmi';
 import { createGroupPost, updateFileById, signMessageWithMetaMask } from '@/services/dXService';
 import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { AuthGuard } from '@/components/AuthGuard';
 import '../styles/editor.css';
 
-const STORAGE_KEY = 'editorjs-content';
-const TITLE_STORAGE_KEY = 'editorjs-title';
-const IMAGE_SIZES_KEY = 'editorjs-image-sizes';
+// localStorage removed - users must manually save using save button
 
 const EditorPage = () => {
   const editorRef = useRef<EditorJS | null>(null);
   const holderRef = useRef<HTMLDivElement>(null);
   const [documentTitle, setDocumentTitle] = useState('');
   const [lastSaved, setLastSaved] = useState<string>('');
-  const [autoSaveTimeout, setAutoSaveTimeout] = useState<NodeJS.Timeout | null>(null);
+  // Auto-save removed - users must manually save
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [previewData, setPreviewData] = useState<any>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -64,13 +62,51 @@ const EditorPage = () => {
   
   const { address } = useAccount();
   const { toast } = useToast();
-  const navigate = useNavigate();
+  const originalNavigate = useNavigate();
+  const { cid } = useParams();
   const { ensureAuthenticated, isAuthenticated } = useAuth();
+
+  // Create a blocked navigate function that shows dialog only when there are unsaved changes
+  const navigate = (to: any, options?: any) => {
+    console.log('Programmatic navigation attempt from editor', { to, options, hasUnsavedChanges });
+    
+    // Check if we're navigating from an existing post to a new post
+    const cidFromUrl = getCidFromUrl();
+    const isNavigatingToNewPost = !to.includes('/editor/') && !to.includes('editor/');
+    
+    if (hasUnsavedChanges) {
+      setShowUnsavedDialog(true);
+      setPendingNavigation(() => () => {
+        console.log('Programmatic navigation function created, will navigate to:', to);
+        
+        // Set flag if navigating from existing post to new post
+        if (cidFromUrl && isNavigatingToNewPost) {
+          sessionStorage.setItem('coming-from-existing-post', 'true');
+        }
+        
+        // localStorage removed - no need to clear
+        setTimeout(() => {
+          originalNavigate(to, options);
+        }, 0);
+      });
+    } else {
+      // No unsaved changes, navigate directly
+      
+      // Set flag if navigating from existing post to new post
+      if (cidFromUrl && isNavigatingToNewPost) {
+        sessionStorage.setItem('coming-from-existing-post', 'true');
+      }
+      
+      // localStorage removed - no need to clear
+      setTimeout(() => {
+        originalNavigate(to, options);
+      }, 0);
+    }
+  };
 
   // Get CID from URL parameters if present (for editing existing posts)
   const getCidFromUrl = () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get('cid');
+    return cid || null;
   };
 
   // Handle image resize events with useEffect
@@ -153,7 +189,7 @@ const EditorPage = () => {
       const imageId = getImageId(resizeState.activeImage);
       const currentWidth = parseInt(resizeState.activeImage.style.width) || resizeState.activeImage.offsetWidth;
       const currentHeight = parseInt(resizeState.activeImage.style.height) || resizeState.activeImage.offsetHeight;
-      saveImageSize(imageId, currentWidth, currentHeight);
+      // Image size saving removed - localStorage not used
       
       // Force a reflow to ensure the final size is applied
       resizeState.activeImage.offsetHeight;
@@ -183,44 +219,9 @@ const EditorPage = () => {
     };
   }, [resizeState.isResizing, resizeState.activeImage, resizeState.startX, resizeState.startWidth, resizeState.originalAspectRatio, resizeState.lastResizeTime, resizeState.animationFrame]);
 
-  // Load saved content from localStorage
-  const loadSavedContent = () => {
-    try {
-      const savedContent = localStorage.getItem(STORAGE_KEY);
-      const savedTitle = localStorage.getItem(TITLE_STORAGE_KEY);
-      
-      if (savedTitle) {
-        setDocumentTitle(savedTitle);
-      }
-      
-      return savedContent ? JSON.parse(savedContent) : null;
-    } catch (error) {
-      console.error('Error loading saved content:', error);
-      return null;
-    }
-  };
+  // localStorage removed - no saved content to load
 
-  // Image size management functions
-  const getImageSizes = () => {
-    try {
-      const sizes = localStorage.getItem(IMAGE_SIZES_KEY);
-      return sizes ? JSON.parse(sizes) : {};
-    } catch (error) {
-      console.error('Error loading image sizes:', error);
-      return {};
-    }
-  };
-
-  const saveImageSize = (imageId: string, width: number, height: number) => {
-    try {
-      const sizes = getImageSizes();
-      sizes[imageId] = { width, height };
-      localStorage.setItem(IMAGE_SIZES_KEY, JSON.stringify(sizes));
-      console.log(`Saved image size for ${imageId}:`, { width, height });
-    } catch (error) {
-      console.error('Error saving image size:', error);
-    }
-  };
+  // Image size management removed - localStorage not used
 
   const getImageId = (img: HTMLImageElement) => {
     // Create a unique identifier using image src and some context
@@ -234,20 +235,17 @@ const EditorPage = () => {
   const applySavedImageSizes = () => {
     if (!holderRef.current) return;
     
-    const sizes = getImageSizes();
+    // Image size management removed - localStorage not used
     const images = holderRef.current.querySelectorAll('img');
     
     images.forEach(img => {
       const imageElement = img as HTMLImageElement;
       const imageId = getImageId(imageElement);
       
-      if (sizes[imageId]) {
-        const { width, height } = sizes[imageId];
-        imageElement.style.width = `${width}px`;
-        imageElement.style.height = `${height}px`;
+      // Image size management removed - localStorage not used
+      // No stored sizes to apply
         imageElement.style.maxWidth = 'none';
         // console.log(`Applied saved size to image ${imageId}:`, { width, height });
-      }
     });
   };
 
@@ -280,36 +278,13 @@ const EditorPage = () => {
       
         console.log('📊 Found', images.length, 'images in DOM');
       
-      // Get block data from localStorage instead of calling save()
-      const storedContent = localStorage.getItem(STORAGE_KEY);
-      if (!storedContent) {
-        console.log('⚠️ No stored content found');
-        return;
-      }
-      
-      let parsedContent;
-      try {
-        parsedContent = JSON.parse(storedContent);
-        console.log('💾 localStorage content blocks:', parsedContent.blocks?.length || 0);
-        console.log('🖼️ Image blocks in localStorage:', 
-          parsedContent.blocks?.filter((b: any) => b.type === 'image').map((b: any, i: number) => ({
-            index: i,
-            url: b.data?.file?.url || b.data?.url,
-            customWidth: b.data?.customWidth,
-            customHeight: b.data?.customHeight,
-            width: b.data?.width,
-            height: b.data?.height
-          }))
-        );
-      } catch (e) {
-        console.warn('Failed to parse localStorage content:', e);
-        return;
-      }
+      // localStorage removed - no stored content to process
       
       let imageIndex = 0;
       let sizesApplied = 0;
       
       // Iterate through blocks to find image blocks with custom dimensions
+      const parsedContent = await editorRef.current.save();
       parsedContent.blocks?.forEach((block: any, blockIndex: number) => {
         if (block.type === 'image' && block.data) {
           const imageElement = images[imageIndex] as HTMLImageElement;
@@ -358,7 +333,7 @@ const EditorPage = () => {
               
               // Save to localStorage for consistency with resize handles
               const imageId = getImageId(imageElement);
-              saveImageSize(imageId, customWidth, customHeight);
+              // Image size saving removed - localStorage not used
               
               sizesApplied++;
               
@@ -388,13 +363,7 @@ const EditorPage = () => {
         // Mark as applied to prevent repeated calls
         hasAppliedImageSizes = true;
         
-        // If no sizes were applied, try again with localStorage content
-        if (sizesApplied === 0) {
-          console.log('🔄 Retrying with localStorage content...');
-          setTimeout(() => {
-            applyImageSizesFromStoredContent();
-          }, 500);
-        }
+        // localStorage removed - no stored content to retry with
         
       } catch (error) {
         console.error('❌ Error applying image sizes from block data:', error);
@@ -403,118 +372,43 @@ const EditorPage = () => {
   };
 
   // Fallback function to apply sizes from localStorage content
-  const applyImageSizesFromStoredContent = () => {
-    try {
-      const storedContent = localStorage.getItem(STORAGE_KEY);
-      if (!storedContent || !holderRef.current) return;
-      
-      const parsedContent = JSON.parse(storedContent);
-      const images = holderRef.current.querySelectorAll('img');
-      
-      console.log('🔄 Applying sizes from stored content fallback...');
-      
-      let imageIndex = 0;
-      let sizesApplied = 0;
-      
-      parsedContent.blocks?.forEach((block: any, blockIndex: number) => {
-        if (block.type === 'image' && block.data) {
-          const imageElement = images[imageIndex] as HTMLImageElement;
-          
-          if (imageElement) {
-            const customWidth = block.data.customWidth || block.data.width || block.data.file?.width;
-            const customHeight = block.data.customHeight || block.data.height || block.data.file?.height;
-            
-            if (customWidth && customHeight) {
-              imageElement.style.setProperty('width', `${customWidth}px`, 'important');
-              imageElement.style.setProperty('height', `${customHeight}px`, 'important');
-              imageElement.style.setProperty('max-width', 'none', 'important');
-              imageElement.style.setProperty('object-fit', 'contain', 'important');
-              
-              const imageId = getImageId(imageElement);
-              saveImageSize(imageId, customWidth, customHeight);
-              
-              sizesApplied++;
-              
-              console.log(`✅ Fallback applied size to image ${imageIndex}:`, { 
-                width: customWidth, 
-                height: customHeight
-              });
-            }
-          }
-          
-          imageIndex++;
-        }
-      });
-      
-      console.log(`🎯 Fallback finished: ${sizesApplied}/${imageIndex} images processed`);
-      
-    } catch (error) {
-      console.error('❌ Error in fallback image size application:', error);
-    }
-  };
+  // Fallback function removed - localStorage not used
 
-  // Save content to localStorage
-  const saveContent = async () => {
-    if (!editorRef.current) return;
-    
-    try {
-      const outputData = await editorRef.current.save();
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(outputData));
-      localStorage.setItem(TITLE_STORAGE_KEY, documentTitle);
-      
-      const now = new Date().toLocaleTimeString();
-      setLastSaved(`Last saved at ${now}`);
-      
-      console.log('Content saved successfully', outputData);
-    } catch (error) {
-      console.error('Error saving content:', error);
-    }
-  };
+  // Auto-save removed - users must manually save using save button
 
-  // Auto-save with debouncing
-  const autoSave = () => {
-    // Clear existing timeout
-    if (autoSaveTimeout) {
-      clearTimeout(autoSaveTimeout);
-    }
-    
-    // Set new timeout for auto-save after 2 seconds of inactivity
-    const timeout = setTimeout(() => {
-      saveContent();
-    }, 2000);
-    
-    setAutoSaveTimeout(timeout);
-  };
-
-  // Check if content has meaningful changes
+  // Check if content has meaningful changes that require IPFS saving
   const hasContentChanged = async () => {
     if (!editorRef.current) return false;
     
     try {
       const currentData = await editorRef.current.save();
-      const savedData = loadSavedContent();
+      // localStorage removed - no saved data to compare
       
       // Check if title is different
-      const savedTitle = localStorage.getItem(TITLE_STORAGE_KEY) || '';
-      if (documentTitle !== savedTitle) return true;
+      // localStorage removed - no saved title to compare
+      // Title comparison removed - localStorage not used
       
-      // Check if content is different (simple comparison)
+      // If no saved data exists, check if current content has meaningful data
+      // Always check for meaningful content since localStorage is removed
+      {
       const currentBlocks = currentData?.blocks || [];
-      const savedBlocks = savedData?.blocks || [];
-      
-      if (currentBlocks.length !== savedBlocks.length) return true;
-      
-      // Check if any blocks have non-empty content
-      const hasNonEmptyContent = currentBlocks.some(block => {
+        return currentBlocks.some(block => {
         if (block.type === 'paragraph' && block.data?.text?.trim()) return true;
         if (block.type === 'header' && block.data?.text?.trim()) return true;
         if (block.type === 'list' && block.data?.items?.length > 0) return true;
         if (block.type === 'quote' && (block.data?.text?.trim() || block.data?.caption?.trim())) return true;
         if (block.type === 'code' && block.data?.code?.trim()) return true;
+          if (block.type === 'image' && block.data?.file?.url) return true;
+          if (block.type === 'table' && block.data?.content?.length > 0) return true;
         return false;
       });
+      }
       
-      return hasNonEmptyContent;
+      // localStorage removed - no saved data to compare
+      
+      // localStorage removed - no comparison needed
+      
+      // localStorage removed - no comparison needed
     } catch (error) {
       console.error('Error checking content changes:', error);
       return false;
@@ -559,12 +453,12 @@ const EditorPage = () => {
           
           // Get stored sizes from localStorage as fallback
           const imageId = getImageId(imageElement);
-          const storedSizes = getImageSizes();
-          const storedSize = storedSizes[imageId];
+          // Image size management removed - localStorage not used
+          // Image size management removed - no stored sizes
           
           console.log(`🔍 Block ${blockIndex} dimension analysis:`, {
             currentDOM: { width: currentWidth, height: currentHeight },
-            storedSize: storedSize,
+            // storedSize removed - localStorage not used
             blockData: {
               customWidth: block.data.customWidth,
               customHeight: block.data.customHeight,
@@ -574,9 +468,9 @@ const EditorPage = () => {
             imageId
           });
           
-          // Prioritize stored dimensions over current DOM dimensions to preserve user's intended size
-          const finalWidth = storedSize?.width || (currentWidth > 0 ? currentWidth : block.data.customWidth);
-          const finalHeight = storedSize?.height || (currentHeight > 0 ? currentHeight : block.data.customHeight);
+          // Use current DOM dimensions or block data dimensions
+          const finalWidth = currentWidth > 0 ? currentWidth : block.data.customWidth;
+          const finalHeight = currentHeight > 0 ? currentHeight : block.data.customHeight;
           
           if (finalWidth && finalHeight) {
             block.data.customWidth = finalWidth;
@@ -608,8 +502,8 @@ const EditorPage = () => {
     return enhancedData;
   };
 
-  // Save content to API
-  const saveToAPI = async () => {
+  // Save content to API (internal function)
+  const saveToAPIInternal = async (clearPendingNavigation = false) => {
     if (!editorRef.current || !address) {
       toast({
         title: "Error",
@@ -617,6 +511,13 @@ const EditorPage = () => {
         variant: "destructive"
       });
       return false;
+    }
+
+    // Clear pending navigation if this is a direct save (not from dialog)
+    if (clearPendingNavigation) {
+      console.log('💾 Direct save initiated - clearing any pending navigation');
+      setPendingNavigation(null);
+      setShowUnsavedDialog(false);
     }
 
     // Ensure user is authenticated before saving
@@ -646,18 +547,101 @@ const EditorPage = () => {
         console.log('   - Title:', documentTitle);
         console.log('   - Content structure:', Object.keys(enhancedOutputData || {}));
         
-        await updateFileById(cidFromUrl, enhancedOutputData, documentTitle, address);
+        // localStorage removed - no need to clear before IPFS request
+        
+        // Ensure user is authenticated before making the update call
+        try {
+          await ensureAuthenticated();
+        } catch (authError) {
+          console.error('❌ Authentication failed:', authError);
+          toast({
+            title: "Authentication Error",
+            description: "Please connect your wallet and try again",
+            variant: "destructive"
+          });
+          return false;
+        }
+        
+        let result;
+        try {
+          result = await updateFileById(cidFromUrl, enhancedOutputData, documentTitle, address);
+        } catch (error) {
+          console.error('❌ Error in updateFileById:', error);
+          
+          // Check if it's an authentication error
+          if (error.message && error.message.includes('401')) {
+            try {
+              await ensureAuthenticated();
+              result = await updateFileById(cidFromUrl, enhancedOutputData, documentTitle, address);
+            } catch (retryError) {
+              console.error('❌ Retry failed:', retryError);
+              toast({
+                title: "Error",
+                description: "Failed to update content after retry",
+                variant: "destructive"
+              });
+              return false;
+            }
+          } else {
+            toast({
+              title: "Error",
+              description: "Failed to update content",
+              variant: "destructive"
+            });
+            return false;
+          }
+        }
+        
+        // Extract new CID from the update response (same format as create/group)
+        const newCid = result?.upload?.cid || result?.cid || result?.data?.cid || result?.ipfsHash || result?.hash;
+        
+        // Debug: Log to localStorage so it persists across redirects
+        localStorage.setItem('debug-update', JSON.stringify({
+          timestamp: new Date().toISOString(),
+          hasResult: !!result,
+          resultKeys: result ? Object.keys(result) : [],
+          extractedCid: newCid,
+          currentUrl: window.location.href
+        }));
+        
+        if (newCid) {
+          // Update the URL with the new CID and redirect
+          const newUrl = `/app/editor/${newCid}`;
+          
+          // Debug: Log redirect details
+          localStorage.setItem('debug-redirect', JSON.stringify({
+            timestamp: new Date().toISOString(),
+            newCid: newCid,
+            newUrl: newUrl,
+            fullUrl: window.location.origin + newUrl,
+            currentUrl: window.location.href
+          }));
         
         toast({
           title: "Success", 
-          description: "Content updated successfully! Reloading page...",
-        });
-        
-        // Reload the page to get the latest saved content
-        // Don't clear localStorage before reload - let the reloaded page load fresh content from server
+            description: "Content updated successfully! Redirecting to updated content...",
+          });
+          
+          // Add a small delay to ensure toast is shown
+          setTimeout(() => {
+            console.log('🚀 About to redirect to:', newUrl);
+            console.log('🚀 Full URL:', window.location.origin + newUrl);
+            window.location.href = newUrl;
+          }, 500);
+          
+        } else {
+          console.warn('⚠️ No new CID found in update response, reloading with current CID');
+          
+          toast({
+            title: "Success", 
+            description: "Content updated successfully! Reloading...",
+          });
+          
+          // Fallback: reload the page if no new CID
         setTimeout(() => {
           window.location.reload();
-        }, 1000); // Small delay to show the success message
+          }, 1000);
+        }
         
         return true;
         
@@ -687,11 +671,42 @@ const EditorPage = () => {
         });
         console.log('=== SIGNING PROCESS END ===');
         
-        // Post to API
-        await createGroupPost(enhancedOutputData, documentTitle, address, signature, salt);
+        // localStorage removed - no need to clear before IPFS request
         
-        // Handle successful save (this will clear localStorage and redirect)
+        // Ensure user is authenticated before making the create call
+        try {
+          await ensureAuthenticated();
+        } catch (authError) {
+          console.error('❌ Authentication failed for new post:', authError);
+          toast({
+            title: "Authentication Error",
+            description: "Please connect your wallet and try again",
+            variant: "destructive"
+          });
+          return false;
+        }
+        
+        // Post to API and get the response with CID
+        const result = await createGroupPost(enhancedOutputData, documentTitle, address, signature, salt);
+        
+        // Check if we got a CID from the API response (try different possible field names)
+        const cid = result?.updatedUpload?.cid || result?.cid || result?.data?.cid || result?.ipfsHash || result?.hash;
+        if (result && cid) {
+          // Update the URL with the new CID and redirect
+          const newUrl = `/app/editor/${cid}`;
+          
+          toast({
+            title: "Success", 
+            description: "Content saved! Redirecting to new content...",
+          });
+          
+          // Redirect to the new URL with the new CID
+          window.location.href = newUrl;
+        } else {
+          // Fallback: Handle successful save without CID
+          console.warn('⚠️ No CID returned from API, using fallback behavior');
         handleSuccessfulSave();
+        }
         
         return true;
       }
@@ -709,48 +724,194 @@ const EditorPage = () => {
     }
   };
 
-  // Handle save action from dialog
+  // Public save function for direct saves (clears pending navigation)
+  const saveToAPI = async () => {
+    return await saveToAPIInternal(true);
+  };
+
+  // Handle save action from dialog (preserves pending navigation)
   const handleSave = async () => {
-    const success = await saveToAPI();
-    // Success handling is already done in saveToAPI via handleSuccessfulSave
-    if (pendingNavigation && success) {
-      setPendingNavigation(null);
+    console.log('Dialog save button clicked, pendingNavigation exists:', !!pendingNavigation);
+    const success = await saveToAPIInternal(false);
+    // The handleSuccessfulSave function will handle the navigation logic
+    // No need to duplicate it here
+  };
+
+  // localStorage removed - no need to clear storage
+
+  // fetchAndLoadContent function removed - using redirect approach instead
+
+  // Debug function to check update/redirect status
+  const checkUpdateDebug = () => {
+    const updateDebug = localStorage.getItem('debug-update');
+    const redirectDebug = localStorage.getItem('debug-redirect');
+    
+    console.log('🔍 Update Debug Info:');
+    if (updateDebug) {
+      console.log(JSON.parse(updateDebug));
+    } else {
+      console.log('No update debug info found');
+    }
+    
+    console.log('🔍 Redirect Debug Info:');
+    if (redirectDebug) {
+      console.log(JSON.parse(redirectDebug));
+    } else {
+      console.log('No redirect debug info found');
     }
   };
 
-  // Clear all editor-related local storage
-  const clearEditorStorage = () => {
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem(TITLE_STORAGE_KEY);
-    localStorage.removeItem(IMAGE_SIZES_KEY);
-    console.log('✅ Editor storage cleared');
+  // Make debug function available globally
+  (window as any).checkUpdateDebug = checkUpdateDebug;
+
+  // Reload content from IPFS after successful save using /fileByCid API
+  const reloadContentFromIPFS = async () => {
+    const cidFromUrl = getCidFromUrl();
+    console.log('🔄 reloadContentFromIPFS called, CID from URL:', cidFromUrl);
+    if (!cidFromUrl) {
+      console.log('❌ No CID found in URL, cannot reload content');
+      return;
+    }
+
+    setIsLoadingContent(true);
+    try {
+      console.log('🔄 Reloading content using /fileByCid API for CID:', cidFromUrl);
+      
+      // Import fetchFileContentByCid from dXService
+      const { fetchFileContentByCid } = await import('@/services/dXService');
+      
+      const contentData = await fetchFileContentByCid(cidFromUrl);
+      console.log('🔍 /fileByCid API result:', contentData);
+      
+      if (contentData) {
+        console.log('🔍 Content data type:', typeof contentData);
+        console.log('🔍 Content data keys:', Object.keys(contentData || {}));
+        
+        try {
+          // Parse the JSON response that contains title and content
+          const parsedResponse = typeof contentData === 'string' ? JSON.parse(contentData) : contentData;
+          console.log('🔍 Parsed response:', parsedResponse);
+          console.log('🔍 Parsed response keys:', Object.keys(parsedResponse));
+          console.log('🔍 Content field:', parsedResponse.content);
+          console.log('🔍 Title field:', parsedResponse.title);
+          
+          if (parsedResponse.content) {
+            console.log('✅ Successfully loaded content from /fileByCid API');
+            console.log('🔍 Content structure:', Object.keys(parsedResponse.content));
+            console.log('🔍 Content blocks count:', parsedResponse.content.blocks?.length);
+            
+            // Store the loaded content in localStorage for consistency
+            // localStorage removed - no need to store content
+            
+            // Clear old image size data to ensure fresh content is used
+            // localStorage removed - no image sizes to clear
+            console.log('🧹 Cleared old localStorage data after reloading from API');
+            
+            // Set the title
+            if (parsedResponse.title) {
+              setDocumentTitle(parsedResponse.title);
+              console.log('🔍 Title set to:', parsedResponse.title);
+            }
+            
+            // Force editor re-initialization by destroying and recreating
+            if (editorRef.current && editorRef.current.destroy) {
+              console.log('🔄 Destroying existing editor before reload');
+              editorRef.current.destroy();
+              editorRef.current = null;
+            }
+            
+            // Small delay to ensure DOM cleanup is complete
+            setTimeout(() => {
+              // Set preview data to trigger editor re-initialization
+              console.log('🔍 Setting preview data:', parsedResponse.content);
+              setPreviewData(parsedResponse.content);
+              console.log('✅ Preview data set, editor will re-initialize');
+            }, 100);
+            
+          } else {
+            // Fallback to the original content if structure is different
+            console.log('⚠️ No content field in parsed response, using fallback structure');
+            console.log('🔍 Using raw contentData:', contentData);
+            // localStorage removed - no need to store content
+            setPreviewData(contentData);
+          }
+        } catch (error) {
+          // If parsing fails, use the content as-is
+          console.log('⚠️ JSON parsing failed, using raw content:', error);
+          console.log('🔍 Raw contentData:', contentData);
+          // localStorage removed - no need to store content
+          setPreviewData(contentData);
+        }
+      } else {
+        console.error('❌ Failed to reload content from /fileByCid API: No content data');
+      }
+    } catch (error) {
+      console.error('❌ Error reloading content from /fileByCid API:', error);
+    } finally {
+      setIsLoadingContent(false);
+    }
   };
 
   // Handle successful save - clear storage and redirect
   const handleSuccessfulSave = () => {
     setHasUnsavedChanges(false);
     setShowUnsavedDialog(false);
-    clearEditorStorage();
+    // localStorage removed - no need to clear
     
+    // Check if there's a pending navigation (user was trying to navigate somewhere)
+    if (pendingNavigation) {
     toast({
       title: "Success", 
-      description: "Content saved! Redirecting to My Posts...",
+        description: "Content saved! Redirecting...",
     });
     
-    // Navigate to my posts page
+      // Execute the pending navigation after successful save
+      const navFunction = pendingNavigation;
+      setPendingNavigation(null);
     setTimeout(() => {
-      navigate('/app/my-posts');
+        navFunction();
     }, 1000); // Small delay to show the success message
+      } else {
+        // No pending navigation, reload content from IPFS and stay on editor page
+        toast({
+          title: "Success", 
+          description: "Content saved! Reloading from IPFS...",
+        });
+        
+        // Reload content from IPFS after a short delay
+        setTimeout(() => {
+          reloadContentFromIPFS();
+        }, 1000);
+      }
   };
 
   // Handle discard action from dialog
   const handleDiscard = () => {
-    setHasUnsavedChanges(false);
-    setShowUnsavedDialog(false);
+    console.log('Discard button clicked, pendingNavigation exists:', !!pendingNavigation);
     
+    // Execute the pending navigation when discarding
     if (pendingNavigation) {
-      pendingNavigation();
+      console.log('Executing pending navigation after discard');
+      const navFunction = pendingNavigation;
+      
+      // Close dialog and clear state
+      setShowUnsavedDialog(false);
+      setHasUnsavedChanges(false);
       setPendingNavigation(null);
+      
+      // localStorage removed - no need to clear
+      
+      // Execute navigation in next tick to avoid React warning
+      setTimeout(() => {
+        navFunction();
+      }, 0);
+    } else {
+      console.log('No pending navigation to execute');
+      // Still close dialog even if no navigation
+      setShowUnsavedDialog(false);
+      setHasUnsavedChanges(false);
+      // Clear localStorage even when no navigation
+      // localStorage removed - no need to clear
     }
   };
 
@@ -766,7 +927,7 @@ const EditorPage = () => {
           const outputData = await editorRef.current.save();
           setPreviewData(outputData);
           // Also save to localStorage as backup
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(outputData));
+          // localStorage removed - no need to store content
           setIsPreviewMode(true);
         } catch (error) {
           console.error('Error saving content for preview:', error);
@@ -840,7 +1001,8 @@ const EditorPage = () => {
     }
   };
 
-  // Load existing post content from IPFS when editing
+
+  // Load existing post content using /fileByCid API when editing
   useEffect(() => {
     const loadExistingPostContent = async () => {
       const cidFromUrl = getCidFromUrl();
@@ -848,16 +1010,16 @@ const EditorPage = () => {
 
       setIsLoadingContent(true);
       try {
-        console.log('🔄 Loading existing post content from IPFS for CID:', cidFromUrl);
+        console.log('🔄 Loading existing post content using /fileByCid API for CID:', cidFromUrl);
         
-        // Import fetchFromIPFS here to avoid circular dependency
-        const { fetchFromIPFS } = await import('@/services/pinataService');
+        // Import fetchFileContentByCid from dXService
+        const { fetchFileContentByCid } = await import('@/services/dXService');
         
-        const result = await fetchFromIPFS(cidFromUrl);
-        if (result.success && result.content) {
+        const contentData = await fetchFileContentByCid(cidFromUrl);
+        if (contentData) {
           try {
             // Parse the JSON response that contains title and content
-            const parsedResponse = JSON.parse(result.content);
+            const parsedResponse = typeof contentData === 'string' ? JSON.parse(contentData) : contentData;
             if (parsedResponse.content) {
               // Debug: Log the loaded content to check for image size data
               console.log('🔍 Loaded content structure:', {
@@ -881,35 +1043,34 @@ const EditorPage = () => {
               if (parsedResponse.title) {
                 setDocumentTitle(parsedResponse.title);
               }
-              console.log('✅ Successfully loaded existing post content from IPFS');
+              console.log('✅ Successfully loaded existing post content from /fileByCid API');
               
               // Store the loaded content in localStorage as well for consistency
-              localStorage.setItem(STORAGE_KEY, JSON.stringify(parsedResponse.content));
+              // localStorage removed - no need to store content
               
               // Clear any old localStorage data after loading fresh content from server
               // This ensures we're working with the latest server content
-              const urlParams = new URLSearchParams(window.location.search);
-              const cidFromUrl = urlParams.get('cid');
+              const cidFromUrl = getCidFromUrl();
               if (cidFromUrl) {
                 // Clear old data to ensure fresh content is used
-                localStorage.removeItem('editorjs-image-sizes');
+                // localStorage removed - no image sizes to clear
                 console.log('🧹 Cleared old localStorage data after loading fresh content from server');
               }
             } else {
               // Fallback to the original content if structure is different
-              setPreviewData(result.content);
+              setPreviewData(contentData);
               console.log('✅ Loaded existing post content (fallback structure)');
             }
           } catch (error) {
             // If parsing fails, use the content as-is
-            setPreviewData(result.content);
+            setPreviewData(contentData);
             console.log('✅ Loaded existing post content (raw format)');
           }
         } else {
-          console.error('❌ Failed to load existing post content:', result.error);
+          console.error('❌ Failed to load existing post content: No content data');
         }
       } catch (error) {
-        console.error('❌ Error loading existing post content from IPFS:', error);
+        console.error('❌ Error loading existing post content from /fileByCid API:', error);
       } finally {
         setIsLoadingContent(false);
       }
@@ -919,21 +1080,56 @@ const EditorPage = () => {
   }, []); // Run once on mount
 
   useEffect(() => {
-    if (!holderRef.current || isPreviewMode || isLoadingContent) return;
+    console.log('🔍 Editor initialization useEffect triggered');
+    console.log('🔍 holderRef.current:', !!holderRef.current);
+    console.log('🔍 isPreviewMode:', isPreviewMode);
+    console.log('🔍 isLoadingContent:', isLoadingContent);
+    console.log('🔍 previewData:', previewData);
+    
+    if (!holderRef.current || isPreviewMode || isLoadingContent) {
+      console.log('🔍 Skipping editor initialization - conditions not met');
+      return;
+    }
 
     // Small delay to ensure DOM is ready
     const timer = setTimeout(() => {
+      console.log('🔍 Starting editor initialization...');
+      
       // Destroy existing editor if it exists
       if (editorRef.current && editorRef.current.destroy) {
+        console.log('🔍 Destroying existing editor');
         editorRef.current.destroy();
         editorRef.current = null;
       }
 
-      // Load saved content
-      const savedData = loadSavedContent();
+      // Only load saved content if we're editing an existing post (has CID)
+      const cidFromUrl = getCidFromUrl();
+      let initialData = null;
       
-      // Use preview data if available, otherwise use saved data
-      const initialData = previewData || savedData;
+      if (cidFromUrl) {
+        // Editing existing post - use preview data from IPFS
+        console.log('🔍 Editing existing post - using preview data:', previewData);
+        initialData = previewData;
+      } else {
+        // New post - check if we should clear content or preserve it
+        const wasComingFromExistingPost = sessionStorage.getItem('coming-from-existing-post') === 'true';
+        
+        if (wasComingFromExistingPost) {
+          // Coming from existing post - start empty
+          console.log('🔍 New post after existing post - starting with empty editor');
+          setDocumentTitle('');
+          setHasUnsavedChanges(false);
+          initialData = null;
+          // Clear the flag
+          sessionStorage.removeItem('coming-from-existing-post');
+        } else {
+          // Regular new post - start empty (no localStorage to preserve)
+          console.log('🔍 New post - starting with empty editor');
+          initialData = null; // Always start empty for new posts
+        }
+      }
+      
+      console.log('🔍 Initial data for editor:', initialData);
 
       const editor = new EditorJS({
       holder: holderRef.current,
@@ -1040,8 +1236,7 @@ const EditorPage = () => {
         }
       },
       onChange: async () => {
-        console.log('Content changed - triggering auto-save');
-        autoSave();
+        console.log('Content changed - checking for unsaved changes');
         // Check if content has meaningful changes
         const hasChanges = await hasContentChanged();
         setHasUnsavedChanges(hasChanges);
@@ -1093,6 +1288,9 @@ const EditorPage = () => {
     });
 
       editorRef.current = editor;
+      console.log('✅ Editor created successfully:', !!editorRef.current);
+      console.log('🔍 Editor holder element:', holderRef.current);
+      console.log('🔍 Editor holder children:', holderRef.current?.children.length);
     }, 100); // Small delay to ensure DOM is ready
 
     return () => {
@@ -1100,40 +1298,43 @@ const EditorPage = () => {
       if (editorRef.current && editorRef.current.destroy) {
         editorRef.current.destroy();
       }
-      // Clear auto-save timeout on cleanup
-      if (autoSaveTimeout) {
-        clearTimeout(autoSaveTimeout);
-      }
+      // Auto-save removed - no timeout to clear
     };
   }, [isPreviewMode, previewData, isLoadingContent]);
 
-  // Save title when it changes (with debouncing)
+  // Title saving removed - localStorage not used
+
+  // Clear preview data when navigating to new post (no CID)
   useEffect(() => {
-    if (documentTitle) {
-      localStorage.setItem(TITLE_STORAGE_KEY, documentTitle);
+    const cidFromUrl = getCidFromUrl();
+    if (!cidFromUrl) {
+      console.log('🔍 New post detected - clearing all content');
+      setPreviewData(null);
+      setDocumentTitle('');
+      setHasUnsavedChanges(false);
     }
-  }, [documentTitle]);
+  }, []); // Run once on mount
 
-  // Set up custom dialog triggers (NO browser native dialogs)
+  // Set up comprehensive unsaved changes protection
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      // When tab becomes hidden, show our custom dialog if there are unsaved changes
-      if (document.visibilityState === 'hidden' && hasUnsavedChanges) {
-        console.log('Tab hidden with unsaved changes - showing dialog');
-        setShowUnsavedDialog(true);
-      }
+    // Disable browser beforeunload warning - we handle this with our custom dialog
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      // Don't show browser warning - our custom dialog handles this better
+      console.log('Beforeunload triggered - using custom dialog instead of browser warning');
     };
 
-    // When user returns to tab, show dialog if there are unsaved changes
-    const handleWindowFocus = () => {
-      if (hasUnsavedChanges && !showUnsavedDialog) {
-        console.log('Window focused with unsaved changes - showing dialog');
-        setShowUnsavedDialog(true);
-      }
-    };
+    // Removed aggressive visibility and focus handlers to prevent multiple dialogs
 
-    // Detection for tab close attempts - show ONLY our custom dialog
+    // Detection for tab close attempts and save shortcuts
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Save shortcut (Ctrl/Cmd+S)
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        console.log('Save shortcut triggered');
+        saveToAPI();
+        return;
+      }
+      
       // Detect Ctrl+W (close tab), Ctrl+Shift+W (close window), Alt+F4, Cmd+Q
       if (hasUnsavedChanges && !showUnsavedDialog) {
         const isCloseAttempt = 
@@ -1151,61 +1352,19 @@ const EditorPage = () => {
     };
 
     // Detect mouse movement towards close button area (experimental)
-    const handleMouseMove = (e: MouseEvent) => {
-      if (hasUnsavedChanges && !showUnsavedDialog) {
-        // Check if mouse is moving towards top-right area (where close button usually is)
-        const { clientX, clientY } = e;
-        const { innerWidth } = window;
-        
-        // Close button area: top 50px, right 100px
-        const isNearCloseButton = clientX > (innerWidth - 100) && clientY < 50;
-        
-        if (isNearCloseButton) {
-          console.log('Mouse near close button with unsaved changes - showing dialog');
-          setShowUnsavedDialog(true);
-        }
-      }
-    };
+    // Removed aggressive mouse movement handler to prevent multiple dialogs
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleWindowFocus);
+    // Add event listeners (simplified to prevent multiple dialogs)
+    window.addEventListener('beforeunload', handleBeforeUnload);
     document.addEventListener('keydown', handleKeyDown);
-    document.addEventListener('mousemove', handleMouseMove);
 
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleWindowFocus);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
       document.removeEventListener('keydown', handleKeyDown);
-      document.removeEventListener('mousemove', handleMouseMove);
     };
   }, [hasUnsavedChanges, showUnsavedDialog]);
 
-  // Show dialog after user is idle with unsaved changes
-  useEffect(() => {
-    if (hasUnsavedChanges && !showUnsavedDialog) {
-      // Clear existing timer
-      if (idleTimer) {
-        clearTimeout(idleTimer);
-      }
-      
-      // Show dialog after 15 seconds of inactivity with unsaved changes (reduced from 30s)
-      const timer = setTimeout(() => {
-        console.log('User idle with unsaved changes - showing dialog');
-        setShowUnsavedDialog(true);
-      }, 15000); // 15 seconds
-      
-      setIdleTimer(timer);
-    } else if (idleTimer) {
-      clearTimeout(idleTimer);
-      setIdleTimer(null);
-    }
-    
-    return () => {
-      if (idleTimer) {
-        clearTimeout(idleTimer);
-      }
-    };
-  }, [hasUnsavedChanges, showUnsavedDialog]);
+  // Idle timer removed - warning only shows when actually trying to navigate away
 
   // Check for changes when title changes
   useEffect(() => {
@@ -1215,6 +1374,98 @@ const EditorPage = () => {
     };
     checkChanges();
   }, [documentTitle]);
+
+  // Handle navigation attempts from editor page - show warning dialog only when there are unsaved changes
+  useEffect(() => {
+    let dialogTimeout: NodeJS.Timeout | null = null;
+    
+    const handleLinkClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const link = target.closest('a[href]');
+      
+      // Only block navigation if there are unsaved changes and no dialog is already showing
+      if (link && !link.hasAttribute('data-ignore-unsaved') && hasUnsavedChanges && !showUnsavedDialog) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Navigation attempt from editor with unsaved changes - showing save dialog');
+        
+        // Clear any existing timeout
+        if (dialogTimeout) {
+          clearTimeout(dialogTimeout);
+        }
+        
+        // Add small delay to prevent rapid-fire dialogs
+        dialogTimeout = setTimeout(() => {
+        setShowUnsavedDialog(true);
+          setPendingNavigation(() => () => {
+            // Use React Router navigate instead of window.location
+            const href = (link as HTMLAnchorElement).href;
+            const path = href.replace(window.location.origin, '');
+            console.log('Link navigation function created, will navigate to:', path);
+            
+            // Check if navigating from existing post to new post
+            const cidFromUrl = getCidFromUrl();
+            const isNavigatingToNewPost = !path.includes('/editor/') && !path.includes('editor/');
+            
+            // Set flag if navigating from existing post to new post
+            if (cidFromUrl && isNavigatingToNewPost) {
+              sessionStorage.setItem('coming-from-existing-post', 'true');
+            }
+            
+            // Clear localStorage before redirecting
+            // localStorage removed - no need to clear
+            // Use setTimeout to avoid React warning about updating during render
+            setTimeout(() => {
+              originalNavigate(path);
+            }, 0);
+          });
+        }, 100);
+      }
+    };
+
+    // Handle browser back/forward buttons - show dialog only when there are unsaved changes
+    const handlePopState = (e: PopStateEvent) => {
+      console.log('Browser navigation from editor', { hasUnsavedChanges });
+      if (hasUnsavedChanges) {
+        // Push the current state back to prevent navigation
+        window.history.pushState(null, '', window.location.href);
+        setShowUnsavedDialog(true);
+        setPendingNavigation(() => () => {
+          // Check if navigating from existing post to new post
+          const cidFromUrl = getCidFromUrl();
+          const currentUrl = window.location.href;
+          const isNavigatingToNewPost = !currentUrl.includes('/editor/') && !currentUrl.includes('editor/');
+          
+          // Set flag if navigating from existing post to new post
+          if (cidFromUrl && isNavigatingToNewPost) {
+            sessionStorage.setItem('coming-from-existing-post', 'true');
+          }
+          
+          // Clear localStorage before redirecting
+          // localStorage removed - no need to clear
+          // Allow the navigation to proceed
+          setTimeout(() => {
+            window.history.back();
+          }, 0);
+        });
+      }
+      // If no unsaved changes, let the navigation proceed naturally
+    };
+
+    document.addEventListener('click', handleLinkClick, true); // Use capture phase
+    window.addEventListener('popstate', handlePopState);
+    
+    // Push initial state to enable popstate detection
+    window.history.pushState(null, '', window.location.href);
+    
+    return () => {
+      if (dialogTimeout) {
+        clearTimeout(dialogTimeout);
+      }
+      document.removeEventListener('click', handleLinkClick, true);
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [originalNavigate, hasUnsavedChanges, showUnsavedDialog]); // Include all relevant dependencies
 
 
   const initializeImageResizing = () => {
@@ -1249,14 +1500,10 @@ const EditorPage = () => {
             // Apply saved size to this image
             const imageElement = img as HTMLImageElement;
             const imageId = getImageId(imageElement);
-            const sizes = getImageSizes();
-            if (sizes[imageId]) {
-              const { width, height } = sizes[imageId];
-              imageElement.style.width = `${width}px`;
-              imageElement.style.height = `${height}px`;
+            // Image size management removed - localStorage not used
+            // No stored sizes to apply
               imageElement.style.maxWidth = 'none';
-              console.log(`Applied saved size to new image ${imageId}:`, { width, height });
-            }
+            // console.log(`Applied saved size to new image ${imageId}:`, { width, height });
             
             foundImages++;
           }
@@ -1597,7 +1844,7 @@ const EditorPage = () => {
         <Navbar />
       
       {/* Title input and auto-save indicator */}
-      <div className="max-w-4xl mx-auto px-8 pt-12 pb-4">
+      <div className="max-w-4xl mx-auto px-8 pt-6 pb-4">
         <div className="flex items-center justify-between mb-6">
           <input
             type="text"
@@ -1640,15 +1887,16 @@ const EditorPage = () => {
                 <span>Preview</span>
               </button>
             </div>
+            
           </nav>
         </div>
       </div>
 
       {/* Main editor or preview */}
-      <div className="max-w-4xl mx-auto px-8 pb-20">
+      <div className="max-w-4xl mx-auto px-8 pb-64">
         <div className="tab-content">
           {isLoadingContent ? (
-            <div className="min-h-[800px] flex items-center justify-center">
+            <div className="min-h-[400px] flex items-center justify-center">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
                 <p className="text-gray-600 dark:text-gray-400">Loading content...</p>
@@ -1657,21 +1905,21 @@ const EditorPage = () => {
           ) : isPreviewMode ? (
             <EditorPreview 
               data={previewData}
-              className="min-h-[800px]"
+              className="min-h-[400px]"
             />
           ) : (
             <div 
               ref={holderRef}
-              className="min-h-[800px] focus:outline-none"
+              className="min-h-[400px] focus:outline-none"
               style={{
-                minHeight: '800px'
+                minHeight: '400px'
               }}
             />
           )}
         </div>
       </div>
 
-      {/* CSS for smooth image resizing */}
+      {/* CSS for smooth image resizing and editor spacing */}
       <style dangerouslySetInnerHTML={{
         __html: `
           .image-resize-wrapper {
@@ -1722,30 +1970,129 @@ const EditorPage = () => {
           .image-resize-wrapper:hover .resize-handle {
             opacity: 1 !important;
           }
+          
+          /* Keep EditorJS default spacing but remove extra margins */
+          .codex-editor {
+            padding: 0 !important;
+            margin: 0 !important;
+          }
+          
+          .codex-editor__redactor {
+            padding: 0 !important;
+            margin: 0 !important;
+          }
+          
+          .ce-block__content {
+            margin: 0 !important;
+            padding: 0 !important;
+          }
         `
       }} />
 
-      {/* Save and Post Buttons - Fixed at bottom right */}
-      <div className="fixed bottom-6 right-6 flex items-center space-x-3 z-50">
+      {/* Unsaved Changes Dialog */}
+      {showUnsavedDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+            <div className="flex items-center mb-4">
+              <div className="flex-shrink-0">
+                <div className="w-8 h-8 bg-yellow-100 dark:bg-yellow-900 rounded-full flex items-center justify-center">
+                  <svg className="w-5 h-5 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                  Leave Editor?
+                </h3>
+              </div>
+            </div>
+            
+            <div className="mb-6">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                You are about to leave the editor. Make sure to save your changes to IPFS before navigating away. 
+                Your work will be lost if you continue without saving.
+              </p>
+            </div>
+            
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={handleDiscard}
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md transition-colors"
+              >
+                Leave Without Saving
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={isSaving}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed rounded-md transition-colors"
+              >
+                {isSaving ? 'Saving...' : 'Save & Leave'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Action Bar - Bottom Center */}
+      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
+        {/* Ellipse container with glass morphism */}
+        <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border border-white/20 dark:border-gray-700/50 rounded-full shadow-2xl px-8 py-4">
+          <div className="flex items-center space-x-4">
         {/* Save Button */}
         <button
           onClick={saveToAPI}
           disabled={isSaving || !address}
-          className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl"
-          title={!isAuthenticated ? "Authentication required to save" : "Save content to blockchain"}
-        >
-          {isSaving ? 'Saving...' : 'Save'}
+              className="group relative px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 disabled:hover:scale-100"
+              title={!isAuthenticated ? "Authentication required to save" : "Save content to IPFS (Ctrl/Cmd+S)"}
+            >
+              <div className="flex items-center space-x-2">
+                {isSaving ? (
+                  <>
+                    <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    <span className="text-sm">Saving...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <span className="text-sm hidden sm:inline">Save to IPFS</span>
+                    <span className="text-sm sm:hidden">Save</span>
+                  </>
+                )}
+              </div>
         </button>
+            
+            {/* Divider */}
+            <div className="w-px h-6 bg-gray-300 dark:bg-gray-600"></div>
         
         {/* Post Button */}
         <button
           onClick={saveToAPI}
           disabled={isSaving || !address}
-          className="px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg shadow-lg transition-all duration-200 hover:shadow-xl"
-          title={!isAuthenticated ? "Authentication required to post" : "Post content to blockchain"}
-        >
-          {isSaving ? 'Posting...' : 'Post'}
+              className="group relative px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 disabled:hover:scale-100"
+              title={!isAuthenticated ? "Authentication required to post" : "Post content to IPFS"}
+            >
+              <div className="flex items-center space-x-2">
+                {isSaving ? (
+                  <>
+                    <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    <span className="text-sm">Posting...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                    <span className="text-sm hidden sm:inline">Publish Onchain</span>
+                    <span className="text-sm sm:hidden">Publish</span>
+                  </>
+                )}
+              </div>
         </button>
+          </div>
+        </div>
       </div>
 
       </div>

@@ -48,7 +48,7 @@ const App = () => (
                 <Route path="/app/my-comments" element={<MyCommentsPage />} />
                 <Route path="/app/announcements" element={<AnnouncementPage />} />
                 <Route path="/app/archives" element={<ArchivePage />} />
-                <Route path="/app/editor" element={<EditorPage />} />
+                <Route path="/app/editor/:cid?" element={<EditorPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>

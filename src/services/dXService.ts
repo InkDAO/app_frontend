@@ -78,10 +78,12 @@ export const createGroupPost = async (content: any, title: string, address: stri
     // console.log('   - Content size:', contentFile.size, 'bytes');
     // console.log('📦 Full API Payload:', JSON.stringify(payload, null, 2));
 
+
     const response = await fetch('http://localhost:8888/create/group', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authService.getAuthToken()}`
       },
       body: JSON.stringify(payload)
     });
@@ -95,7 +97,7 @@ export const createGroupPost = async (content: any, title: string, address: stri
     }
 
     const result = await response.json();
-    console.log('✅ API Success Response:', result);
+    console.log('✅ Content uploaded successfully!');
     
     // Return enhanced result with upload info
     return {
@@ -359,6 +361,7 @@ export const updateFileById = async (cid: string, content: any, title: string, a
     console.log('📡 Sending update request for CID:', cid);
     console.log('📦 Update payload (content length):', payload.content.length, 'characters');
     
+    
     // Make authenticated API call to update the file
     const response = await fetch(`http://localhost:8888/update/file?cid=${cid}`, {
       method: 'POST',
@@ -370,15 +373,29 @@ export const updateFileById = async (cid: string, content: any, title: string, a
     });
     
     console.log('📥 Update API response status:', response.status);
+    console.log('📥 Update API response headers:', Object.fromEntries(response.headers.entries()));
     
     if (!response.ok) {
       const errorText = await response.text();
       console.error('❌ Update API error response:', errorText);
+      console.error('❌ Update API error status:', response.status);
+      console.error('❌ Update API error statusText:', response.statusText);
       throw new Error(`Failed to update file: ${response.status} - ${errorText}`);
     }
     
     const result = await response.json();
-    console.log('✅ File updated successfully:', result);
+    console.log('✅ File updated successfully!');
+    console.log('🔍 Update API Response Details:');
+    console.log('   - Response type:', typeof result);
+    console.log('   - Response keys:', Object.keys(result || {}));
+    console.log('   - Full response:', result);
+    console.log('   - CID field:', result?.cid);
+    console.log('   - UpdatedUpload field:', result?.updatedUpload);
+    console.log('   - UpdatedUpload CID:', result?.updatedUpload?.cid);
+    console.log('   - Data field:', result?.data);
+    console.log('   - Data CID:', result?.data?.cid);
+    console.log('   - IPFS Hash:', result?.ipfsHash);
+    console.log('   - Hash:', result?.hash);
     
     return result;
   } catch (error) {

@@ -6,7 +6,7 @@ import { TagSearch } from "@/components/TagSearch";
 import { useAccount } from "wagmi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, ArrowUpDown, Wallet, MessageSquare, ArrowRight, Hash, Bookmark, FileText } from "lucide-react";
+import { Search, ArrowUpDown, Wallet, MessageSquare, ArrowRight, Hash, Bookmark, FileText, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { usePosts } from "@/hooks/usePosts";
 import { handleGetFilesByTags } from "@/services/pinataService";
@@ -155,30 +155,38 @@ export const MyPostsPage = () => {
         ) : (
           <div className="w-full">
             {/* Custom Tab Navigation */}
-            <div className="mb-6">
-              <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1 shadow-sm w-fit">
-                <button
-                  onClick={() => setActiveTab("my-posts")}
-                  className={`flex items-center space-x-2 px-4 py-2.5 text-sm font-medium rounded-md transition-all duration-200 ${
-                    activeTab === "my-posts"
-                      ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm border border-gray-200 dark:border-gray-600'
-                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-700/50'
-                  }`}
-                >
-                  <FileText className="w-4 h-4" />
-                  <span>My Posts</span>
-                </button>
-                <button
-                  onClick={() => setActiveTab("saved-posts")}
-                  className={`flex items-center space-x-2 px-4 py-2.5 text-sm font-medium rounded-md transition-all duration-200 ${
-                    activeTab === "saved-posts"
-                      ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm border border-gray-200 dark:border-gray-600'
-                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-700/50'
-                  }`}
-                >
-                  <Bookmark className="w-4 h-4" />
-                  <span>Saved Posts</span>
-                </button>
+            <div className="mb-8">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1 shadow-sm w-fit">
+                  <button
+                    onClick={() => setActiveTab("my-posts")}
+                    className={`flex items-center space-x-2 px-4 py-2.5 text-sm font-medium rounded-md transition-all duration-200 ${
+                      activeTab === "my-posts"
+                        ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm border border-gray-200 dark:border-gray-600'
+                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-700/50'
+                    }`}
+                  >
+                    <FileText className="w-4 h-4" />
+                    <span>My Posts</span>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("saved-posts")}
+                    className={`flex items-center space-x-2 px-4 py-2.5 text-sm font-medium rounded-md transition-all duration-200 ${
+                      activeTab === "saved-posts"
+                        ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm border border-gray-200 dark:border-gray-600'
+                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-700/50'
+                    }`}
+                  >
+                    <Bookmark className="w-4 h-4" />
+                    <span>Saved Posts</span>
+                  </button>
+                </div>
+                {activeTab === "saved-posts" && (
+                  <Button onClick={handleFetchSavedPosts} variant="outline" size="sm" className="flex items-center gap-2">
+                    <RefreshCw className="w-4 h-4" />
+                    Refresh
+                  </Button>
+                )}
               </div>
             </div>
             
@@ -358,20 +366,6 @@ export const MyPostsPage = () => {
                   </div>
                 ) : savedPosts.length > 0 ? (
                   <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-1">
-                        <p className="text-sm text-muted-foreground">
-                          {savedPosts.length} saved post{savedPosts.length !== 1 ? 's' : ''} found
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Content loaded from IPFS via CID
-                        </p>
-                      </div>
-                      <Button onClick={handleFetchSavedPosts} variant="outline" size="sm">
-                        Refresh
-                      </Button>
-                    </div>
-                    
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center">
                       {savedPosts.map((savedPost, index) => (
                         <SavedPostCard 

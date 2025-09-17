@@ -41,6 +41,26 @@ const EditorPage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [pendingNavigation, setPendingNavigation] = useState<(() => void) | null>(null);
   const [idleTimer, setIdleTimer] = useState<NodeJS.Timeout | null>(null);
+  const [isLoadingContent, setIsLoadingContent] = useState(false);
+  
+  // Image resize state management
+  const [resizeState, setResizeState] = useState<{
+    isResizing: boolean;
+    activeImage: HTMLImageElement | null;
+    startX: number;
+    startWidth: number;
+    originalAspectRatio: number;
+    animationFrame: number | null;
+    lastResizeTime: number;
+  }>({
+    isResizing: false,
+    activeImage: null,
+    startX: 0,
+    startWidth: 0,
+    originalAspectRatio: 0,
+    animationFrame: null,
+    lastResizeTime: 0
+  });
   
   const { address } = useAccount();
   const { toast } = useToast();
@@ -52,6 +72,116 @@ const EditorPage = () => {
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get('cid');
   };
+
+  // Handle image resize events with useEffect
+  useEffect(() => {
+    if (!resizeState.isResizing || !resizeState.activeImage) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Throttle resize events to 60fps
+      const now = performance.now();
+      if (now - resizeState.lastResizeTime < 16) return; // ~60fps
+      
+      setResizeState(prev => ({ ...prev, lastResizeTime: now }));
+
+      // Cancel previous animation frame
+      if (resizeState.animationFrame) {
+        cancelAnimationFrame(resizeState.animationFrame);
+      }
+
+      const animationFrame = requestAnimationFrame(() => {
+        const deltaX = e.clientX - resizeState.startX;
+        let newWidth = resizeState.startWidth + deltaX;
+        
+        // Constrain width between 100px and container width
+        const container = resizeState.activeImage?.closest('.ce-block__content') || 
+                        resizeState.activeImage?.closest('.ce-block');
+        const maxWidth = container ? (container as HTMLElement).clientWidth - 40 : 800;
+        newWidth = Math.max(100, Math.min(newWidth, maxWidth));
+
+        // Maintain aspect ratio
+        const newHeight = newWidth / resizeState.originalAspectRatio;
+
+        if (resizeState.activeImage) {
+          // Apply all styles at once to prevent flickering
+          resizeState.activeImage.style.cssText = `
+            width: ${newWidth}px !important;
+            height: ${newHeight}px !important;
+            max-width: none !important;
+            object-fit: contain !important;
+            transition: none !important;
+            will-change: width, height !important;
+            transform: translateZ(0) !important;
+            display: block !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: none !important;
+            outline: none !important;
+          `;
+        }
+      });
+
+      setResizeState(prev => ({ ...prev, animationFrame }));
+    };
+
+    const handleMouseUp = () => {
+      if (!resizeState.activeImage) return;
+
+      // Cancel any pending animation frame
+      if (resizeState.animationFrame) {
+        cancelAnimationFrame(resizeState.animationFrame);
+      }
+
+      // Remove resizing class
+      const wrapper = resizeState.activeImage.closest('.image-resize-wrapper');
+      wrapper?.classList.remove('resizing');
+      
+      // Restore image styles
+      resizeState.activeImage.style.transition = '';
+      resizeState.activeImage.style.willChange = '';
+      resizeState.activeImage.style.transform = '';
+      
+      // Restore body styles
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+      document.body.style.pointerEvents = '';
+      
+      // Save the new image size when resize is complete
+      const imageId = getImageId(resizeState.activeImage);
+      const currentWidth = parseInt(resizeState.activeImage.style.width) || resizeState.activeImage.offsetWidth;
+      const currentHeight = parseInt(resizeState.activeImage.style.height) || resizeState.activeImage.offsetHeight;
+      saveImageSize(imageId, currentWidth, currentHeight);
+      
+      // Force a reflow to ensure the final size is applied
+      resizeState.activeImage.offsetHeight;
+
+      // Reset resize state
+      setResizeState({
+        isResizing: false,
+        activeImage: null,
+        startX: 0,
+        startWidth: 0,
+        originalAspectRatio: 0,
+        animationFrame: null,
+        lastResizeTime: 0
+      });
+    };
+
+    document.addEventListener('mousemove', handleMouseMove, { passive: false });
+    document.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      
+      if (resizeState.animationFrame) {
+        cancelAnimationFrame(resizeState.animationFrame);
+      }
+    };
+  }, [resizeState.isResizing, resizeState.activeImage, resizeState.startX, resizeState.startWidth, resizeState.originalAspectRatio, resizeState.lastResizeTime, resizeState.animationFrame]);
 
   // Load saved content from localStorage
   const loadSavedContent = () => {
@@ -116,54 +246,71 @@ const EditorPage = () => {
         imageElement.style.width = `${width}px`;
         imageElement.style.height = `${height}px`;
         imageElement.style.maxWidth = 'none';
-        console.log(`Applied saved size to image ${imageId}:`, { width, height });
+        // console.log(`Applied saved size to image ${imageId}:`, { width, height });
       }
     });
   };
 
+  // Debounce function to prevent excessive calls
+  let imageSizeApplicationTimeout: NodeJS.Timeout | null = null;
+  let hasAppliedImageSizes = false;
+  
   // Apply image sizes from EditorJS block data (for loaded saved content)
   const applyImageSizesFromBlockData = async () => {
     if (!editorRef.current || !holderRef.current) {
-      console.log('⚠️ Editor or holder not ready for image size application');
       return;
     }
     
-    try {
-      console.log('🔍 Starting image size application from block data...');
+    // Don't apply if we've already applied recently
+    if (hasAppliedImageSizes) {
+      return;
+    }
+    
+    // Debounce to prevent excessive calls
+    if (imageSizeApplicationTimeout) {
+      clearTimeout(imageSizeApplicationTimeout);
+    }
+    
+    imageSizeApplicationTimeout = setTimeout(async () => {
+      try {
+        console.log('🔍 Starting image size application from block data...');
+        
+        // Get images directly from DOM instead of calling save()
+        const images = holderRef.current!.querySelectorAll('img');
       
-      // Get current editor data to access block information
-      const outputData = await editorRef.current.save();
-      const images = holderRef.current.querySelectorAll('img');
+        console.log('📊 Found', images.length, 'images in DOM');
       
-      console.log('📊 Found', images.length, 'images in DOM');
-      console.log('📋 Found', outputData.blocks?.length || 0, 'blocks in editor data');
-      
-      // Also check localStorage for the content that was stored
+      // Get block data from localStorage instead of calling save()
       const storedContent = localStorage.getItem(STORAGE_KEY);
-      if (storedContent) {
-        try {
-          const parsedContent = JSON.parse(storedContent);
-          console.log('💾 localStorage content blocks:', parsedContent.blocks?.length || 0);
-          console.log('🖼️ Image blocks in localStorage:', 
-            parsedContent.blocks?.filter((b: any) => b.type === 'image').map((b: any, i: number) => ({
-              index: i,
-              url: b.data?.file?.url || b.data?.url,
-              customWidth: b.data?.customWidth,
-              customHeight: b.data?.customHeight,
-              width: b.data?.width,
-              height: b.data?.height
-            }))
-          );
-        } catch (e) {
-          console.warn('Failed to parse localStorage content:', e);
-        }
+      if (!storedContent) {
+        console.log('⚠️ No stored content found');
+        return;
+      }
+      
+      let parsedContent;
+      try {
+        parsedContent = JSON.parse(storedContent);
+        console.log('💾 localStorage content blocks:', parsedContent.blocks?.length || 0);
+        console.log('🖼️ Image blocks in localStorage:', 
+          parsedContent.blocks?.filter((b: any) => b.type === 'image').map((b: any, i: number) => ({
+            index: i,
+            url: b.data?.file?.url || b.data?.url,
+            customWidth: b.data?.customWidth,
+            customHeight: b.data?.customHeight,
+            width: b.data?.width,
+            height: b.data?.height
+          }))
+        );
+      } catch (e) {
+        console.warn('Failed to parse localStorage content:', e);
+        return;
       }
       
       let imageIndex = 0;
       let sizesApplied = 0;
       
       // Iterate through blocks to find image blocks with custom dimensions
-      outputData.blocks?.forEach((block: any, blockIndex: number) => {
+      parsedContent.blocks?.forEach((block: any, blockIndex: number) => {
         if (block.type === 'image' && block.data) {
           const imageElement = images[imageIndex] as HTMLImageElement;
           
@@ -206,6 +353,9 @@ const EditorPage = () => {
               imageElement.setAttribute('width', customWidth.toString());
               imageElement.setAttribute('height', customHeight.toString());
               
+              // Force a reflow to ensure the changes take effect
+              imageElement.offsetHeight;
+              
               // Save to localStorage for consistency with resize handles
               const imageId = getImageId(imageElement);
               saveImageSize(imageId, customWidth, customHeight);
@@ -233,19 +383,23 @@ const EditorPage = () => {
         }
       });
       
-      console.log(`🎯 Finished applying image sizes: ${sizesApplied}/${imageIndex} images processed`);
-      
-      // If no sizes were applied, try again with localStorage content
-      if (sizesApplied === 0 && storedContent) {
-        console.log('🔄 Retrying with localStorage content...');
-        setTimeout(() => {
-          applyImageSizesFromStoredContent();
-        }, 500);
+        console.log(`🎯 Finished applying image sizes: ${sizesApplied}/${imageIndex} images processed`);
+        
+        // Mark as applied to prevent repeated calls
+        hasAppliedImageSizes = true;
+        
+        // If no sizes were applied, try again with localStorage content
+        if (sizesApplied === 0) {
+          console.log('🔄 Retrying with localStorage content...');
+          setTimeout(() => {
+            applyImageSizesFromStoredContent();
+          }, 500);
+        }
+        
+      } catch (error) {
+        console.error('❌ Error applying image sizes from block data:', error);
       }
-      
-    } catch (error) {
-      console.error('❌ Error applying image sizes from block data:', error);
-    }
+    }, 200); // Debounce for 200ms
   };
 
   // Fallback function to apply sizes from localStorage content
@@ -374,12 +528,21 @@ const EditorPage = () => {
     }
 
     console.log('🖼️ Injecting image sizes into blocks...');
+    console.log('📊 Original blocks before injection:', outputData.blocks?.map((b: any, i: number) => ({
+      index: i,
+      type: b.type,
+      hasCustomWidth: !!b.data?.customWidth,
+      hasCustomHeight: !!b.data?.customHeight,
+      customWidth: b.data?.customWidth,
+      customHeight: b.data?.customHeight
+    })));
     
     // Create a copy of the output data
     const enhancedData = JSON.parse(JSON.stringify(outputData));
     
     // Find all image elements in the editor
     const imageElements = holderRef.current.querySelectorAll('img');
+    console.log('🖼️ Found', imageElements.length, 'image elements in DOM');
     let imageIndex = 0;
     
     // Process each block
@@ -399,9 +562,21 @@ const EditorPage = () => {
           const storedSizes = getImageSizes();
           const storedSize = storedSizes[imageId];
           
-          // Use current dimensions if valid, otherwise use stored dimensions
-          const finalWidth = currentWidth > 0 ? currentWidth : storedSize?.width;
-          const finalHeight = currentHeight > 0 ? currentHeight : storedSize?.height;
+          console.log(`🔍 Block ${blockIndex} dimension analysis:`, {
+            currentDOM: { width: currentWidth, height: currentHeight },
+            storedSize: storedSize,
+            blockData: {
+              customWidth: block.data.customWidth,
+              customHeight: block.data.customHeight,
+              width: block.data.width,
+              height: block.data.height
+            },
+            imageId
+          });
+          
+          // Prioritize stored dimensions over current DOM dimensions to preserve user's intended size
+          const finalWidth = storedSize?.width || (currentWidth > 0 ? currentWidth : block.data.customWidth);
+          const finalHeight = storedSize?.height || (currentHeight > 0 ? currentHeight : block.data.customHeight);
           
           if (finalWidth && finalHeight) {
             block.data.customWidth = finalWidth;
@@ -420,7 +595,16 @@ const EditorPage = () => {
       return block;
     });
     
-    console.log('✅ Enhanced output data with image sizes:', enhancedData);
+    console.log('✅ Image size injection completed');
+    console.log('📊 Enhanced blocks after injection:', enhancedData.blocks?.map((b: any, i: number) => ({
+      index: i,
+      type: b.type,
+      hasCustomWidth: !!b.data?.customWidth,
+      hasCustomHeight: !!b.data?.customHeight,
+      customWidth: b.data?.customWidth,
+      customHeight: b.data?.customHeight
+    })));
+    
     return enhancedData;
   };
 
@@ -464,13 +648,16 @@ const EditorPage = () => {
         
         await updateFileById(cidFromUrl, enhancedOutputData, documentTitle, address);
         
-        // Clear localStorage after successful update
-        clearEditorStorage();
-        
         toast({
           title: "Success", 
-          description: "Content updated successfully!",
+          description: "Content updated successfully! Reloading page...",
         });
+        
+        // Reload the page to get the latest saved content
+        // Don't clear localStorage before reload - let the reloaded page load fresh content from server
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000); // Small delay to show the success message
         
         return true;
         
@@ -588,9 +775,151 @@ const EditorPage = () => {
     }
   };
 
+  // Force apply image dimensions - more aggressive approach
+  const forceApplyImageDimensions = async () => {
+    if (!editorRef.current || !holderRef.current) {
+      console.log('⚠️ Editor or holder not ready for force image dimension application');
+      return;
+    }
+
+    try {
+      console.log('🔧 Force applying image dimensions...');
+      
+      // Get current editor data
+      const outputData = await editorRef.current.save();
+      const images = holderRef.current.querySelectorAll('img');
+      
+      console.log('🔧 Found', images.length, 'images for force application');
+      
+      let imageIndex = 0;
+      let appliedCount = 0;
+      
+      // Process each image block
+      outputData.blocks?.forEach((block: any, blockIndex: number) => {
+        if (block.type === 'image' && block.data) {
+          const imageElement = images[imageIndex] as HTMLImageElement;
+          
+          if (imageElement) {
+            // Get custom dimensions from block data
+            const customWidth = block.data.customWidth || block.data.width || block.data.file?.width;
+            const customHeight = block.data.customHeight || block.data.height || block.data.file?.height;
+            
+            console.log(`🔧 Force applying to image ${imageIndex}:`, {
+              customWidth,
+              customHeight,
+              currentWidth: imageElement.offsetWidth,
+              currentHeight: imageElement.offsetHeight
+            });
+            
+            if (customWidth && customHeight) {
+              // Force apply with !important and multiple methods
+              imageElement.style.setProperty('width', `${customWidth}px`, 'important');
+              imageElement.style.setProperty('height', `${customHeight}px`, 'important');
+              imageElement.style.setProperty('max-width', 'none', 'important');
+              imageElement.style.setProperty('object-fit', 'contain', 'important');
+              
+              // Set attributes
+              imageElement.setAttribute('width', customWidth.toString());
+              imageElement.setAttribute('height', customHeight.toString());
+              
+              // Force reflow
+              imageElement.offsetHeight;
+              
+              appliedCount++;
+              console.log(`✅ Force applied dimensions to image ${imageIndex}:`, { customWidth, customHeight });
+            }
+          }
+          
+          imageIndex++;
+        }
+      });
+      
+      console.log(`🔧 Force application completed: ${appliedCount}/${images.length} images processed`);
+    } catch (error) {
+      console.error('❌ Error in force apply image dimensions:', error);
+    }
+  };
+
+  // Load existing post content from IPFS when editing
+  useEffect(() => {
+    const loadExistingPostContent = async () => {
+      const cidFromUrl = getCidFromUrl();
+      if (!cidFromUrl) return;
+
+      setIsLoadingContent(true);
+      try {
+        console.log('🔄 Loading existing post content from IPFS for CID:', cidFromUrl);
+        
+        // Import fetchFromIPFS here to avoid circular dependency
+        const { fetchFromIPFS } = await import('@/services/pinataService');
+        
+        const result = await fetchFromIPFS(cidFromUrl);
+        if (result.success && result.content) {
+          try {
+            // Parse the JSON response that contains title and content
+            const parsedResponse = JSON.parse(result.content);
+            if (parsedResponse.content) {
+              // Debug: Log the loaded content to check for image size data
+              console.log('🔍 Loaded content structure:', {
+                hasBlocks: !!parsedResponse.content.blocks,
+                blockCount: parsedResponse.content.blocks?.length || 0,
+                imageBlocks: parsedResponse.content.blocks?.filter((b: any) => b.type === 'image').map((b: any, i: number) => ({
+                  index: i,
+                  url: b.data?.file?.url || b.data?.url,
+                  customWidth: b.data?.customWidth,
+                  customHeight: b.data?.customHeight,
+                  width: b.data?.width,
+                  height: b.data?.height,
+                  fileWidth: b.data?.file?.width,
+                  fileHeight: b.data?.file?.height
+                })) || []
+              });
+              
+              // Set the content as preview data to be loaded into editor
+              setPreviewData(parsedResponse.content);
+              // Also set the title
+              if (parsedResponse.title) {
+                setDocumentTitle(parsedResponse.title);
+              }
+              console.log('✅ Successfully loaded existing post content from IPFS');
+              
+              // Store the loaded content in localStorage as well for consistency
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(parsedResponse.content));
+              
+              // Clear any old localStorage data after loading fresh content from server
+              // This ensures we're working with the latest server content
+              const urlParams = new URLSearchParams(window.location.search);
+              const cidFromUrl = urlParams.get('cid');
+              if (cidFromUrl) {
+                // Clear old data to ensure fresh content is used
+                localStorage.removeItem('editorjs-image-sizes');
+                console.log('🧹 Cleared old localStorage data after loading fresh content from server');
+              }
+            } else {
+              // Fallback to the original content if structure is different
+              setPreviewData(result.content);
+              console.log('✅ Loaded existing post content (fallback structure)');
+            }
+          } catch (error) {
+            // If parsing fails, use the content as-is
+            setPreviewData(result.content);
+            console.log('✅ Loaded existing post content (raw format)');
+          }
+        } else {
+          console.error('❌ Failed to load existing post content:', result.error);
+        }
+      } catch (error) {
+        console.error('❌ Error loading existing post content from IPFS:', error);
+      } finally {
+        setIsLoadingContent(false);
+      }
+    };
+
+    loadExistingPostContent();
+  }, []); // Run once on mount
 
   useEffect(() => {
-    if (!holderRef.current || isPreviewMode) return;
+    if (!holderRef.current || isPreviewMode || isLoadingContent) return;
 
     // Small delay to ensure DOM is ready
     const timer = setTimeout(() => {
@@ -730,14 +1059,36 @@ const EditorPage = () => {
             if (cidFromUrl) {
               console.log('🔄 Detected CID in URL, will apply saved image sizes with retries...');
               
-              // Multiple attempts with increasing delays
-              setTimeout(() => applyImageSizesFromBlockData(), 500);
-              setTimeout(() => applyImageSizesFromBlockData(), 1000);
-              setTimeout(() => applyImageSizesFromBlockData(), 2000);
-              setTimeout(() => applyImageSizesFromBlockData(), 3000);
+              // Immediate attempt - try right away
+              console.log('🔄 Immediate attempt: Applying image sizes from block data...');
+              applyImageSizesFromBlockData();
+              
+              // Multiple attempts with increasing delays to ensure images are fully loaded
+              setTimeout(() => {
+                console.log('🔄 Attempt 1: Applying image sizes from block data...');
+                applyImageSizesFromBlockData();
+              }, 300);
+              setTimeout(() => {
+                console.log('🔄 Attempt 2: Applying image sizes from block data...');
+                applyImageSizesFromBlockData();
+              }, 800);
+              setTimeout(() => {
+                console.log('🔄 Attempt 3: Applying image sizes from block data...');
+                applyImageSizesFromBlockData();
+              }, 1500);
+              setTimeout(() => {
+                console.log('🔄 Attempt 4: Applying image sizes from block data...');
+                applyImageSizesFromBlockData();
+              }, 3000);
+              
+              // Additional aggressive approach - force apply dimensions after editor is fully loaded
+              setTimeout(() => {
+                console.log('🔄 Final attempt: Force applying image dimensions...');
+                forceApplyImageDimensions();
+              }, 5000);
             }
-          }, 200);
-        }, 500);
+          }, 100);
+        }, 300);
       }
     });
 
@@ -754,7 +1105,7 @@ const EditorPage = () => {
         clearTimeout(autoSaveTimeout);
       }
     };
-  }, [isPreviewMode, previewData]);
+  }, [isPreviewMode, previewData, isLoadingContent]);
 
   // Save title when it changes (with debouncing)
   useEffect(() => {
@@ -912,76 +1263,90 @@ const EditorPage = () => {
         });
       });
       
-      console.log(`Scan found ${foundImages} new images to add handles to`);
+      // console.log(`Scan found ${foundImages} new images to add handles to`);
       return foundImages;
     };
     
-    // Observer to watch for new blocks (images, quotes, code blocks)
-    const observer = new MutationObserver((mutations) => {
-      let hasImageChanges = false;
-      let hasQuoteChanges = false;
-      let hasCodeChanges = false;
+    // Efficient mutation observer that handles all changes without periodic scanning
+    let mutationTimeout: NodeJS.Timeout | null = null;
+    const throttledMutationHandler = (mutations: MutationRecord[]) => {
+      if (mutationTimeout) return;
       
-      mutations.forEach((mutation) => {
-        // Check for added nodes
-        mutation.addedNodes.forEach((node) => {
-          if (node.nodeType === Node.ELEMENT_NODE) {
-            const element = node as Element;
+      mutationTimeout = setTimeout(() => {
+        let hasImageChanges = false;
+        let hasQuoteChanges = false;
+        let hasCodeChanges = false;
+        
+        mutations.forEach((mutation) => {
+          // Check for added nodes
+          mutation.addedNodes.forEach((node) => {
+            if (node.nodeType === Node.ELEMENT_NODE) {
+              const element = node as Element;
+              
+              // Check for images - more comprehensive detection
+              if (element.querySelector('img') || element.tagName === 'IMG' || 
+                  element.classList.contains('ce-image') || element.classList.contains('image-tool')) {
+                hasImageChanges = true;
+              }
+              
+              // Check for quotes
+              if (element.querySelector('.cdx-quote') || element.classList.contains('cdx-quote') ||
+                  element.querySelector('[data-tool="quote"]') || element.getAttribute('data-tool') === 'quote') {
+                hasQuoteChanges = true;
+              }
+              
+              // Check for code blocks
+              if (element.querySelector('.ce-code') || element.classList.contains('ce-code') ||
+                  element.querySelector('[data-tool="code"]') || element.getAttribute('data-tool') === 'code') {
+                hasCodeChanges = true;
+              }
+            }
+          });
+          
+          // Check for attribute changes that might affect images
+          if (mutation.type === 'attributes') {
+            const target = mutation.target as Element;
             
-            // Check for images
-            if (element.querySelector('img') || element.tagName === 'IMG') {
+            if ((mutation.attributeName === 'src' || mutation.attributeName === 'class' || 
+                 mutation.attributeName === 'style') &&
+                (target.tagName === 'IMG' || target.querySelector('img') || 
+                 target.classList.contains('ce-image') || target.classList.contains('image-tool'))) {
               hasImageChanges = true;
-            }
-            
-            // Check for quotes
-            if (element.querySelector('.cdx-quote') || element.classList.contains('cdx-quote') ||
-                element.querySelector('[data-tool="quote"]') || element.getAttribute('data-tool') === 'quote') {
-              hasQuoteChanges = true;
-            }
-            
-            // Check for code blocks
-            if (element.querySelector('.ce-code') || element.classList.contains('ce-code') ||
-                element.querySelector('[data-tool="code"]') || element.getAttribute('data-tool') === 'code') {
-              hasCodeChanges = true;
             }
           }
         });
         
-        // Check for attribute changes
-        if (mutation.type === 'attributes') {
-          const target = mutation.target as Element;
-          
-          if ((mutation.attributeName === 'src' || mutation.attributeName === 'class') &&
-              (target.tagName === 'IMG' || target.querySelector('img'))) {
-            hasImageChanges = true;
-          }
+        if (hasImageChanges) {
+          // Process images immediately when detected
+          setTimeout(() => {
+            scanAndAddHandles();
+            applySavedImageSizes();
+            
+            // For editing existing content, also apply block data sizes
+            const cidFromUrl = getCidFromUrl();
+            if (cidFromUrl) {
+              // Only apply if we haven't already applied recently
+              if (!imageSizeApplicationTimeout) {
+                applyImageSizesFromBlockData();
+              }
+            }
+          }, 50); // Faster response for images
         }
-      });
-      
-      if (hasImageChanges) {
-        setTimeout(() => {
-          scanAndAddHandles();
-          // Also apply saved sizes to any new images
-          applySavedImageSizes();
-          
-          // For editing existing content, also apply block data sizes
-          const cidFromUrl = getCidFromUrl();
-          if (cidFromUrl) {
-            setTimeout(() => {
-              applyImageSizesFromBlockData();
-            }, 100);
-          }
-        }, 200);
-      }
-      
-      if (hasQuoteChanges) {
-        setTimeout(() => ensureQuoteCaptions(), 50); // Much faster for quotes
-      }
-      
-      if (hasCodeChanges) {
-        setTimeout(() => autoResizeCodeBlocks(), 100);
-      }
-    });
+        
+        if (hasQuoteChanges) {
+          setTimeout(() => ensureQuoteCaptions(), 25);
+        }
+        
+        if (hasCodeChanges) {
+          setTimeout(() => autoResizeCodeBlocks(), 50);
+        }
+        
+        mutationTimeout = null;
+      }, 50); // Reduced throttle to 50ms for better responsiveness
+    };
+
+    // Observer to watch for new blocks (images, quotes, code blocks)
+    const observer = new MutationObserver(throttledMutationHandler);
 
     // Start observing
     if (holderRef.current) {
@@ -992,7 +1357,7 @@ const EditorPage = () => {
         attributeFilter: ['src', 'class', 'style']
       });
 
-      // Initial scan with retries
+      // Initial scan - only retry if no images found initially
       const initialScanWithRetry = (attempts = 0) => {
         const foundImages = scanAndAddHandles();
         applySavedImageSizes(); // Apply saved sizes to all images
@@ -1000,39 +1365,19 @@ const EditorPage = () => {
         // If editing existing content, also apply sizes from block data
         const cidFromUrl = getCidFromUrl();
         if (cidFromUrl) {
-          // Apply on each retry attempt to be more aggressive
-          setTimeout(() => {
-            applyImageSizesFromBlockData();
-          }, 300 + (attempts * 200));
+          applyImageSizesFromBlockData();
         }
         
-        // Retry up to 5 times with increasing delays
-        if (attempts < 5) {
-          setTimeout(() => initialScanWithRetry(attempts + 1), 500 * (attempts + 1));
+        // Only retry if no images were found and we haven't tried too many times
+        if (foundImages === 0 && attempts < 3) {
+          setTimeout(() => initialScanWithRetry(attempts + 1), 1000 * (attempts + 1));
         }
       };
       
       initialScanWithRetry();
       
-      // More frequent periodic scan to catch any missed elements
-      const periodicScan = setInterval(() => {
-        scanAndAddHandles();
-        applySavedImageSizes(); // Restore image sizes
-        
-        // For editing existing content, periodically ensure block data sizes are applied
-        const cidFromUrl = getCidFromUrl();
-        if (cidFromUrl) {
-          applyImageSizesFromBlockData();
-        }
-        
-        ensureQuoteCaptions(); // Ensure quote captions are visible
-        autoResizeCodeBlocks(); // Handle code block auto-resize
-      }, 1000); // Reduced from 3000ms to 1000ms
-      
-      // Clean up periodic scan after 30 seconds
-      setTimeout(() => {
-        clearInterval(periodicScan);
-      }, 30000);
+      // No periodic scanning needed - mutation observer handles all changes
+      // The mutation observer will detect new images and apply handles/sizes as needed
       
       // Initial quote caption setup with multiple attempts
       setTimeout(() => ensureQuoteCaptions(), 100);
@@ -1055,62 +1400,26 @@ const EditorPage = () => {
     
     const wrapper = document.createElement('div');
     wrapper.className = 'image-resize-wrapper';
-    wrapper.style.cssText = `
-      position: relative !important;
-      display: inline-block !important;
-      margin: 0 auto !important;
-    `;
     
     // Insert wrapper and move image into it
     imageElement.parentElement?.insertBefore(wrapper, imageElement);
     wrapper.appendChild(imageElement);
     
-    console.log('Adding resize handles to image:', imageElement);
+    // Ensure image has proper styling for smooth resizing
+    imageElement.style.display = 'block';
+    imageElement.style.margin = '0';
+    imageElement.style.padding = '0';
+    imageElement.style.border = 'none';
+    imageElement.style.outline = 'none';
+    
+    // console.log('Adding resize handles to image:', imageElement);
 
     // Create resize handles
     const leftHandle = document.createElement('div');
     leftHandle.className = 'resize-handle left';
-     leftHandle.style.cssText = `
-       position: absolute !important;
-       top: 50% !important;
-       left: 2px !important;
-       transform: translateY(-50%) !important;
-       width: 8px !important;
-       height: 100px !important;
-       background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%) !important;
-       border: 2px solid #ffffff !important;
-       border-radius: 4px !important;
-       cursor: ew-resize !important;
-       opacity: 0 !important;
-       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-       z-index: 10000 !important;
-       pointer-events: auto !important;
-       display: block !important;
-       visibility: visible !important;
-       box-shadow: 0 4px 20px rgba(59, 130, 246, 0.5), 0 2px 8px rgba(0,0,0,0.3) !important;
-     `;
     
     const rightHandle = document.createElement('div');
     rightHandle.className = 'resize-handle right';
-    rightHandle.style.cssText = `
-      position: absolute !important;
-      top: 50% !important;
-      right: 2px !important;
-      transform: translateY(-50%) !important;
-      width: 8px !important;
-      height: 100px !important;
-      background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%) !important;
-      border: 2px solid #ffffff !important;
-      border-radius: 4px !important;
-      cursor: ew-resize !important;
-      opacity: 0 !important;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-      z-index: 10000 !important;
-      pointer-events: auto !important;
-      display: block !important;
-      visibility: visible !important;
-      box-shadow: 0 4px 20px rgba(59, 130, 246, 0.5), 0 2px 8px rgba(0,0,0,0.3) !important;
-    `;
 
     wrapper.appendChild(leftHandle);
     wrapper.appendChild(rightHandle);
@@ -1132,52 +1441,38 @@ const EditorPage = () => {
      imageElement.addEventListener('mouseenter', showHandles);
      imageElement.addEventListener('mouseleave', hideHandles);
 
-    // Add resize functionality
-    let isResizing = false;
-    let startX = 0;
-    let startWidth = 0;
-    let originalAspectRatio = 0;
-
+    // Add resize functionality using React state
     const startResize = (e: MouseEvent, handle: HTMLElement) => {
-      isResizing = true;
-      startX = e.clientX;
-      startWidth = imageElement.offsetWidth;
-      originalAspectRatio = imageElement.naturalWidth / imageElement.naturalHeight;
+      const startX = e.clientX;
+      const startWidth = imageElement.offsetWidth;
+      const originalAspectRatio = imageElement.naturalWidth / imageElement.naturalHeight;
       
-      document.addEventListener('mousemove', handleResize);
-      document.addEventListener('mouseup', stopResize);
+      // Update React state to trigger useEffect
+      setResizeState({
+        isResizing: true,
+        activeImage: imageElement,
+        startX,
+        startWidth,
+        originalAspectRatio,
+        animationFrame: null,
+        lastResizeTime: 0
+      });
+      
+      // Disable all transitions and optimizations
+      imageElement.style.transition = 'none';
+      imageElement.style.willChange = 'width, height';
+      imageElement.style.transform = 'translateZ(0)'; // Force hardware acceleration
+      
+      // Prevent text selection and other interactions
+      document.body.style.userSelect = 'none';
+      document.body.style.cursor = 'ew-resize';
+      document.body.style.pointerEvents = 'none';
+      
+      // Add class to wrapper for styling
+      wrapper.classList.add('resizing');
+      
       e.preventDefault();
-    };
-
-    const handleResize = (e: MouseEvent) => {
-      if (!isResizing) return;
-
-      const deltaX = e.clientX - startX;
-      let newWidth = startWidth + deltaX;
-      
-       // Constrain width between 100px and container width
-       const container = wrapper.closest('.ce-block__content') || wrapper.closest('.ce-block');
-       const maxWidth = container ? (container as HTMLElement).clientWidth - 40 : 800;
-      newWidth = Math.max(100, Math.min(newWidth, maxWidth));
-
-      // Maintain aspect ratio
-      const newHeight = newWidth / originalAspectRatio;
-
-      imageElement.style.width = `${newWidth}px`;
-      imageElement.style.height = `${newHeight}px`;
-      imageElement.style.maxWidth = 'none';
-    };
-
-    const stopResize = () => {
-      isResizing = false;
-      document.removeEventListener('mousemove', handleResize);
-      document.removeEventListener('mouseup', stopResize);
-      
-      // Save the new image size when resize is complete
-      const imageId = getImageId(imageElement);
-      const currentWidth = parseInt(imageElement.style.width) || imageElement.offsetWidth;
-      const currentHeight = parseInt(imageElement.style.height) || imageElement.offsetHeight;
-      saveImageSize(imageId, currentWidth, currentHeight);
+      e.stopPropagation();
     };
 
     leftHandle.addEventListener('mousedown', (e) => startResize(e, leftHandle));
@@ -1352,7 +1647,14 @@ const EditorPage = () => {
       {/* Main editor or preview */}
       <div className="max-w-4xl mx-auto px-8 pb-20">
         <div className="tab-content">
-          {isPreviewMode ? (
+          {isLoadingContent ? (
+            <div className="min-h-[800px] flex items-center justify-center">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-600 dark:text-gray-400">Loading content...</p>
+              </div>
+            </div>
+          ) : isPreviewMode ? (
             <EditorPreview 
               data={previewData}
               className="min-h-[800px]"
@@ -1368,6 +1670,60 @@ const EditorPage = () => {
           )}
         </div>
       </div>
+
+      {/* CSS for smooth image resizing */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          .image-resize-wrapper {
+            position: relative !important;
+            display: inline-block !important;
+            margin: 0 auto !important;
+            overflow: hidden !important;
+            contain: layout style !important;
+          }
+          
+          .image-resize-wrapper.resizing {
+            contain: layout style paint !important;
+          }
+          
+          .image-resize-wrapper.resizing img {
+            image-rendering: auto !important;
+            backface-visibility: hidden !important;
+            perspective: 1000px !important;
+          }
+          
+          .resize-handle {
+            position: absolute !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            width: 8px !important;
+            height: 100px !important;
+            background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%) !important;
+            border: 2px solid #ffffff !important;
+            border-radius: 4px !important;
+            cursor: ew-resize !important;
+            opacity: 0 !important;
+            transition: opacity 0.2s ease !important;
+            z-index: 10000 !important;
+            pointer-events: auto !important;
+            display: block !important;
+            visibility: visible !important;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.5), 0 2px 8px rgba(0,0,0,0.3) !important;
+          }
+          
+          .resize-handle.left {
+            left: 2px !important;
+          }
+          
+          .resize-handle.right {
+            right: 2px !important;
+          }
+          
+          .image-resize-wrapper:hover .resize-handle {
+            opacity: 1 !important;
+          }
+        `
+      }} />
 
       {/* Save and Post Buttons - Fixed at bottom right */}
       <div className="fixed bottom-6 right-6 flex items-center space-x-3 z-50">

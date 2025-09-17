@@ -5,6 +5,11 @@ import Image from '@editorjs/image';
  * to include size information in the block data
  */
 export default class CustomImageTool extends Image {
+  private _wrapper: HTMLElement | null = null;
+  private _imageElement: HTMLImageElement | null = null;
+  private _customData: any;
+  private _isApplyingSizes: boolean = false;
+
   static get toolbox() {
     return {
       title: 'Image',
@@ -12,34 +17,79 @@ export default class CustomImageTool extends Image {
     };
   }
 
-  constructor({ data, config, api, readOnly }: any) {
-    super({ data, config, api, readOnly });
+  constructor({ data, config, api, readOnly, block }: any) {
+    super({ data, config, api, readOnly, block });
     
     // Store reference to the wrapper for size detection
     this._wrapper = null;
     this._imageElement = null;
+    this._customData = data;
   }
 
   render() {
     const wrapper = super.render();
     this._wrapper = wrapper;
     
-    // Find the image element
-    const imageElement = wrapper.querySelector('img');
-    if (imageElement) {
-      this._imageElement = imageElement;
-      
-      // Apply stored dimensions if they exist
-      if (this.data.customWidth) {
-        imageElement.style.width = `${this.data.customWidth}px`;
-      }
-      if (this.data.customHeight) {
-        imageElement.style.height = `${this.data.customHeight}px`;
-      }
-      
-      // Set up size tracking
-      this._setupSizeTracking(imageElement);
+    // Debug: Log the data being passed to CustomImageTool (only if dimensions exist)
+    if (this._customData.customWidth || this._customData.customHeight || this._customData.width || this._customData.height) {
+      console.log('🔧 CustomImageTool render - data:', {
+        customWidth: this._customData.customWidth,
+        customHeight: this._customData.customHeight,
+        width: this._customData.width,
+        height: this._customData.height,
+        fileWidth: this._customData.file?.width,
+        fileHeight: this._customData.file?.height,
+        url: this._customData.file?.url || this._customData.url
+      });
     }
+    
+    // Apply dimensions after the image is loaded
+    const applyDimensions = () => {
+      const imageElement = wrapper.querySelector('img');
+      if (imageElement) {
+        this._imageElement = imageElement;
+        
+        // Apply stored dimensions if they exist (check multiple sources)
+        const width = this._customData.customWidth || this._customData.width || this._customData.file?.width;
+        const height = this._customData.customHeight || this._customData.height || this._customData.file?.height;
+        
+        if (width && height) {
+          // Apply both dimensions with !important to override any existing styles
+          imageElement.style.setProperty('width', `${width}px`, 'important');
+          imageElement.style.setProperty('height', `${height}px`, 'important');
+          imageElement.style.setProperty('max-width', 'none', 'important');
+          imageElement.style.setProperty('object-fit', 'contain', 'important');
+          imageElement.setAttribute('width', width.toString());
+          imageElement.setAttribute('height', height.toString());
+          
+          console.log('🔧 CustomImageTool: Applied dimensions:', { width, height });
+          
+          // Force a reflow to ensure changes take effect
+          imageElement.offsetHeight;
+        } else if (width) {
+          // Only width specified - maintain aspect ratio
+          imageElement.style.setProperty('width', `${width}px`, 'important');
+          imageElement.style.setProperty('max-width', 'none', 'important');
+          imageElement.setAttribute('width', width.toString());
+          console.log('🔧 CustomImageTool: Applied width:', width);
+        } else if (height) {
+          // Only height specified - maintain aspect ratio
+          imageElement.style.setProperty('height', `${height}px`, 'important');
+          imageElement.setAttribute('height', height.toString());
+          console.log('🔧 CustomImageTool: Applied height:', height);
+        }
+        
+        // Set up size tracking
+        this._setupSizeTracking(imageElement);
+      }
+    };
+    
+    // Try to apply dimensions immediately
+    applyDimensions();
+    
+    // Also try after a short delay to ensure the image is fully loaded
+    setTimeout(applyDimensions, 100);
+    setTimeout(applyDimensions, 500);
     
     return wrapper;
   }
@@ -71,6 +121,13 @@ export default class CustomImageTool extends Image {
   }
 
   /**
+   * Set flag to prevent save during size application
+   */
+  setApplyingSizes(flag: boolean) {
+    this._isApplyingSizes = flag;
+  }
+
+  /**
    * Update the block data with current image dimensions
    */
   _updateSizeData() {
@@ -82,14 +139,14 @@ export default class CustomImageTool extends Image {
     
     // Only update if dimensions are valid and different
     if (width > 0 && height > 0) {
-      if (this.data.customWidth !== width || this.data.customHeight !== height) {
-        this.data.customWidth = width;
-        this.data.customHeight = height;
+      if (this._customData.customWidth !== width || this._customData.customHeight !== height) {
+        this._customData.customWidth = width;
+        this._customData.customHeight = height;
         
         console.log('Updated image block data with size:', {
           width,
           height,
-          url: this.data.file?.url
+          url: this._customData.file?.url
         });
       }
     }
@@ -98,8 +155,13 @@ export default class CustomImageTool extends Image {
   /**
    * Save method - includes size information
    */
-  save(blockContent: HTMLElement) {
-    const data = super.save(blockContent);
+  save() {
+    const data = super.save();
+    
+    // Don't save during size application to prevent loops
+    if (this._isApplyingSizes) {
+      return data;
+    }
     
     // Ensure size information is included
     if (this._imageElement) {
@@ -108,20 +170,23 @@ export default class CustomImageTool extends Image {
       const height = parseInt(computedStyle.height);
       
       if (width > 0 && height > 0) {
-        data.customWidth = width;
-        data.customHeight = height;
+        (data as any).customWidth = width;
+        (data as any).customHeight = height;
       }
     }
     
     // Include any existing size data
-    if (this.data.customWidth) {
-      data.customWidth = this.data.customWidth;
+    if (this._customData.customWidth) {
+      (data as any).customWidth = this._customData.customWidth;
     }
-    if (this.data.customHeight) {
-      data.customHeight = this.data.customHeight;
+    if (this._customData.customHeight) {
+      (data as any).customHeight = this._customData.customHeight;
     }
     
-    console.log('Saving image block with data:', data);
+    // Only log when not applying sizes to reduce console noise
+    if (!this._isApplyingSizes) {
+      console.log('Saving image block with data:', data);
+    }
     
     return data;
   }

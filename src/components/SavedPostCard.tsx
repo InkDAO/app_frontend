@@ -31,7 +31,6 @@ export const SavedPostCard = ({ savedPost, onDelete }: SavedPostCardProps) => {
   // Parse content and extract title, image, and preview
   let postTitle = (name && name.trim()) ? name.trim() : 'Untitled';
   let postImage: string | null = null;
-  let postImageDimensions: { width?: number; height?: number } | null = null;
   let postPreview: string | null = null;
   let editorContent = null;
 
@@ -65,31 +64,13 @@ export const SavedPostCard = ({ savedPost, onDelete }: SavedPostCardProps) => {
         }
       }
 
-      // Extract first image from EditorJS blocks with dimensions
+      // Extract first image from EditorJS blocks
       if (editorContent && editorContent.blocks && Array.isArray(editorContent.blocks)) {
         const imageBlock = editorContent.blocks.find((block: any) => 
           block.type === 'image' && block.data && (block.data.file?.url || block.data.url)
         );
         if (imageBlock) {
           postImage = imageBlock.data.file?.url || imageBlock.data.url;
-          
-          // Extract custom dimensions set by user in editor
-          const customWidth = imageBlock.data.customWidth || imageBlock.data.width || imageBlock.data.file?.width;
-          const customHeight = imageBlock.data.customHeight || imageBlock.data.height || imageBlock.data.file?.height;
-          
-          console.log('🖼️ Image dimensions extracted:', {
-            url: postImage,
-            customWidth,
-            customHeight,
-            rawData: imageBlock.data
-          });
-          
-          if (customWidth || customHeight) {
-            postImageDimensions = {
-              width: customWidth,
-              height: customHeight
-            };
-          }
         }
       }
 
@@ -308,27 +289,11 @@ export const SavedPostCard = ({ savedPost, onDelete }: SavedPostCardProps) => {
       {/* Image Section */}
       <div className="relative h-48 bg-muted/30 overflow-hidden flex items-center justify-center">
         {postImage ? (
-          (() => {
-            console.log('🎨 Applying image dimensions to card:', {
-              dimensions: postImageDimensions,
-              title: postTitle
-            });
-            
-            return (
-              <img 
-                src={postImage} 
-                alt={postTitle}
-                className="group-hover:scale-105 transition-transform duration-300"
-                style={{
-                  width: postImageDimensions?.width ? `${postImageDimensions.width}px` : '100%',
-                  height: postImageDimensions?.height ? `${postImageDimensions.height}px` : '100%',
-                  maxWidth: '100%',
-                  maxHeight: '100%',
-                  objectFit: postImageDimensions ? 'contain' : 'cover'
-                }}
-              />
-            );
-          })()
+          <img 
+            src={postImage} 
+            alt={postTitle}
+            className="group-hover:scale-105 transition-transform duration-300 w-full h-full object-cover"
+          />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted/50 to-muted/80">
             <FileImage className="h-16 w-16 text-muted-foreground/50" />

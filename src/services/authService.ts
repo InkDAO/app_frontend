@@ -172,22 +172,7 @@ export class AuthService {
     console.log('🚪 User logged out');
   }
 
-  // Auto-authenticate if wallet is connected but no JWT
-  async autoAuthenticate(address: string): Promise<boolean> {
-    try {
-      if (this.isAuthenticated()) {
-        console.log('✅ Already authenticated');
-        return true;
-      }
-
-      console.log('🔄 Auto-authenticating with wallet...');
-      await this.login(address);
-      return true;
-    } catch (error) {
-      console.error('❌ Auto-authentication failed:', error);
-      return false;
-    }
-  }
+  // Auto-authentication removed - users must manually authenticate
 }
 
 // Singleton instance

@@ -28,40 +28,7 @@ export const useAuth = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Auto-authenticate when wallet connects
-  useEffect(() => {
-    const handleWalletConnection = async () => {
-      if (isConnected && address && !authState.isAuthenticated && !isAuthenticating) {
-        try {
-          setIsAuthenticating(true);
-          console.log('🔗 Wallet connected, attempting authentication...');
-          
-          const success = await authService.autoAuthenticate(address);
-          
-          if (success) {
-            const newState = authService.getAuthState();
-            setAuthState(newState);
-            
-            toast({
-              title: "Authentication Successful",
-              description: "You are now logged in with your wallet.",
-            });
-          }
-        } catch (error: any) {
-          console.error('Auto-authentication failed:', error);
-          toast({
-            title: "Authentication Failed",
-            description: error.message || "Failed to authenticate with wallet.",
-            variant: "destructive",
-          });
-        } finally {
-          setIsAuthenticating(false);
-        }
-      }
-    };
-
-    handleWalletConnection();
-  }, [isConnected, address, authState.isAuthenticated, isAuthenticating, toast]);
+  // Auto-authentication removed - users must manually authenticate
 
   // Logout when wallet disconnects
   useEffect(() => {

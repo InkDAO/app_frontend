@@ -38,6 +38,7 @@ const EditorPage = () => {
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [pendingNavigation, setPendingNavigation] = useState<(() => void) | null>(null);
+  const [dialogType, setDialogType] = useState<'write' | 'other'>('other');
   const [idleTimer, setIdleTimer] = useState<NodeJS.Timeout | null>(null);
   const [isLoadingContent, setIsLoadingContent] = useState(false);
   
@@ -75,6 +76,9 @@ const EditorPage = () => {
     const isNavigatingToNewPost = !to.includes('/editor/') && !to.includes('editor/');
     
     if (hasUnsavedChanges) {
+      // Determine dialog type based on destination
+      const isWriteNavigation = to === '/app/editor' || to.startsWith('/app/editor/');
+      setDialogType(isWriteNavigation ? 'write' : 'other');
       setShowUnsavedDialog(true);
       setPendingNavigation(() => () => {
         console.log('Programmatic navigation function created, will navigate to:', to);
@@ -622,12 +626,18 @@ const EditorPage = () => {
             description: "Content updated successfully! Redirecting to updated content...",
           });
           
-          // Add a small delay to ensure toast is shown
-          setTimeout(() => {
-            console.log('🚀 About to redirect to:', newUrl);
-            console.log('🚀 Full URL:', window.location.origin + newUrl);
-            window.location.href = newUrl;
-          }, 500);
+          // For direct saves, redirect to the new CID
+          // For dialog saves, call handleSuccessfulSave to respect pendingNavigation
+          if (clearPendingNavigation) {
+            // Direct save from floating navbar - redirect to new CID
+            console.log('💾 Direct save - redirecting to new CID:', newCid);
+            setTimeout(() => {
+              window.location.href = newUrl;
+            }, 1000);
+          } else {
+            // Dialog save - call handleSuccessfulSave to respect pendingNavigation
+            handleSuccessfulSave();
+          }
           
         } else {
           console.warn('⚠️ No new CID found in update response, reloading with current CID');
@@ -700,8 +710,18 @@ const EditorPage = () => {
             description: "Content saved! Redirecting to new content...",
           });
           
-          // Redirect to the new URL with the new CID
-          window.location.href = newUrl;
+        // For direct saves, redirect to the new CID
+        // For dialog saves, call handleSuccessfulSave to respect pendingNavigation
+        if (clearPendingNavigation) {
+          // Direct save from floating navbar - redirect to new CID
+          console.log('💾 Direct save - redirecting to new CID:', cid);
+          setTimeout(() => {
+            window.location.href = newUrl;
+          }, 1000);
+        } else {
+          // Dialog save - call handleSuccessfulSave to respect pendingNavigation
+          handleSuccessfulSave();
+        }
         } else {
           // Fallback: Handle successful save without CID
           console.warn('⚠️ No CID returned from API, using fallback behavior');
@@ -731,8 +751,11 @@ const EditorPage = () => {
 
   // Handle save action from dialog (preserves pending navigation)
   const handleSave = async () => {
-    console.log('Dialog save button clicked, pendingNavigation exists:', !!pendingNavigation);
+    console.log('💾 Dialog save button clicked');
+    console.log('💾 pendingNavigation exists:', !!pendingNavigation);
+    console.log('💾 dialogType:', dialogType);
     const success = await saveToAPIInternal(false);
+    console.log('💾 saveToAPIInternal result:', success);
     // The handleSuccessfulSave function will handle the navigation logic
     // No need to duplicate it here
   };
@@ -852,37 +875,53 @@ const EditorPage = () => {
     }
   };
 
-  // Handle successful save - clear storage and redirect
+  // Handle successful save from dialog - execute user's intended navigation
   const handleSuccessfulSave = () => {
+    console.log('🔄 handleSuccessfulSave called (dialog save)');
+    console.log('🔄 pendingNavigation exists:', !!pendingNavigation);
+    console.log('🔄 dialogType:', dialogType);
+    
     setHasUnsavedChanges(false);
     setShowUnsavedDialog(false);
     // localStorage removed - no need to clear
     
-    // Check if there's a pending navigation (user was trying to navigate somewhere)
+    // This function is only called for dialog saves, so there should always be a pendingNavigation
     if (pendingNavigation) {
-    toast({
-      title: "Success", 
+      console.log('✅ Executing pending navigation after save');
+      toast({
+        title: "Success", 
         description: "Content saved! Redirecting...",
-    });
-    
+      });
+      
       // Execute the pending navigation after successful save
       const navFunction = pendingNavigation;
       setPendingNavigation(null);
-    setTimeout(() => {
-        navFunction();
-    }, 1000); // Small delay to show the success message
-      } else {
-        // No pending navigation, reload content from IPFS and stay on editor page
-        toast({
-          title: "Success", 
-          description: "Content saved! Reloading from IPFS...",
-        });
-        
-        // Reload content from IPFS after a short delay
+      
+      // Check if this is a write button navigation - use full page refresh for clean editor
+      if (dialogType === 'write') {
+        console.log('📝 Write navigation from save dialog - using full page refresh');
         setTimeout(() => {
-          reloadContentFromIPFS();
+          window.location.href = '/app/editor';
+        }, 1000);
+      } else {
+        console.log('🏠 Other navigation from save dialog - using normal navigation');
+        // For other navigation, use normal navigation
+        setTimeout(() => {
+          navFunction();
         }, 1000);
       }
+    } else {
+      console.warn('⚠️ No pending navigation in dialog save - this should not happen');
+      // Fallback: reload content from IPFS
+      toast({
+        title: "Success", 
+        description: "Content saved! Reloading...",
+      });
+      
+      setTimeout(() => {
+        reloadContentFromIPFS();
+      }, 1000);
+    }
   };
 
   // Handle discard action from dialog
@@ -892,19 +931,25 @@ const EditorPage = () => {
     // Execute the pending navigation when discarding
     if (pendingNavigation) {
       console.log('Executing pending navigation after discard');
-      const navFunction = pendingNavigation;
       
       // Close dialog and clear state
       setShowUnsavedDialog(false);
       setHasUnsavedChanges(false);
       setPendingNavigation(null);
       
-      // localStorage removed - no need to clear
-      
-      // Execute navigation in next tick to avoid React warning
-      setTimeout(() => {
-        navFunction();
-      }, 0);
+      // Check if destination is /app/editor (write button) - use full page refresh
+      if (dialogType === 'write') {
+        console.log('Write navigation detected - using full page refresh to clear editor');
+        setTimeout(() => {
+          window.location.href = '/app/editor';
+        }, 0);
+      } else {
+        // For other navigation, use normal navigation
+        const navFunction = pendingNavigation;
+        setTimeout(() => {
+          navFunction();
+        }, 0);
+      }
     } else {
       console.log('No pending navigation to execute');
       // Still close dialog even if no navigation
@@ -1300,7 +1345,7 @@ const EditorPage = () => {
       }
       // Auto-save removed - no timeout to clear
     };
-  }, [isPreviewMode, previewData, isLoadingContent]);
+  }, [isPreviewMode, previewData, isLoadingContent, cid]);
 
   // Title saving removed - localStorage not used
 
@@ -1313,7 +1358,7 @@ const EditorPage = () => {
       setDocumentTitle('');
       setHasUnsavedChanges(false);
     }
-  }, []); // Run once on mount
+  }, [cid]); // Run whenever CID changes
 
   // Set up comprehensive unsaved changes protection
   useEffect(() => {
@@ -1396,11 +1441,15 @@ const EditorPage = () => {
         
         // Add small delay to prevent rapid-fire dialogs
         dialogTimeout = setTimeout(() => {
-        setShowUnsavedDialog(true);
+          // Determine dialog type based on destination
+          const href = (link as HTMLAnchorElement).href;
+          const path = href.replace(window.location.origin, '');
+          const isWriteNavigation = path === '/app/editor' || path.startsWith('/app/editor/');
+          
+          setDialogType(isWriteNavigation ? 'write' : 'other');
+          setShowUnsavedDialog(true);
           setPendingNavigation(() => () => {
             // Use React Router navigate instead of window.location
-            const href = (link as HTMLAnchorElement).href;
-            const path = href.replace(window.location.origin, '');
             console.log('Link navigation function created, will navigate to:', path);
             
             // Check if navigating from existing post to new post
@@ -1429,6 +1478,8 @@ const EditorPage = () => {
       if (hasUnsavedChanges) {
         // Push the current state back to prevent navigation
         window.history.pushState(null, '', window.location.href);
+        // For popstate, we can't determine the exact destination, so default to 'other'
+        setDialogType('other');
         setShowUnsavedDialog(true);
         setPendingNavigation(() => () => {
           // Check if navigating from existing post to new post
@@ -2003,15 +2054,17 @@ const EditorPage = () => {
               </div>
               <div className="ml-3">
                 <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                  Leave Editor?
+                  {dialogType === 'write' ? 'Open New Editor?' : 'Leave Editor?'}
                 </h3>
               </div>
             </div>
             
             <div className="mb-6">
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                You are about to leave the editor. Make sure to save your changes to IPFS before navigating away. 
-                Your work will be lost if you continue without saving.
+                {dialogType === 'write' 
+                  ? 'You are opening a new editor. Make sure to save your current changes to IPFS before proceeding. Your current work will be lost if you continue without saving.'
+                  : 'You are about to leave the editor. Make sure to save your changes to IPFS before navigating away. Your work will be lost if you continue without saving.'
+                }
               </p>
             </div>
             
@@ -2020,14 +2073,14 @@ const EditorPage = () => {
                 onClick={handleDiscard}
                 className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md transition-colors"
               >
-                Leave Without Saving
+                {dialogType === 'write' ? 'Open Without Saving' : 'Leave Without Saving'}
               </button>
               <button
                 onClick={handleSave}
                 disabled={isSaving}
                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed rounded-md transition-colors"
               >
-                {isSaving ? 'Saving...' : 'Save & Leave'}
+                {isSaving ? 'Saving...' : (dialogType === 'write' ? 'Save & Open New' : 'Save & Leave')}
               </button>
             </div>
           </div>

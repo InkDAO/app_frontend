@@ -35,15 +35,16 @@ const Navbar = () => {
             </Link>
             
             {/* Write Button */}
-            <Button
-              variant={location.pathname === "/app/editor" ? "default" : "ghost"}
-              size="sm"
-              className="flex items-center gap-2"
-              onClick={() => window.location.href = '/app/editor'}
-            >
-              <Edit3 className="h-4 w-4" />
-              <span className="hidden lg:inline">Write</span>
-            </Button>
+            <Link to="/app/editor">
+              <Button
+                variant={location.pathname === "/app/editor" || location.pathname.startsWith("/app/editor/") ? "default" : "ghost"}
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <Edit3 className="h-4 w-4" />
+                <span className="hidden lg:inline">Write</span>
+              </Button>
+            </Link>
             
             {/* Me Button */}
             <Link to="/app/my-posts">

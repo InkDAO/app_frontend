@@ -301,7 +301,7 @@ export const SavedPostCard = ({ savedPost, onDelete }: SavedPostCardProps) => {
             variant="secondary"
             size="sm"
             onClick={handleViewMore}
-            className="h-8 w-8 p-0 bg-white/90 hover:bg-white dark:bg-gray-800/90 dark:hover:bg-gray-800 shadow-lg backdrop-blur-sm border-0"
+            className="h-8 w-8 p-0 bg-white/90 hover:bg-white dark:bg-gray-900/90 dark:hover:bg-gray-900 shadow-lg backdrop-blur-sm border-0"
             title="Edit post"
           >
             <Edit className="h-4 w-4" />
@@ -312,7 +312,7 @@ export const SavedPostCard = ({ savedPost, onDelete }: SavedPostCardProps) => {
             size="sm"
             onClick={handleDelete}
             disabled={isDeleting || !cid}
-            className="h-8 w-8 p-0 bg-white/90 hover:bg-red-50 dark:bg-gray-800/90 dark:hover:bg-red-950/50 shadow-lg backdrop-blur-sm border-0 hover:text-red-600 dark:hover:text-red-400"
+            className="h-8 w-8 p-0 bg-white/90 hover:bg-red-50 dark:bg-gray-900/90 dark:hover:bg-red-950/50 shadow-lg backdrop-blur-sm border-0 hover:text-red-600 dark:hover:text-red-400"
             title={isDeleting ? "Deleting..." : "Delete post"}
           >
             {isDeleting ? (

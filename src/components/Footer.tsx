@@ -49,12 +49,12 @@ const Footer = () => {
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           {/* Copyright */}
-          <div 
+          {/* <div 
             className="text-sm"
             style={{ color: theme === "light" ? "#6B7280" : "#9CA3AF" }}
           >
             Copyright © 2025 dX. All rights reserved.
-          </div>
+          </div> */}
           
           {/* Social Links */}
           <div className="flex items-center gap-6">

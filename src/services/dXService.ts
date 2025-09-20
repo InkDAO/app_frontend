@@ -409,11 +409,10 @@ export const fetchSavedPosts = async (owner: string): Promise<any[]> => {
   try {
     console.log('📡 Fetching saved posts for owner:', owner);
     
-    // Check if JWT token exists, if not, authenticate first
+    // Check if JWT token exists, if not, throw error
     if (!authService.isAuthenticated()) {
-      console.log('🔐 No valid JWT token found, authenticating...');
-      // This will trigger the user to sign a message for authentication
-      await authService.login(owner);
+      console.log('🔐 No valid JWT token found, authentication required');
+      throw new Error('Authentication required. Please sign in first.');
     }
 
     // Make authenticated API call to fetch saved posts

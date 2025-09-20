@@ -1,31 +1,25 @@
-import { useState, useEffect } from "react";
-import Navbar from "@/components/Navbar";
+import { useState } from "react";
 import { PostCard } from "@/components/PostCard";
-import { SavedPostCard } from "@/components/SavedPostCard";
 import { TagSearch } from "@/components/TagSearch";
-import { useAccount } from "wagmi";
+import { AuthGuard } from "@/components/AuthGuard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, ArrowUpDown, Wallet, MessageSquare, ArrowRight, Hash, Bookmark, FileText, RefreshCw } from "lucide-react";
+import { Search, ArrowUpDown, MessageSquare, ArrowRight, Hash } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { usePosts } from "@/hooks/usePosts";
 import { handleGetFilesByTags } from "@/services/pinataService";
-import { fetchSavedPosts } from "@/services/dXService";
 import { Post } from "@/types";
+import { useAccount } from "wagmi";
 
 export const MyPostsPage = () => {
   const navigate = useNavigate();
-  const { address, isConnected } = useAccount();
+  const { address } = useAccount();
   const [searchTerm, setSearchTerm] = useState("");
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [searchMode, setSearchMode] = useState<'title' | 'tags'>('title');
   const [taggedPosts, setTaggedPosts] = useState<Post[]>([]);
   const [isTagSearchLoading, setIsTagSearchLoading] = useState(false);
   const [hasSelectedTags, setHasSelectedTags] = useState(false);
-  const [savedPosts, setSavedPosts] = useState<any[]>([]);
-  const [isSavedPostsLoading, setIsSavedPostsLoading] = useState(false);
-  const [savedPostsError, setSavedPostsError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("my-posts");
   const { allPosts, isAllPostLoading } = usePosts();
 
   const myPosts = allPosts.filter((post) => {
@@ -99,236 +93,102 @@ export const MyPostsPage = () => {
     }
   };
 
-  // Fetch saved posts when tab switches to saved posts
-  const handleFetchSavedPosts = async () => {
-    if (!address) return;
-    
-    setIsSavedPostsLoading(true);
-    setSavedPostsError(null);
-    
-    try {
-      const savedPostsData = await fetchSavedPosts(address);
-      setSavedPosts(savedPostsData);
-    } catch (error) {
-      console.error('Failed to fetch saved posts:', error);
-      setSavedPostsError(error instanceof Error ? error.message : 'Failed to fetch saved posts');
-    } finally {
-      setIsSavedPostsLoading(false);
-    }
-  };
-
-  // Handle deletion of a saved post
-  const handleDeleteSavedPost = (deletedCid: string) => {
-    setSavedPosts(prevPosts => 
-      prevPosts.filter(post => post.cid !== deletedCid)
-    );
-  };
-
-  // Fetch saved posts when tab changes to saved posts
-  useEffect(() => {
-    if (activeTab === 'saved-posts' && address && isConnected) {
-      handleFetchSavedPosts();
-    }
-  }, [activeTab, address, isConnected]);
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-2 md:py-6 max-w-7xl">
+    <AuthGuard>
+      <div className="px-4 sm:px-6 py-6 lg:px-8 max-w-7xl mx-auto w-full">
         <div className="mb-6">
         </div>
-
-        {!isConnected ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center animate-in fade-in-50 slide-in-from-bottom-4 duration-500">
-            <div className="flex items-center gap-3 mb-2 animate-in fade-in-50 zoom-in-50 duration-700">
-              <Wallet className="h-8 w-8 animate-[float_3s_ease-in-out_infinite]" />
-              <h2 className="text-2xl font-semibold">Connect Your Wallet</h2>
-            </div>
-            <p className="text-muted-foreground mb-6 max-w-md animate-in fade-in-50 slide-in-from-bottom-2 duration-1000">
-              Connect wallet to view your posts
-            </p>
-          </div>
-        ) : (
           <div className="w-full">
-            {/* Custom Tab Navigation */}
-            <div className="mb-8">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1 shadow-sm w-fit">
-                  <button
-                    onClick={() => setActiveTab("my-posts")}
-                    className={`flex items-center space-x-2 px-4 py-2.5 text-sm font-medium rounded-md transition-all duration-200 ${
-                      activeTab === "my-posts"
-                        ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm border border-gray-200 dark:border-gray-600'
-                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-700/50'
-                    }`}
-                  >
-                    <FileText className="w-4 h-4" />
-                    <span>My Posts</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("saved-posts")}
-                    className={`flex items-center space-x-2 px-4 py-2.5 text-sm font-medium rounded-md transition-all duration-200 ${
-                      activeTab === "saved-posts"
-                        ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm border border-gray-200 dark:border-gray-600'
-                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-700/50'
-                    }`}
-                  >
-                    <Bookmark className="w-4 h-4" />
-                    <span>Saved Posts</span>
-                  </button>
+            {isAllPostLoading ? (
+              <div className="flex justify-center items-center py-4 md:py-8">
+                <div className="w-full space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="animate-pulse">
+                      <div className="h-24 bg-muted/50 rounded-lg border border-border">
+                        <div className="p-4 space-y-3">
+                          <div className="h-4 bg-muted rounded w-3/4" />
+                          <div className="h-3 bg-muted rounded w-1/2" />
+                          <div className="flex justify-between items-center">
+                            <div className="h-3 bg-muted rounded w-1/4" />
+                            <div className="h-3 bg-muted rounded w-1/4" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                {activeTab === "saved-posts" && (
-                  <Button onClick={handleFetchSavedPosts} variant="outline" size="sm" className="flex items-center gap-2">
-                    <RefreshCw className="w-4 h-4" />
-                    Refresh
-                  </Button>
-                )}
               </div>
-            </div>
-            
-            {/* Tab Content */}
-            {activeTab === "my-posts" && (
-              isAllPostLoading ? (
-                <div className="flex justify-center items-center py-4 md:py-8">
-                  <div className="w-full space-y-4">
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} className="animate-pulse">
-                        <div className="h-24 bg-muted/50 rounded-lg border border-border">
-                          <div className="p-4 space-y-3">
-                            <div className="h-4 bg-muted rounded w-3/4" />
-                            <div className="h-3 bg-muted rounded w-1/2" />
-                            <div className="flex justify-between items-center">
-                              <div className="h-3 bg-muted rounded w-1/4" />
-                              <div className="h-3 bg-muted rounded w-1/4" />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : myPosts.length > 0 ? (
-                <div>
-                  {/* Search Mode Toggle */}
-                  <div className="flex gap-2 mb-4">
-                    <Button
-                      variant={searchMode === 'title' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => handleModeSwitch('title')}
-                      className="flex items-center gap-2"
-                    >
-                      <Search className="h-4 w-4" />
-                      Search by Title
-                    </Button>
-                    <Button
-                      variant={searchMode === 'tags' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => handleModeSwitch('tags')}
-                      className="flex items-center gap-2"
-                    >
-                      <Hash className="h-4 w-4" />
-                      Search by Tags
-                    </Button>
-                  </div>
-
-                  {/* Search Section */}
-                  <div className="mb-6">
-                    {searchMode === 'title' ? (
-                      <div className="relative flex items-center gap-2">
-                        <div className="relative flex-1">
-                          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            type="search"
-                            placeholder="Search your posts by title..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10"
-                          />
-                        </div>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-8 w-8 p-0 hover:bg-transparent"
-                          onClick={toggleSort}
-                        >
-                          <ArrowUpDown className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="flex items-end gap-2">
-                        <div className="flex-1">
-                          <TagSearch
-                            onTagSearch={handleTagSearch}
-                            isLoading={isTagSearchLoading}
-                            placeholder="Search your posts by tags..."
-                          />
-                        </div>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-8 w-8 p-0 hover:bg-transparent"
-                          onClick={toggleSort}
-                        >
-                          <ArrowUpDown className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Posts Results */}
-                  {(isTagSearchLoading) ? (
-                    <div className="flex justify-center items-center py-4 md:py-8">
-                      <div className="w-full space-y-4">
-                        {[1, 2, 3].map((i) => (
-                          <div key={i} className="animate-pulse">
-                            <div className="h-24 bg-muted/50 rounded-lg border border-border">
-                              <div className="p-4 space-y-3">
-                                <div className="h-4 bg-muted rounded w-3/4" />
-                                <div className="h-3 bg-muted rounded w-1/2" />
-                                <div className="flex justify-between items-center">
-                                  <div className="h-3 bg-muted rounded w-1/4" />
-                                  <div className="h-3 bg-muted rounded w-1/4" />
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ) : sortedAndFilteredPosts.length > 0 ? (
-                    sortedAndFilteredPosts.map((post) => (
-                      <PostCard key={post.postId} post={post} />
-                    ))
-                  ) : (searchTerm || searchMode === 'tags') ? (
-                    <div className="text-center py-10">
-                      <p className="text-muted-foreground mb-4">
-                        {searchMode === 'tags' 
-                          ? 'No posts found with the selected tags'
-                          : 'No posts match your search'
-                        }
-                      </p>
-                    </div>
-                  ) : null}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-16 text-center animate-in fade-in-50 slide-in-from-bottom-4 duration-500">
-                  <div className="flex items-center gap-3 mb-2 animate-in fade-in-50 zoom-in-50 duration-700">
-                    <MessageSquare className="h-8 w-8 animate-[float_3s_ease-in-out_infinite]" />
-                    <h2 className="text-2xl font-semibold">No Posts Yet</h2>
-                  </div>
-                  <div 
-                    onClick={() => navigate('/app')}
-                    className="flex items-center gap-2 text-muted-foreground mb-6 max-w-md animate-in fade-in-50 slide-in-from-bottom-2 duration-1000 cursor-pointer hover:text-foreground transition-colors"
+            ) : myPosts.length > 0 ? (
+              <div>
+                {/* Search Mode Toggle */}
+                <div className="flex gap-2 mb-4">
+                  <Button
+                    variant={searchMode === 'title' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => handleModeSwitch('title')}
+                    className="flex items-center gap-2"
                   >
-                    <p>Write your first post to get started</p>
-                    <ArrowRight className="h-4 w-4" />
-                  </div>
+                    <Search className="h-4 w-4" />
+                    Search by Title
+                  </Button>
+                  <Button
+                    variant={searchMode === 'tags' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => handleModeSwitch('tags')}
+                    className="flex items-center gap-2"
+                  >
+                    <Hash className="h-4 w-4" />
+                    Search by Tags
+                  </Button>
                 </div>
-              )
-            )}
-              
-            {activeTab === "saved-posts" && (
-                isSavedPostsLoading ? (
+
+                {/* Search Section */}
+                <div className="mb-6">
+                  {searchMode === 'title' ? (
+                    <div className="relative flex items-center gap-2">
+                      <div className="relative flex-1">
+                        <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          type="search"
+                          placeholder="Search your posts by title..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="pl-10"
+                        />
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 w-8 p-0 hover:bg-transparent"
+                        onClick={toggleSort}
+                      >
+                        <ArrowUpDown className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-end gap-2">
+                      <div className="flex-1">
+                        <TagSearch
+                          onTagSearch={handleTagSearch}
+                          isLoading={isTagSearchLoading}
+                          placeholder="Search your posts by tags..."
+                        />
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 w-8 p-0 hover:bg-transparent"
+                        onClick={toggleSort}
+                      >
+                        <ArrowUpDown className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Posts Results */}
+                {(isTagSearchLoading) ? (
                   <div className="flex justify-center items-center py-4 md:py-8">
                     <div className="w-full space-y-4">
                       {[1, 2, 3].map((i) => (
@@ -347,49 +207,38 @@ export const MyPostsPage = () => {
                       ))}
                     </div>
                   </div>
-                ) : savedPostsError ? (
-                  <div className="flex flex-col items-center justify-center py-16 text-center">
-                    <div className="text-red-500 mb-4">
-                      <MessageSquare className="h-8 w-8 mx-auto mb-2" />
-                      <h2 className="text-xl font-semibold">Error Loading Saved Posts</h2>
-                    </div>
-                    <p className="text-muted-foreground mb-4 max-w-md">
-                      {savedPostsError}
+                ) : sortedAndFilteredPosts.length > 0 ? (
+                  sortedAndFilteredPosts.map((post) => (
+                    <PostCard key={post.postId} post={post} />
+                  ))
+                ) : (searchTerm || searchMode === 'tags') ? (
+                  <div className="text-center py-10">
+                    <p className="text-muted-foreground mb-4">
+                      {searchMode === 'tags' 
+                        ? 'No posts found with the selected tags'
+                        : 'No posts match your search'
+                      }
                     </p>
-                    <Button onClick={handleFetchSavedPosts} variant="outline">
-                      Try Again
-                    </Button>
                   </div>
-                ) : savedPosts.length > 0 ? (
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center">
-                      {savedPosts.map((savedPost, index) => (
-                        <SavedPostCard 
-                          key={savedPost.cid || index} 
-                          savedPost={savedPost}
-                          onDelete={handleDeleteSavedPost}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center py-16 text-center animate-in fade-in-50 slide-in-from-bottom-4 duration-500">
-                    <div className="flex items-center gap-3 mb-2 animate-in fade-in-50 zoom-in-50 duration-700">
-                      <Bookmark className="h-8 w-8 animate-[float_3s_ease-in-out_infinite]" />
-                      <h2 className="text-2xl font-semibold">No Saved Posts</h2>
-                    </div>
-                    <p className="text-muted-foreground mb-6 max-w-md animate-in fade-in-50 slide-in-from-bottom-2 duration-1000">
-                      Your saved posts will appear here when you have any
-                    </p>
-                    <Button onClick={handleFetchSavedPosts} variant="outline">
-                      Refresh
-                    </Button>
-                  </div>
-                )
+                ) : null}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-16 text-center animate-in fade-in-50 slide-in-from-bottom-4 duration-500">
+                <div className="flex items-center gap-3 mb-2 animate-in fade-in-50 zoom-in-50 duration-700">
+                  <MessageSquare className="h-8 w-8 animate-[float_3s_ease-in-out_infinite]" />
+                  <h2 className="text-2xl font-semibold">No Posts Yet</h2>
+                </div>
+                <div 
+                  onClick={() => navigate('/app')}
+                  className="flex items-center gap-2 text-muted-foreground mb-6 max-w-md animate-in fade-in-50 slide-in-from-bottom-2 duration-1000 cursor-pointer hover:text-foreground transition-colors"
+                >
+                  <p>Write your first post to get started</p>
+                  <ArrowRight className="h-4 w-4" />
+                </div>
+              </div>
             )}
-          </div>
-        )}
-      </main>
-    </div>
+        </div>
+      </div>
+    </AuthGuard>
   );
 };

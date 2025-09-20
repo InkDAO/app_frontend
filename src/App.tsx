@@ -9,6 +9,7 @@ import { MyPostsPage } from "@/pages/MyPostsPage";
 import { MyCommentsPage } from "@/pages/MyCommentsPage";
 import { AnnouncementPage } from "@/pages/AnnouncementPage";
 import { ArchivePage } from "@/pages/ArchivePage";
+import { DraftsPage } from "@/pages/DraftsPage";
 import NotFound from "@/pages/NotFound";
 import EditorPage from "@/pages/editor";
 
@@ -37,22 +38,23 @@ const App = () => (
     <QueryClientProvider client={queryClient}>
       <RainbowKitProvider>
         <TooltipProvider>
-          <AppLayout>
-            <Sonner position="top-right" />
-            <BrowserRouter>
+          <BrowserRouter>
+            <AppLayout>
+              <Sonner position="top-right" />
               <Routes>
                 <Route path="/" element={<Landing />} />
                 <Route path="/app" element={<HomePage />} />
                 <Route path="/app/post/:id" element={<PostInfoPage />} />
                 <Route path="/app/my-posts" element={<MyPostsPage />} />
+                <Route path="/app/drafts" element={<DraftsPage />} />
                 <Route path="/app/my-comments" element={<MyCommentsPage />} />
                 <Route path="/app/announcements" element={<AnnouncementPage />} />
                 <Route path="/app/archives" element={<ArchivePage />} />
                 <Route path="/app/editor/:cid?" element={<EditorPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
-            </BrowserRouter>
-          </AppLayout>
+            </AppLayout>
+          </BrowserRouter>
         </TooltipProvider>
       </RainbowKitProvider>
     </QueryClientProvider>

@@ -1,84 +1,97 @@
-import React from 'react';
+import { ReactNode } from 'react';
+import { useAccount } from 'wagmi';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { Wallet, Shield, Loader2 } from 'lucide-react';
+import { Wallet, User, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface AuthGuardProps {
-  children: React.ReactNode;
-  fallback?: React.ReactNode;
-  requireAuth?: boolean;
+  children: ReactNode;
+  fallback?: ReactNode;
 }
 
-export const AuthGuard: React.FC<AuthGuardProps> = ({ 
-  children, 
-  fallback, 
-  requireAuth = true 
-}) => {
-  const { 
-    isAuthenticated, 
-    isAuthenticating, 
-    isWalletConnected, 
-    isCorrectWallet,
-    authenticate 
-  } = useAuth();
+export const AuthGuard = ({ children, fallback }: AuthGuardProps) => {
+  const { isConnected } = useAccount();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
-  // If authentication is not required, always show children
-  if (!requireAuth) {
-    return <>{children}</>;
-  }
-
-  // Show loading state while authenticating
-  if (isAuthenticating) {
-    return (
-      <div className="flex flex-col items-center justify-center p-8 space-y-4">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-        <p className="text-gray-600 dark:text-gray-400">Authenticating with your wallet...</p>
-      </div>
-    );
-  }
-
-  // Show wallet connection required
-  if (!isWalletConnected) {
+  // If not connected to wallet
+  if (!isConnected) {
     return fallback || (
-      <div className="flex flex-col items-center justify-center p-8 space-y-4">
-        <Wallet className="w-12 h-12 text-gray-400" />
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-          Wallet Required
-        </h3>
-        <p className="text-gray-600 dark:text-gray-400 text-center max-w-md">
-          Please connect your wallet to access this feature.
-        </p>
+      <div className="min-h-screen flex flex-col items-center justify-start text-center animate-in fade-in-50 slide-in-from-bottom-4 duration-500 px-4 pt-32">
+        <div className="max-w-2xl mx-auto">
+          {/* Large Icon Container */}
+          <div className="mb-8 animate-in fade-in-50 zoom-in-50 duration-700">
+            <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-2xl">
+              <Wallet className="h-12 w-12 text-white animate-[float_3s_ease-in-out_infinite]" />
+            </div>
+            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-4">
+              Connect Your Wallet
+            </h1>
+            <p className="text-xl text-muted-foreground mb-8 max-w-lg mx-auto leading-relaxed">
+              Please connect your wallet to access this page and start your decentralized journey
+            </p>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-in fade-in-50 slide-in-from-bottom-2 duration-1000">
+            <Button 
+              onClick={() => navigate('/app')} 
+              variant="outline" 
+              size="lg"
+              className="w-full sm:w-auto px-8 py-3 text-lg font-semibold"
+            >
+              Go to Home
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }
 
-  // Show authentication required
-  if (!isAuthenticated || !isCorrectWallet) {
+  // If connected but not authenticated
+  if (!isAuthenticated) {
     return fallback || (
-      <div className="flex flex-col items-center justify-center p-8 space-y-4">
-        <Shield className="w-12 h-12 text-amber-500" />
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-          Authentication Required
-        </h3>
-        <p className="text-gray-600 dark:text-gray-400 text-center max-w-md">
-          Please authenticate with your wallet to access this feature.
-        </p>
-        <Button 
-          onClick={authenticate}
-          className="flex items-center space-x-2"
-          disabled={isAuthenticating}
-        >
-          {isAuthenticating ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Shield className="w-4 h-4" />
-          )}
-          <span>Authenticate with Wallet</span>
-        </Button>
+      <div className="min-h-screen flex flex-col items-center justify-start text-center animate-in fade-in-50 slide-in-from-bottom-4 duration-500 px-4 pt-32">
+        <div className="max-w-2xl mx-auto">
+          {/* Large Icon Container */}
+          <div className="mb-8 animate-in fade-in-50 zoom-in-50 duration-700">
+            <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-green-500 to-blue-600 flex items-center justify-center shadow-2xl">
+              <User className="h-12 w-12 text-white animate-[float_3s_ease-in-out_infinite]" />
+            </div>
+            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent mb-4">
+              Authentication Required
+            </h1>
+            <p className="text-xl text-muted-foreground mb-8 max-w-lg mx-auto leading-relaxed">
+              Please sign in with your wallet to access this page
+            </p>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-in fade-in-50 slide-in-from-bottom-2 duration-1000">
+            <Button 
+              onClick={() => navigate('/app')} 
+              variant="outline" 
+              size="lg"
+              className="w-full sm:w-auto px-8 py-3 text-lg font-semibold"
+            >
+              Go to Home
+            </Button>
+            <Button 
+              onClick={() => window.location.reload()} 
+              variant="default" 
+              size="lg"
+              className="w-full sm:w-auto px-8 py-3 text-lg font-semibold bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600"
+            >
+              <ArrowRight className="h-5 w-5 mr-2" />
+              Sign In
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }
 
-  // User is authenticated, show protected content
+  // If authenticated, render children
   return <>{children}</>;
 };

@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import EditorJS from '@editorjs/editorjs';
-import Navbar from "@/components/Navbar";
 import EditorPreview from "@/components/EditorPreview";
 import Header from '@editorjs/header';
 import List from '@editorjs/list';
@@ -21,7 +20,7 @@ import { createGroupPost, updateFileById, signMessageWithMetaMask } from '@/serv
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { AuthGuard } from '@/components/AuthGuard';
+import { useEditor } from '@/context/EditorContext';
 import '../styles/editor.css';
 
 // localStorage removed - users must manually save using save button
@@ -66,6 +65,8 @@ const EditorPage = () => {
   const originalNavigate = useNavigate();
   const { cid } = useParams();
   const { ensureAuthenticated, isAuthenticated } = useAuth();
+  const { setEditorProps } = useEditor();
+
 
   // Create a blocked navigate function that shows dialog only when there are unsaved changes
   const navigate = (to: any, options?: any) => {
@@ -748,6 +749,16 @@ const EditorPage = () => {
   const saveToAPI = async () => {
     return await saveToAPIInternal(true);
   };
+
+  // Set editor props in context for TopHeader
+  useEffect(() => {
+    setEditorProps({
+      onSave: saveToAPI,
+      onPublish: saveToAPI,
+      isSaving,
+      isAuthenticated,
+    });
+  }, [saveToAPI, isSaving, isAuthenticated, setEditorProps]);
 
   // Handle save action from dialog (preserves pending navigation)
   const handleSave = async () => {
@@ -1890,10 +1901,7 @@ const EditorPage = () => {
   };
 
   return (
-    <AuthGuard requireAuth={false}>
-      <div className={`min-h-screen bg-white dark:bg-gray-900 ${isPreviewMode ? 'preview-mode' : ''}`}>
-        <Navbar />
-      
+    <div className={`min-h-screen bg-background ${isPreviewMode ? 'preview-mode' : ''}`}>
       {/* Title input and auto-save indicator */}
       <div className="max-w-4xl mx-auto px-8 pt-6 pb-4">
         <div className="flex items-center justify-between mb-6">
@@ -1910,7 +1918,7 @@ const EditorPage = () => {
         {/* Tab Navigation */}
         <div className="mb-2">
           <nav className="flex justify-between items-center" aria-label="Tabs">
-            <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1 shadow-sm">
+            <div className="flex items-center bg-gray-100 dark:bg-gray-900 rounded-lg p-1 shadow-sm">
               <button
                 onClick={() => {
                   if (isPreviewMode) {
@@ -2043,7 +2051,7 @@ const EditorPage = () => {
       {/* Unsaved Changes Dialog */}
       {showUnsavedDialog && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
             <div className="flex items-center mb-4">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-yellow-100 dark:bg-yellow-900 rounded-full flex items-center justify-center">
@@ -2087,69 +2095,8 @@ const EditorPage = () => {
         </div>
       )}
 
-      {/* Floating Action Bar - Bottom Center */}
-      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
-        {/* Ellipse container with glass morphism */}
-        <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border border-white/20 dark:border-gray-700/50 rounded-full shadow-2xl px-8 py-4">
-          <div className="flex items-center space-x-4">
-        {/* Save Button */}
-        <button
-          onClick={saveToAPI}
-          disabled={isSaving || !address}
-              className="group relative px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 disabled:hover:scale-100"
-              title={!isAuthenticated ? "Authentication required to save" : "Save content to IPFS (Ctrl/Cmd+S)"}
-            >
-              <div className="flex items-center space-x-2">
-                {isSaving ? (
-                  <>
-                    <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    <span className="text-sm">Saving...</span>
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12" />
-                    </svg>
-                    <span className="text-sm hidden sm:inline">Save to IPFS</span>
-                    <span className="text-sm sm:hidden">Save</span>
-                  </>
-                )}
-              </div>
-        </button>
-            
-            {/* Divider */}
-            <div className="w-px h-6 bg-gray-300 dark:bg-gray-600"></div>
-        
-        {/* Post Button */}
-        <button
-          onClick={saveToAPI}
-          disabled={isSaving || !address}
-              className="group relative px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 disabled:hover:scale-100"
-              title={!isAuthenticated ? "Authentication required to post" : "Post content to IPFS"}
-            >
-              <div className="flex items-center space-x-2">
-                {isSaving ? (
-                  <>
-                    <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    <span className="text-sm">Posting...</span>
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                    </svg>
-                    <span className="text-sm hidden sm:inline">Publish Onchain</span>
-                    <span className="text-sm sm:hidden">Publish</span>
-                  </>
-                )}
-              </div>
-        </button>
-          </div>
-        </div>
-      </div>
 
       </div>
-    </AuthGuard>
   );
 };
 

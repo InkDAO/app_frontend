@@ -41,7 +41,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
     <ThemeProvider>
       <SearchProvider>
         <EditorProvider>
-          <div className={`h-screen bg-background ${showSidebar ? 'flex flex-col' : ''}`}>
+          <div className={`h-screen max-h-screen bg-background flex flex-col`}>
           {/* Top Header - only show for app routes */}
           {showSidebar && (
             <TopHeader 
@@ -51,16 +51,16 @@ const AppLayout = ({ children }: AppLayoutProps) => {
           
           
           {/* Main content area with sidebar and content */}
-          <div className={`flex-1 flex transition-all duration-300 ease-in-out ${showSidebar ? 'pt-16' : ''}`}>
+          <div className={`flex-1 flex transition-all duration-300 ease-in-out ${showSidebar ? 'pt-16' : ''} min-h-0 max-h-full`}>
             {/* Sidebar - only show for app routes */}
             {showSidebar && (
               <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
             )}
             
             {/* Main content area - natural flex layout */}
-            <div className={`flex-1 flex flex-col transition-all duration-300 ease-in-out border-t border-gray-300 dark:border-gray-600 ${showSidebar && sidebarOpen ? 'lg:ml-64' : ''}`}>
+            <div className={`flex-1 flex flex-col transition-all duration-300 ease-in-out ${showSidebar && sidebarOpen ? 'lg:ml-64' : ''} min-h-0 max-h-full`}>
               {/* Main content - scrollable only when needed */}
-              <main className={`flex-1 w-full bg-background overflow-y-auto`}>
+              <main className={`flex-1 w-full bg-background overflow-y-auto min-h-0 max-h-full`}>
                 {children}
               </main>
             </div>
@@ -73,3 +73,6 @@ const AppLayout = ({ children }: AppLayoutProps) => {
 };
 
 export default AppLayout;
+
+
+

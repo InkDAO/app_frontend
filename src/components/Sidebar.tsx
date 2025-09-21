@@ -113,11 +113,11 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       
       {/* Sidebar */}
             <div className={cn(
-              "h-[calc(100vh-4rem)] w-56 sm:w-60 lg:w-64 bg-background border-r border-gray-200 dark:border-gray-700 transform transition-transform duration-300 ease-in-out flex flex-col overflow-hidden fixed left-0 z-50",
+              "h-[calc(100vh-4rem)] w-56 sm:w-60 lg:w-64 bg-background border-r border-gray-100 dark:border-gray-900 transform transition-transform duration-300 ease-in-out flex flex-col overflow-hidden fixed left-0 z-50",
               isOpen ? "translate-x-0 top-[calc(4rem+1px)]" : "-translate-x-full top-16"
             )}>
               {/* Top border line */}
-              <div className="w-full h-px bg-gray-300 dark:bg-gray-600"></div>
+              <div className="w-full h-px bg-gray-100 dark:bg-gray-900"></div>
         {/* Header - Empty space for alignment */}
         <div className="p-4 flex-shrink-0">
         </div>
@@ -149,7 +149,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
         </nav>
 
         {/* Tag Filter Section */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+        <div className="p-4 border-t border-gray-100 dark:border-gray-900 flex-shrink-0">
           <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
             Filter by Tags
           </div>
@@ -163,7 +163,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
         </div>
 
         {/* Theme Toggle */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+        <div className="p-4 border-t border-gray-100 dark:border-gray-900 flex-shrink-0">
           <Button
             variant="ghost"
             onClick={toggleTheme}
@@ -184,7 +184,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
         </div>
 
         {/* Footer Section */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+        <div className="p-4 border-t border-gray-100 dark:border-gray-900 flex-shrink-0">
           {/* Copyright */}
           {/* <div 
             className="text-xs mb-4"

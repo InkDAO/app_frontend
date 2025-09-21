@@ -45,7 +45,7 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
   
   const userState = getUserState();
   return (
-        <header className="fixed top-0 left-0 right-0 z-40 bg-background border-b border-gray-300 dark:border-gray-600">
+        <header className="fixed top-0 left-0 right-0 z-40 bg-background border-b border-gray-100 dark:border-gray-900">
       <div className="flex items-center justify-between px-4 py-3">
         {/* Left side - Hamburger menu and Logo */}
         <div className="flex items-center gap-2 sm:gap-3">
@@ -159,7 +159,7 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
                   </button>
 
                   {/* Divider */}
-                  <div className="h-6 w-px bg-gray-300 dark:bg-gray-600 mr-3"></div>
+                  <div className="h-6 w-px bg-gray-100 dark:bg-gray-900 mr-3"></div>
                 </>
               )}
 
@@ -172,7 +172,7 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
               {!isEditorPage && (
                 <>
                   {/* Vertical separator */}
-                  <div className="h-8 w-px bg-gray-300 dark:bg-gray-600"></div>
+                  <div className="h-8 w-px bg-gray-100 dark:bg-gray-900"></div>
 
                   {/* Sign In/Out Button */}
                   <button
@@ -217,7 +217,7 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
 
       {/* Mobile Search Dropdown (hidden on editor page) */}
       {!isEditorPage && isMobileSearchOpen && (
-        <div className="sm:hidden absolute top-full left-0 right-0 bg-background border-b border-gray-300 dark:border-gray-600 px-4 py-3 z-50">
+        <div className="sm:hidden absolute top-full left-0 right-0 bg-background border-b border-gray-100 dark:border-gray-900 px-4 py-3 z-50">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input

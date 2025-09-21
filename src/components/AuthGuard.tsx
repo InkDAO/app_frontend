@@ -12,7 +12,7 @@ interface AuthGuardProps {
 
 export const AuthGuard = ({ children, fallback }: AuthGuardProps) => {
   const { isConnected } = useAccount();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, authenticate, isAuthenticating } = useAuth();
   const navigate = useNavigate();
 
   // If not connected to wallet
@@ -78,13 +78,23 @@ export const AuthGuard = ({ children, fallback }: AuthGuardProps) => {
               Go to Home
             </Button>
             <Button 
-              onClick={() => window.location.reload()} 
+              onClick={authenticate}
+              disabled={isAuthenticating}
               variant="default" 
               size="lg"
-              className="w-full sm:w-auto px-8 py-3 text-lg font-semibold bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600"
+              className="w-full sm:w-auto px-8 py-3 text-lg font-semibold bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <ArrowRight className="h-5 w-5 mr-2" />
-              Sign In
+              {isAuthenticating ? (
+                <>
+                  <div className="w-5 h-5 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Signing In...
+                </>
+              ) : (
+                <>
+                  <ArrowRight className="h-5 w-5 mr-2" />
+                  Sign In
+                </>
+              )}
             </Button>
           </div>
         </div>

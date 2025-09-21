@@ -1,5 +1,5 @@
 import { maxterdXConfig } from "@/contracts/MasterdX";
-import { useWriteContract, useAccount, useWaitForTransactionReceipt, useReadContract } from "wagmi";
+import { useWriteContract, useAccount, useWaitForTransactionReceipt, useReadContract  } from "wagmi";
 import { sepolia } from "wagmi/chains";
 import { useState, useEffect } from "react";
 import { CommentWithPostTitle } from "@/types";
@@ -10,74 +10,22 @@ import { handleCreateGroup, handleUpload } from "./pinataService";
 // API Service for posting to group endpoint with proper content upload
 export const createGroupPost = async (content: any, title: string, address: string, signature: string, salt: string) => {
   try {
-    console.log('📝 Starting content upload process...');
-    console.log('   - Title:', title);
-    console.log('   - Content structure:', Object.keys(content || {}));
-    console.log('   - Address:', address);
-    
-    // Step 1: Create a group for this post
     const groupName = `${title}_${salt}`.slice(0, 50); // Limit to 50 chars
     console.log('🏗️ Creating group:', groupName);
     
-    // const groupResponse = await handleCreateGroup(groupName);
-    // if (groupResponse.error || !groupResponse.group) {
-    //   throw new Error(`Failed to create group: ${groupResponse.error}`);
-    // }
-    
-    // const groupId = groupResponse.group.id;
-    // console.log('✅ Group created with ID:', groupId);
-    
-    // Step 2: Convert content to a File object for upload
     const contentJson = JSON.stringify({
       title,
       content,
     }, null, 2);
 
     console.log('📦 Content JSON:', contentJson);
-    
-    // const contentBlob = new Blob([contentJson], { type: 'application/json' });
-    // const contentFile = new File([contentBlob], `${title}_${salt}.json`, {
-    //   type: 'application/json'
-    // });
-    
-    // console.log('📦 Content file created:');
-    // console.log('   - Size:', contentFile.size, 'bytes');
-    // console.log('   - Type:', contentFile.type);
-    
-    // // Step 3: Upload content to IPFS
-    // console.log('⬆️ Uploading content to IPFS...');
-    // const uploadResult = await handleUpload(
-    //   contentFile.name,
-    //   groupId,
-    //   contentFile,
-    //   `editor-content,${address.toLowerCase()}` // Add some basic tags
-    // );
-    
-    // if (!uploadResult.success || !uploadResult.cid) {
-    //   throw new Error(`Content upload failed: ${uploadResult.error}`);
-    // }
-    
-    // console.log('✅ Content uploaded to IPFS:');
-    // console.log('   - CID:', uploadResult.cid);
-    // console.log('   - IPFS Link:', uploadResult.ipfsLink);
-    
-    // Step 4: Create payload with real uploaded data
+
     const payload = {
       salt,
       address,
       signature,
       content: contentJson
     };
-
-    // console.log('📡 API Request Details:');
-    // console.log('   - Endpoint: http://localhost:8888/create/group');
-    // console.log('   - Salt (timestamp):', salt);
-    // console.log('   - Address:', address);
-    // console.log('   - Signature:', signature);
-    // console.log('   - Real CID:', uploadResult.cid);
-    // console.log('   - Content size:', contentFile.size, 'bytes');
-    // console.log('📦 Full API Payload:', JSON.stringify(payload, null, 2));
-
 
     const response = await fetch('http://localhost:8888/create/group', {
       method: 'POST',
@@ -88,8 +36,6 @@ export const createGroupPost = async (content: any, title: string, address: stri
       body: JSON.stringify(payload)
     });
 
-    console.log('📥 API Response Status:', response.status);
-
     if (!response.ok) {
       const errorText = await response.text();
       console.error('❌ API Error Response:', errorText);
@@ -99,62 +45,11 @@ export const createGroupPost = async (content: any, title: string, address: stri
     const result = await response.json();
     console.log('✅ Content uploaded successfully!');
     
-    // Return enhanced result with upload info
     return {
       ...result,
-      uploadInfo: {
-        // cid: uploadResult.cid,
-        // ipfsLink: uploadResult.ipfsLink,
-        // groupId: groupId,
-        // fileName: contentFile.name,
-        // fileSize: contentFile.size
-      }
     };
   } catch (error) {
     console.error('❌ Error in createGroupPost:', error);
-    throw error;
-  }
-};
-
-// Function to sign salt (timestamp) with MetaMask
-export const signMessageWithMetaMask = async (salt: string): Promise<string> => {
-  if (!window.ethereum) {
-    throw new Error('MetaMask is not installed');
-  }
-
-  try {
-    // Get the current account
-    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-    const account = accounts[0];
-    
-    console.log('🔐 MetaMask Signing Details:');
-    console.log('   - Salt to sign:', salt);
-    console.log('   - Salt length:', salt.length);
-    console.log('   - Salt type:', typeof salt);
-    console.log('   - Signing account:', account);
-    console.log('   - Method: personal_sign (modern wallet standard)');
-    
-    // Convert salt to hex-encoded UTF-8 using browser-compatible TextEncoder
-    const encoder = new TextEncoder();
-    const saltBytes = encoder.encode(salt);
-    const hexMessage = '0x' + Array.from(saltBytes, byte => byte.toString(16).padStart(2, '0')).join('');
-    
-    console.log('   - Salt as hex:', hexMessage);
-
-    // Use personal_sign which is the standard for modern wallets
-    // This creates a signature compatible with most dApps and APIs
-    const signature = await window.ethereum.request({
-      method: 'personal_sign',
-      params: [hexMessage, account],
-    });
-    
-    console.log('✅ Signature generated via personal_sign:', signature);
-    console.log('   - Signature length:', signature.length);
-    console.log('   - Note: This signature includes Ethereum message prefix');
-    
-    return signature;
-  } catch (error) {
-    console.error('❌ Signing failed:', error);
     throw error;
   }
 };
@@ -272,20 +167,23 @@ export const fetchFileContentByCid = async (cid: string): Promise<any> => {
 };
 
 // API function to delete a file by CID (with authentication)
-export const deleteFileById = async (cid: string, address: string): Promise<any> => {
+export const deleteFileById = async (cid: string, address: string, signMessage: any): Promise<any> => {
   try {
     console.log('🗑️ Starting file deletion process for CID:', cid);
     
     // Generate salt (current timestamp in seconds)
     const timestamp = Math.floor(Date.now() / 1000);
-    const salt = timestamp.toString();
+    const salt = `I want to delete my file ${cid} at timestamp - ${timestamp}`;
     
     console.log('🔐 Generated salt for deletion:', salt);
     console.log('📝 User address:', address);
     
-    // Sign the salt with MetaMask
-    console.log('✍️ Requesting signature from MetaMask...');
-    const signature = await signMessageWithMetaMask(salt);
+    // Sign the salt with wallet
+    console.log('✍️ Requesting signature from wallet...');
+    const signature = await signMessage({ 
+      message: salt,
+      account: address as `0x${string}`
+    });
     
     console.log('✅ Signature received for deletion');
     
@@ -328,7 +226,7 @@ export const deleteFileById = async (cid: string, address: string): Promise<any>
 };
 
 // API function to update a file by CID (with authentication)
-export const updateFileById = async (cid: string, content: any, title: string, address: string): Promise<any> => {
+export const updateFileById = async (cid: string, content: any, title: string, address: string, signMessage: any): Promise<any> => {
   try {
     console.log('🔄 Starting file update process for CID:', cid);
     console.log('   - Title:', title);
@@ -336,14 +234,17 @@ export const updateFileById = async (cid: string, content: any, title: string, a
     
     // Generate salt (current timestamp in seconds)
     const timestamp = Math.floor(Date.now() / 1000);
-    const salt = timestamp.toString();
+    const salt = `I want to update file ${cid} at timestamp - ${timestamp}`;
     
     console.log('🔐 Generated salt for update:', salt);
     console.log('📝 User address:', address);
     
-    // Sign the salt with MetaMask
-    console.log('✍️ Requesting signature from MetaMask...');
-    const signature = await signMessageWithMetaMask(salt);
+    // Sign the salt with wallet
+    console.log('✍️ Requesting signature from wallet...');
+    const signature = await signMessage({ 
+      message: salt,
+      account: address as `0x${string}`
+    });
     
     console.log('✅ Signature received for update');
     

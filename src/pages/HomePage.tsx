@@ -1,4 +1,5 @@
 import { PostCard } from "@/components/PostCard";
+import { EmptyState } from "@/components/EmptyState";
 import { useSearch } from "@/context/SearchContext";
 import { usePosts } from "@/hooks/usePosts";
 
@@ -65,16 +66,11 @@ const HomePage = () => {
             sortedAndFilteredPosts.map((post) => (
               <PostCard key={post.postId} post={post} />
             ))
-          ) : searchTerm ? (
-            <div className="text-center py-10">
-              <p className="text-muted-foreground mb-4">
-                No active posts match your search criteria
-              </p>
-            </div>
           ) : (
-            <div className="text-center py-10">
-              <p className="text-muted-foreground mb-4">No active posts found</p>
-            </div>
+            <EmptyState 
+              type={searchTerm ? "no-search-results" : "no-posts"} 
+              searchTerm={searchTerm}
+            />
           )}
         </div>
       </div>

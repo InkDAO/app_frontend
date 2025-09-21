@@ -1,5 +1,3 @@
-import { signMessageWithMetaMask } from './dXService';
-
 const API_BASE_URL = 'http://localhost:8888';
 const JWT_COOKIE_NAME = 'dx_jwt_token';
 
@@ -66,21 +64,8 @@ export class AuthService {
   }
 
   // Login with wallet signature
-  async login(address: string): Promise<LoginResponse> {
+  async login(address: string, salt: string, signature: string): Promise<LoginResponse> {
     try {
-      console.log('🔐 Starting authentication process...');
-      
-      // Generate salt (current timestamp in seconds)
-      const timestamp = Math.floor(Date.now() / 1000);
-      const salt = timestamp.toString();
-      
-      console.log('1. Generated salt:', salt);
-      console.log('2. User address:', address);
-      
-      // Sign the salt with MetaMask
-      const signature = await signMessageWithMetaMask(salt);
-      
-      console.log('3. Signature received:', signature);
       
       // Send authentication request
       const response = await fetch(`${API_BASE_URL}/auth/login`, {

@@ -6,9 +6,8 @@ import Landing from "@/pages/Landing";
 import HomePage from "@/pages/HomePage";
 import { PostInfoPage } from "@/pages/PostInfoPage";
 import { MyPostsPage } from "@/pages/MyPostsPage";
-import { MyCommentsPage } from "@/pages/MyCommentsPage";
 import { AnnouncementPage } from "@/pages/AnnouncementPage";
-import { ArchivePage } from "@/pages/ArchivePage";
+import { LibraryPage } from "@/pages/LibraryPage";
 import { DraftsPage } from "@/pages/DraftsPage";
 import NotFound from "@/pages/NotFound";
 import EditorPage from "@/pages/editor";
@@ -47,9 +46,8 @@ const App = () => (
                 <Route path="/app/post/:id" element={<PostInfoPage />} />
                 <Route path="/app/my-posts" element={<MyPostsPage />} />
                 <Route path="/app/drafts" element={<DraftsPage />} />
-                <Route path="/app/my-comments" element={<MyCommentsPage />} />
                 <Route path="/app/announcements" element={<AnnouncementPage />} />
-                <Route path="/app/archives" element={<ArchivePage />} />
+                <Route path="/app/library" element={<LibraryPage />} />
                 <Route path="/app/editor/:cid?" element={<EditorPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>

@@ -2,8 +2,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CustomConnectButton } from './ConnectButton';
 import { useSearch } from "@/context/SearchContext";
-import { Search, X, Wallet, User, CheckCircle, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { Search, X, Wallet, User, CheckCircle, Loader2, Save } from "lucide-react";
+import { useState, useMemo } from "react";
 import { useTheme } from "@/context/ThemeContext";
 import { useAccount } from "wagmi";
 import { useAuth } from "@/hooks/useAuth";
@@ -35,15 +35,13 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
   const editorContext = useEditor();
   const { onSave, onPublish, isSaving, isAuthenticated: editorIsAuthenticated } = editorContext;
   
-  // Determine user state
-  const getUserState = () => {
+  // Determine user state - use useMemo to make it reactive
+  const userState = useMemo(() => {
     if (!isConnected) return 'disconnected';
     if (isConnected && !isAuthenticated) return 'connected';
     if (isConnected && isAuthenticated) return 'authenticated';
     return 'disconnected';
-  };
-  
-  const userState = getUserState();
+  }, [isConnected, isAuthenticated]);
   return (
         <header className="fixed top-0 left-0 right-0 z-40 bg-background border-b border-gray-100 dark:border-gray-900">
       <div className="flex items-center justify-between px-4 py-3">
@@ -71,7 +69,7 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
           {!isEditorPage && (
             <div className="hidden sm:flex max-w-lg ml-20">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   type="search"
                   placeholder="Search posts by title..."
@@ -125,9 +123,7 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
                         </>
                       ) : (
                         <>
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12" />
-                          </svg>
+                          <Save className="w-4 h-4" />
                           <span className="text-sm hidden sm:inline">Save</span>
                         </>
                       )}
@@ -184,6 +180,7 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
                   }
                 }}
                 disabled={userState === 'disconnected' || isAuthenticating}
+                title={isAuthenticating ? "Please check your wallet and sign the message" : userState === 'authenticated' ? "Sign out of your account" : "Sign in with your wallet"}
                 className={cn(
                   "flex items-center gap-2 px-3 py-2 border shadow-md transition-all duration-200 transform",
                   "rounded-l-none rounded-r-lg border-l-0",
@@ -205,7 +202,7 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
                   <User className="w-5 h-5" />
                 )}
                 <span className="hidden lg:inline">
-                  {isAuthenticating ? 'Signing In...' : userState === 'authenticated' ? 'Sign Out' : 'Sign In'}
+                  {isAuthenticating ? 'Waiting for wallet...' : userState === 'authenticated' ? 'Sign Out' : 'Sign In'}
                 </span>
               </button>
                 </>

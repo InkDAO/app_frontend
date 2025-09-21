@@ -15,8 +15,8 @@ import Marker from '@editorjs/marker';
 import Underline from '@editorjs/underline';
 import Delimiter from '@editorjs/delimiter';
 import { Edit3, Eye } from 'lucide-react';
-import { useAccount } from 'wagmi';
-import { createGroupPost, updateFileById, signMessageWithMetaMask } from '@/services/dXService';
+import { useAccount, useSignMessage } from 'wagmi';
+import { createGroupPost, updateFileById } from '@/services/dXService';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -61,6 +61,7 @@ const EditorPage = () => {
   });
   
   const { address } = useAccount();
+  const { signMessageAsync } = useSignMessage();
   const { toast } = useToast();
   const originalNavigate = useNavigate();
   const { cid } = useParams();
@@ -569,7 +570,7 @@ const EditorPage = () => {
         
         let result;
         try {
-          result = await updateFileById(cidFromUrl, enhancedOutputData, documentTitle, address);
+          result = await updateFileById(cidFromUrl, enhancedOutputData, documentTitle, address, signMessageAsync);
         } catch (error) {
           console.error('❌ Error in updateFileById:', error);
           
@@ -577,7 +578,7 @@ const EditorPage = () => {
           if (error.message && error.message.includes('401')) {
             try {
               await ensureAuthenticated();
-              result = await updateFileById(cidFromUrl, enhancedOutputData, documentTitle, address);
+              result = await updateFileById(cidFromUrl, enhancedOutputData, documentTitle, address, signMessageAsync);
             } catch (retryError) {
               console.error('❌ Retry failed:', retryError);
               toast({
@@ -662,7 +663,7 @@ const EditorPage = () => {
         
         // Generate salt (current timestamp in seconds)
         const timestamp = Math.floor(Date.now() / 1000);
-        const salt = timestamp.toString();
+        const salt = `I want to create a new file at timestamp - ${timestamp}`;
         
         console.log('=== SIGNING PROCESS START ===');
         console.log('1. Generated salt (timestamp):', salt);
@@ -672,7 +673,10 @@ const EditorPage = () => {
         console.log('3. About to sign salt with MetaMask...');
         
         // Sign the salt directly (API requirement)
-        const signature = await signMessageWithMetaMask(salt);
+        const signature = await signMessageAsync({ 
+          message: salt,
+          account: address as `0x${string}`
+        });
         
         console.log('4. Received signature:', signature);
         console.log('5. API payload will be:', {

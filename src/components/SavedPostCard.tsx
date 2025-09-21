@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Trash2, Loader2, Edit, FileImage } from "lucide-react";
 import { useState } from "react";
-import { useAccount } from "wagmi";
+import { useAccount, useSignMessage } from "wagmi";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { deleteFileById } from "@/services/dXService";
@@ -25,6 +25,7 @@ export const SavedPostCard = ({ savedPost, onDelete }: SavedPostCardProps) => {
   const { name, cid, content, contentError } = savedPost;
   const [isDeleting, setIsDeleting] = useState(false);
   const { address } = useAccount();
+  const { signMessageAsync } = useSignMessage();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -164,7 +165,7 @@ export const SavedPostCard = ({ savedPost, onDelete }: SavedPostCardProps) => {
     setIsDeleting(true);
 
     try {
-      await deleteFileById(cid, address);
+      await deleteFileById(cid, address, signMessageAsync);
       
       toast({
         title: "Success",

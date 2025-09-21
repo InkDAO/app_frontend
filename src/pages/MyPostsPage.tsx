@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { PostCard } from "@/components/PostCard";
+import { EmptyState } from "@/components/EmptyState";
 import { TagSearch } from "@/components/TagSearch";
 import { AuthGuard } from "@/components/AuthGuard";
 import { Button } from "@/components/ui/button";
@@ -212,14 +213,10 @@ export const MyPostsPage = () => {
                     <PostCard key={post.postId} post={post} />
                   ))
                 ) : (searchTerm || searchMode === 'tags') ? (
-                  <div className="text-center py-10">
-                    <p className="text-muted-foreground mb-4">
-                      {searchMode === 'tags' 
-                        ? 'No posts found with the selected tags'
-                        : 'No posts match your search'
-                      }
-                    </p>
-                  </div>
+                  <EmptyState 
+                    type="no-search-results" 
+                    searchTerm={searchMode === 'tags' ? 'selected tags' : searchTerm}
+                  />
                 ) : null}
               </div>
             ) : (

@@ -5,6 +5,7 @@ import AppLayout from "@/components/AppLayout";
 import Landing from "@/pages/Landing";
 import HomePage from "@/pages/HomePage";
 import { PostInfoPage } from "@/pages/PostInfoPage";
+import { PostPreviewPage } from "@/pages/PostPreviewPage";
 import { MyPostsPage } from "@/pages/MyPostsPage";
 import { AnnouncementPage } from "@/pages/AnnouncementPage";
 import { LibraryPage } from "@/pages/LibraryPage";
@@ -38,20 +39,51 @@ const App = () => (
       <RainbowKitProvider>
         <TooltipProvider>
           <BrowserRouter>
-            <AppLayout>
-              <Sonner position="top-right" />
-              <Routes>
-                <Route path="/" element={<Landing />} />
-                <Route path="/app" element={<HomePage />} />
-                <Route path="/app/post/:id" element={<PostInfoPage />} />
-                <Route path="/app/my-posts" element={<MyPostsPage />} />
-                <Route path="/app/drafts" element={<DraftsPage />} />
-                <Route path="/app/announcements" element={<AnnouncementPage />} />
-                <Route path="/app/library" element={<LibraryPage />} />
-                <Route path="/app/editor/:cid?" element={<EditorPage />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </AppLayout>
+            <Routes>
+              <Route path="/" element={<Landing />} />
+              <Route path="/app" element={
+                <AppLayout>
+                  <HomePage />
+                </AppLayout>
+              } />
+                     <Route path="/app/post/:assetAddress" element={
+                       <AppLayout>
+                         <PostPreviewPage />
+                       </AppLayout>
+                     } />
+              <Route path="/app/post/:id" element={
+                <AppLayout>
+                  <PostInfoPage />
+                </AppLayout>
+              } />
+              <Route path="/app/my-posts" element={
+                <AppLayout>
+                  <MyPostsPage />
+                </AppLayout>
+              } />
+              <Route path="/app/drafts" element={
+                <AppLayout>
+                  <DraftsPage />
+                </AppLayout>
+              } />
+              <Route path="/app/announcements" element={
+                <AppLayout>
+                  <AnnouncementPage />
+                </AppLayout>
+              } />
+              <Route path="/app/library" element={
+                <AppLayout>
+                  <LibraryPage />
+                </AppLayout>
+              } />
+              <Route path="/app/editor/:cid?" element={
+                <AppLayout>
+                  <EditorPage />
+                </AppLayout>
+              } />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            <Sonner position="top-right" />
           </BrowserRouter>
         </TooltipProvider>
       </RainbowKitProvider>

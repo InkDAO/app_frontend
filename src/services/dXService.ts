@@ -1,11 +1,9 @@
 import { dXmasterContract } from "@/contracts/dXmaster";
-import { useWriteContract, useAccount, useWaitForTransactionReceipt, useReadContract  } from "wagmi";
+import { useWriteContract, useAccount, useWaitForTransactionReceipt, useReadContract } from "wagmi";
 import { sepolia } from "wagmi/chains";
-import { useState, useEffect } from "react";
-import { CommentWithPostTitle } from "@/types";
 import { apiService } from "./httpClient";
 import { authService } from "./authService";
-import { handleCreateGroup, handleUpload } from "./pinataService";
+import { dXassetContract } from "@/contracts/dXasset";
 
 // API Service for posting to group endpoint with proper content upload
 export const createGroupPost = async (content: any, title: string, address: string, signature: string, salt: string) => {
@@ -134,6 +132,87 @@ export const useAddComment = () => {
     isConfirmed,
     hash
   };
+};
+
+export const useBuyAsset = () => {
+  const { address } = useAccount();
+  const { writeContract, isPending, isSuccess, isError, data: hash } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({hash});
+  
+  
+  const buyAsset = async (assetData: { assetCid: string, amount: string, costInNativeInWei: string }) => {
+    if (!address) {
+      throw new Error("No account connected");
+    }
+
+    const amountInWei = BigInt(assetData.amount) * BigInt(assetData.costInNativeInWei);
+
+    try {
+      await writeContract({
+        address: dXmasterContract.address as `0x${string}`,
+        abi: dXmasterContract.abi,
+        functionName: 'buyAsset',
+        args: [assetData.assetCid as `0x${string}`, BigInt(assetData.amount)],
+        account: address,
+        chain: sepolia,
+        value: amountInWei,
+      });
+
+      console.log('🟢 Transaction submitted successfully');
+      return true;
+
+    } catch (error: any) {
+      console.error("Error in buyAsset:", error);
+      if (error.message?.includes("user rejected")) {
+        throw new Error("Transaction was rejected by user");
+      }
+      throw error;
+    }
+  };
+
+  return {
+    buyAsset,
+    isPending,
+    isSuccess,
+    isError,
+    isConfirming,
+    isConfirmed,
+    hash
+  };
+};
+
+export const getAssetCost = (assetAddress: string) => {
+  const { data: cost } = useReadContract({
+    address: assetAddress as `0x${string}`,
+    abi: dXassetContract.abi,
+    functionName: 'costInNativeInWei',
+    args: []
+  });
+
+  console.log('🟢 cost', cost);
+
+  return cost;
+};
+
+export const useAssetCidByAddress = (assetAddress: string) => {
+  const { data: cid, isLoading, isError } = useReadContract({
+    address: assetAddress as `0x${string}`,
+    abi: dXassetContract.abi,
+    functionName: 'assetCid',
+    args: []
+  });
+
+  return { cid, isLoading, isError };
+};
+
+export const useAssetData = (assetCid: string) => {
+  const { data: assetData, isLoading, isError } = useReadContract({
+    address: dXmasterContract.address as `0x${string}`,
+    abi: dXmasterContract.abi,
+    functionName: 'getAssetInfo',
+    args: [assetCid]
+  });
+  return { assetData, isLoading, isError };
 };
 
 // API function to fetch file content by CID (with JWT authentication)

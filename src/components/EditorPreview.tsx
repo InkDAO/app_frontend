@@ -83,28 +83,40 @@ const EditorPreview: React.FC<EditorPreviewProps> = ({ data, className = '' }) =
           const imageAlt = block.data.caption || '';
           const previewImageId = `${imageUrl}_${imageAlt}_${index}`.replace(/[^a-zA-Z0-9_-]/g, '_');
           
-          // Get saved image dimensions - try multiple ID formats for better compatibility
-          const savedSizes = getImageSizes();
-          let savedSize = savedSizes[previewImageId];
+          // First, try to get dimensions from block data (customWidth/customHeight)
+          let imageWidth = block.data.customWidth || block.data.width || block.data.file?.width;
+          let imageHeight = block.data.customHeight || block.data.height || block.data.file?.height;
           
-          // Try alternative ID formats if primary one doesn't exist
-          if (!savedSize) {
-            // Try without caption/alt
-            const altId = `${imageUrl}__${index}`.replace(/[^a-zA-Z0-9_-]/g, '_');
-            savedSize = savedSizes[altId];
+          // If not found in block data, try localStorage
+          if (!imageWidth || !imageHeight) {
+            const savedSizes = getImageSizes();
+            let savedSize = savedSizes[previewImageId];
+            
+            // Try alternative ID formats if primary one doesn't exist
+            if (!savedSize) {
+              // Try without caption/alt
+              const altId = `${imageUrl}__${index}`.replace(/[^a-zA-Z0-9_-]/g, '_');
+              savedSize = savedSizes[altId];
+            }
+            
+            if (!savedSize) {
+              // Try with empty alt field (common case)
+              const emptyAltId = `${imageUrl}_${''}_${index}`.replace(/[^a-zA-Z0-9_-]/g, '_');
+              savedSize = savedSizes[emptyAltId];
+            }
+            
+            if (savedSize) {
+              imageWidth = savedSize.width;
+              imageHeight = savedSize.height;
+            }
           }
           
-          if (!savedSize) {
-            // Try with empty alt field (common case)
-            const emptyAltId = `${imageUrl}_${''}_${index}`.replace(/[^a-zA-Z0-9_-]/g, '_');
-            savedSize = savedSizes[emptyAltId];
-          }
-          
-          // Apply saved dimensions or use auto sizing
-          const imageStyle = savedSize ? {
-            width: `${savedSize.width}px`,
-            height: `${savedSize.height}px`,
-            maxWidth: 'none'
+          // Apply dimensions if available
+          const imageStyle = (imageWidth && imageHeight) ? {
+            width: `${imageWidth}px`,
+            height: `${imageHeight}px`,
+            maxWidth: 'none',
+            objectFit: 'contain' as const
           } : {};
 
           return (

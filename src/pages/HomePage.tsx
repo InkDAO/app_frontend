@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { SavedPostCard } from "@/components/SavedPostCard";
+import { HomeCard } from "@/components/HomeCard";
 import { EmptyState } from "@/components/EmptyState";
 import { useSearch } from "@/context/SearchContext";
 import { useAssets } from "@/hooks/useAssets";
@@ -117,21 +117,22 @@ const HomePage = () => {
         ) : filteredPosts.length > 0 ? (
           <div className="space-y-6">
             {/* Posts Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center">
-              {filteredPosts.map((asset, index) => (
-                <SavedPostCard 
-                  key={asset.assetCid || index} 
-                  savedPost={{
-                    cid: asset.assetCid,
-                    name: asset.assetTitle,
-                    content: asset.content,
-                    created_at: new Date().toISOString(),
-                    keyvalues: {},
-                    contentError: asset.contentError
-                  }}
-                />
-              ))}
-            </div>
+                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center">
+                     {filteredPosts.map((asset, index) => (
+                       <HomeCard 
+                         key={asset.assetCid || index} 
+                         savedPost={{
+                           cid: asset.assetCid,
+                           name: asset.assetTitle,
+                           content: asset.content,
+                           created_at: new Date().toISOString(),
+                           keyvalues: {},
+                           contentError: asset.contentError
+                         }}
+                         assetAddress={asset.assetAddress}
+                       />
+                     ))}
+                   </div>
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-16 text-center animate-in fade-in-50 slide-in-from-bottom-4 duration-500">

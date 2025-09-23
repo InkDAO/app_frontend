@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { SavedPostCard } from "@/components/SavedPostCard";
+import { LibraryCard } from "@/components/LibraryCard";
 import { AuthGuard } from "@/components/AuthGuard";
 import { useSearch } from "@/context/SearchContext";
 import { useUserAssets } from "@/hooks/useUserAssets";
@@ -15,6 +15,7 @@ export const LibraryPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  console.log('allUserAssets 0', allUserAssets);
   // Fetch content for user assets
   const fetchAssetsContent = async (assets: any[]) => {
     setIsLoading(true);
@@ -75,8 +76,13 @@ export const LibraryPage = () => {
   useEffect(() => {
     if (allUserAssets.length > 0) {
       fetchAssetsContent(allUserAssets);
+    } else {
+      // Reset content when no assets
+      setAssetsWithContent([]);
     }
   }, [allUserAssets]);
+
+  console.log('allUserAssets', allUserAssets);
 
   return (
     <AuthGuard>
@@ -89,7 +95,7 @@ export const LibraryPage = () => {
           <p className="text-muted-foreground">Your personal collection of assets and posts</p>
         </div>
         <div className="w-full">
-          {(isAllUserAssetLoading || isLoading) ? (
+          {isAllUserAssetLoading ? (
             <div className="flex justify-center items-center py-4 md:py-8">
               <div className="w-full space-y-4">
                 {[1, 2, 3].map((i) => (
@@ -118,23 +124,33 @@ export const LibraryPage = () => {
                 {error}
               </p>
             </div>
-          ) : filteredPosts.length > 0 ? (
+          ) : allUserAssets.length > 0 ? (
             <div className="space-y-6">
               {/* Posts Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center">
-                {filteredPosts.map((asset, index) => (
-                  <SavedPostCard 
-                    key={asset.assetCid || index} 
-                    savedPost={{
-                      cid: asset.assetCid,
-                      name: asset.assetTitle,
-                      content: asset.content,
-                      created_at: new Date().toISOString(),
-                      keyvalues: {},
-                      contentError: asset.contentError
-                    }}
-                  />
-                ))}
+                {allUserAssets
+                  .filter(asset => 
+                    !searchTerm.trim() || 
+                    asset.assetTitle.toLowerCase().includes(searchTerm.toLowerCase())
+                  )
+                  .map((asset, index) => {
+                    // Find the asset with content if available
+                    const assetWithContent = filteredPosts.find(a => a.assetCid === asset.assetCid);
+                    return (
+                      <LibraryCard 
+                        key={asset.assetCid || index} 
+                        savedPost={{
+                          cid: asset.assetCid,
+                          name: asset.assetTitle,
+                          content: assetWithContent?.content || null,
+                          created_at: new Date().toISOString(),
+                          keyvalues: {},
+                          contentError: assetWithContent?.contentError || null
+                        }}
+                        assetAddress={asset.assetAddress}
+                      />
+                    );
+                  })}
               </div>
             </div>
           ) : (

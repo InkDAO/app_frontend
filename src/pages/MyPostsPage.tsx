@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { SavedPostCard } from "@/components/SavedPostCard";
+import { MyPostCard } from "@/components/MyPostCard";
 import { AuthGuard } from "@/components/AuthGuard";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, ArrowRight, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
@@ -152,7 +152,7 @@ export const MyPostsPage = () => {
               {/* Posts Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center">
                 {filteredAssets.map((asset, index) => (
-                  <SavedPostCard 
+                  <MyPostCard 
                     key={asset.assetCid || index} 
                     savedPost={{
                       cid: asset.assetCid,
@@ -162,6 +162,7 @@ export const MyPostsPage = () => {
                       keyvalues: {},
                       contentError: asset.contentError
                     }}
+                    assetAddress={asset.assetAddress}
                   />
                 ))}
               </div>

@@ -23,13 +23,11 @@ export const useUserAssets = () => {
     functionName: "getUserAssetData",
     args: [address],
   });
-  console.log('allUserAssetInfo', allUserAssetInfo);
-
-  const userAssets = allAssets.filter((asset) => allUserAssetInfo.some((userAsset) => userAsset.assetAddress === asset.assetAddress));
-  console.log('userAssets', userAssets);
 
   useEffect(() => {
-    if (!isAllUserAssetInfoLoading) {
+    if (!isAllUserAssetInfoLoading && !isAllAssetLoading && allAssets.length > 0 && allUserAssetInfo) {
+      const userAssets = allAssets.filter((asset) => allUserAssetInfo.some((userAsset) => userAsset.assetAddress === asset.assetAddress));
+      
       if (userAssets) {
         const convertedUserAssets: Asset[] = (userAssets as unknown as AssetInfo[]).map(asset => ({
           assetTitle: asset.assetTitle,
@@ -38,12 +36,12 @@ export const useUserAssets = () => {
           author: asset.author,
         }));
         setAllUserAssets(convertedUserAssets);
-    }
+      }
       setIsAllUserAssetLoading(false);
-    } else {
-        setIsAllUserAssetLoading(true);
+    } else if (isAllUserAssetInfoLoading || isAllAssetLoading) {
+      setIsAllUserAssetLoading(true);
     }
-  }, [isAllUserAssetInfoLoading, allUserAssetInfo]);
+  }, [isAllUserAssetInfoLoading, isAllAssetLoading, allAssets, allUserAssetInfo]);
 
   const refetchAssets = () => {
     refetchTotalUserAssets();

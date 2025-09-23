@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import EditorJS from '@editorjs/editorjs';
 import EditorPreview from "@/components/EditorPreview";
 import Header from '@editorjs/header';
@@ -29,6 +29,11 @@ const EditorPage = () => {
   const editorRef = useRef<EditorJS | null>(null);
   const holderRef = useRef<HTMLDivElement>(null);
   const [documentTitle, setDocumentTitle] = useState('');
+  
+  // Use ref to store latest documentTitle to avoid stale closure issues
+  const documentTitleRef = useRef(documentTitle);
+  documentTitleRef.current = documentTitle;
+  
   const [lastSaved, setLastSaved] = useState<string>('');
   // Auto-save removed - users must manually save
   const [isPreviewMode, setIsPreviewMode] = useState(false);
@@ -71,7 +76,6 @@ const EditorPage = () => {
 
   // Create a blocked navigate function that shows dialog only when there are unsaved changes
   const navigate = (to: any, options?: any) => {
-    console.log('Programmatic navigation attempt from editor', { to, options, hasUnsavedChanges });
     
     // Check if we're navigating from an existing post to a new post
     const cidFromUrl = getCidFromUrl();
@@ -83,7 +87,6 @@ const EditorPage = () => {
       setDialogType(isWriteNavigation ? 'write' : 'other');
       setShowUnsavedDialog(true);
       setPendingNavigation(() => () => {
-        console.log('Programmatic navigation function created, will navigate to:', to);
         
         // Set flag if navigating from existing post to new post
         if (cidFromUrl && isNavigatingToNewPost) {
@@ -251,7 +254,6 @@ const EditorPage = () => {
       // Image size management removed - localStorage not used
       // No stored sizes to apply
         imageElement.style.maxWidth = 'none';
-        // console.log(`Applied saved size to image ${imageId}:`, { width, height });
     });
   };
 
@@ -261,7 +263,7 @@ const EditorPage = () => {
   
   // Apply image sizes from EditorJS block data (for loaded saved content)
   const applyImageSizesFromBlockData = async () => {
-    if (!editorRef.current || !holderRef.current) {
+    if (!editorRef.current || !holderRef.current || !editorRef.current.save) {
       return;
     }
     
@@ -277,13 +279,10 @@ const EditorPage = () => {
     
     imageSizeApplicationTimeout = setTimeout(async () => {
       try {
-        console.log('🔍 Starting image size application from block data...');
         
         // Get images directly from DOM instead of calling save()
         const images = holderRef.current!.querySelectorAll('img');
-      
-        console.log('📊 Found', images.length, 'images in DOM');
-      
+            
       // localStorage removed - no stored content to process
       
       let imageIndex = 0;
@@ -295,33 +294,10 @@ const EditorPage = () => {
         if (block.type === 'image' && block.data) {
           const imageElement = images[imageIndex] as HTMLImageElement;
           
-          console.log(`🔍 Processing image block ${blockIndex}:`, {
-            blockType: block.type,
-            hasImageElement: !!imageElement,
-            imageElementSrc: imageElement?.src,
-            blockData: {
-              url: block.data.file?.url || block.data.url,
-              customWidth: block.data.customWidth,
-              customHeight: block.data.customHeight,
-              width: block.data.width,
-              height: block.data.height,
-              file: block.data.file
-            }
-          });
-          
           if (imageElement) {
             // Extract custom dimensions from block data with fallbacks
             const customWidth = block.data.customWidth || block.data.width || block.data.file?.width;
             const customHeight = block.data.customHeight || block.data.height || block.data.file?.height;
-            
-            console.log(`🖼️ Image ${imageIndex} dimension analysis:`, {
-              customWidth,
-              customHeight,
-              currentElementWidth: imageElement.offsetWidth,
-              currentElementHeight: imageElement.offsetHeight,
-              currentStyleWidth: imageElement.style.width,
-              currentStyleHeight: imageElement.style.height
-            });
             
             if (customWidth && customHeight) {
               // Force application with !important style properties
@@ -343,28 +319,16 @@ const EditorPage = () => {
               
               sizesApplied++;
               
-              console.log(`✅ Applied forced size to image ${imageIndex}:`, { 
-                width: customWidth, 
-                height: customHeight,
-                imageId,
-                newStyleWidth: imageElement.style.width,
-                newStyleHeight: imageElement.style.height
-              });
-              
               // Trigger a reflow to ensure changes are applied
               imageElement.offsetHeight;
             } else {
-              console.log(`⚠️ No custom dimensions found for image ${imageIndex}`);
             }
-          } else {
-            console.log(`⚠️ No image element found for block ${blockIndex}`);
           }
           
           imageIndex++;
         }
       });
       
-        console.log(`🎯 Finished applying image sizes: ${sizesApplied}/${imageIndex} images processed`);
         
         // Mark as applied to prevent repeated calls
         hasAppliedImageSizes = true;
@@ -384,7 +348,7 @@ const EditorPage = () => {
 
   // Check if content has meaningful changes that require IPFS saving
   const hasContentChanged = async () => {
-    if (!editorRef.current) return false;
+    if (!editorRef.current || !editorRef.current.save) return false;
     
     try {
       const currentData = await editorRef.current.save();
@@ -423,26 +387,15 @@ const EditorPage = () => {
 
   // Inject current image sizes into EditorJS blocks
   const injectImageSizes = async (outputData: any) => {
-    if (!outputData?.blocks || !holderRef.current) {
+    if (!outputData?.blocks || !holderRef.current || !editorRef.current || !editorRef.current.save) {
       return outputData;
     }
-
-    console.log('🖼️ Injecting image sizes into blocks...');
-    console.log('📊 Original blocks before injection:', outputData.blocks?.map((b: any, i: number) => ({
-      index: i,
-      type: b.type,
-      hasCustomWidth: !!b.data?.customWidth,
-      hasCustomHeight: !!b.data?.customHeight,
-      customWidth: b.data?.customWidth,
-      customHeight: b.data?.customHeight
-    })));
     
     // Create a copy of the output data
     const enhancedData = JSON.parse(JSON.stringify(outputData));
     
     // Find all image elements in the editor
     const imageElements = holderRef.current.querySelectorAll('img');
-    console.log('🖼️ Found', imageElements.length, 'image elements in DOM');
     let imageIndex = 0;
     
     // Process each block
@@ -462,17 +415,7 @@ const EditorPage = () => {
           // Image size management removed - localStorage not used
           // Image size management removed - no stored sizes
           
-          console.log(`🔍 Block ${blockIndex} dimension analysis:`, {
-            currentDOM: { width: currentWidth, height: currentHeight },
-            // storedSize removed - localStorage not used
-            blockData: {
-              customWidth: block.data.customWidth,
-              customHeight: block.data.customHeight,
-              width: block.data.width,
-              height: block.data.height
-            },
-            imageId
-          });
+
           
           // Use current DOM dimensions or block data dimensions
           const finalWidth = currentWidth > 0 ? currentWidth : block.data.customWidth;
@@ -482,10 +425,7 @@ const EditorPage = () => {
             block.data.customWidth = finalWidth;
             block.data.customHeight = finalHeight;
             
-            console.log(`📐 Block ${blockIndex}: Added size ${finalWidth}x${finalHeight} to image`, {
-              url: block.data.file?.url,
-              imageId
-            });
+
           }
         }
         
@@ -495,21 +435,13 @@ const EditorPage = () => {
       return block;
     });
     
-    console.log('✅ Image size injection completed');
-    console.log('📊 Enhanced blocks after injection:', enhancedData.blocks?.map((b: any, i: number) => ({
-      index: i,
-      type: b.type,
-      hasCustomWidth: !!b.data?.customWidth,
-      hasCustomHeight: !!b.data?.customHeight,
-      customWidth: b.data?.customWidth,
-      customHeight: b.data?.customHeight
-    })));
-    
     return enhancedData;
   };
 
   // Save content to API (internal function)
-  const saveToAPIInternal = async (clearPendingNavigation = false) => {
+  const saveToAPIInternal = useCallback(async (clearPendingNavigation = false) => {
+    const currentTitle = documentTitleRef.current;
+    
     if (!editorRef.current || !address) {
       toast({
         title: "Error",
@@ -521,7 +453,6 @@ const EditorPage = () => {
 
     // Clear pending navigation if this is a direct save (not from dialog)
     if (clearPendingNavigation) {
-      console.log('💾 Direct save initiated - clearing any pending navigation');
       setPendingNavigation(null);
       setShowUnsavedDialog(false);
     }
@@ -549,9 +480,6 @@ const EditorPage = () => {
       
       if (cidFromUrl) {
         // UPDATE EXISTING POST
-        console.log('🔄 Updating existing post with CID:', cidFromUrl);
-        console.log('   - Title:', documentTitle);
-        console.log('   - Content structure:', Object.keys(enhancedOutputData || {}));
         
         // localStorage removed - no need to clear before IPFS request
         
@@ -570,7 +498,7 @@ const EditorPage = () => {
         
         let result;
         try {
-          result = await updateFileById(cidFromUrl, enhancedOutputData, documentTitle, address, signMessageAsync);
+          result = await updateFileById(cidFromUrl, enhancedOutputData, currentTitle, address, signMessageAsync);
         } catch (error) {
           console.error('❌ Error in updateFileById:', error);
           
@@ -578,7 +506,7 @@ const EditorPage = () => {
           if (error.message && error.message.includes('401')) {
             try {
               await ensureAuthenticated();
-              result = await updateFileById(cidFromUrl, enhancedOutputData, documentTitle, address, signMessageAsync);
+              result = await updateFileById(cidFromUrl, enhancedOutputData, currentTitle, address, signMessageAsync);
             } catch (retryError) {
               console.error('❌ Retry failed:', retryError);
               toast({
@@ -632,7 +560,6 @@ const EditorPage = () => {
           // For dialog saves, call handleSuccessfulSave to respect pendingNavigation
           if (clearPendingNavigation) {
             // Direct save from floating navbar - redirect to new CID
-            console.log('💾 Direct save - redirecting to new CID:', newCid);
             setTimeout(() => {
               window.location.href = newUrl;
             }, 1000);
@@ -659,32 +586,16 @@ const EditorPage = () => {
         
       } else {
         // CREATE NEW POST
-        console.log('✨ Creating new post');
         
         // Generate salt (current timestamp in seconds)
         const timestamp = Math.floor(Date.now() / 1000);
         const salt = `I want to create a new file at timestamp - ${timestamp}`;
-        
-        console.log('=== SIGNING PROCESS START ===');
-        console.log('1. Generated salt (timestamp):', salt);
-        console.log('   - Salt type:', typeof salt);
-        console.log('   - Salt value as number:', parseInt(salt));
-        console.log('2. User address from wagmi:', address);
-        console.log('3. About to sign salt with MetaMask...');
         
         // Sign the salt directly (API requirement)
         const signature = await signMessageAsync({ 
           message: salt,
           account: address as `0x${string}`
         });
-        
-        console.log('4. Received signature:', signature);
-        console.log('5. API payload will be:', {
-          salt,
-          address,
-          signature
-        });
-        console.log('=== SIGNING PROCESS END ===');
         
         // localStorage removed - no need to clear before IPFS request
         
@@ -702,7 +613,7 @@ const EditorPage = () => {
         }
         
         // Post to API and get the response with CID
-        const result = await createGroupPost(enhancedOutputData, documentTitle, address, signature, salt);
+        const result = await createGroupPost(enhancedOutputData, currentTitle, address, signature, salt);
         
         // Check if we got a CID from the API response (try different possible field names)
         const cid = result?.updatedUpload?.cid || result?.cid || result?.data?.cid || result?.ipfsHash || result?.hash;
@@ -719,7 +630,6 @@ const EditorPage = () => {
         // For dialog saves, call handleSuccessfulSave to respect pendingNavigation
         if (clearPendingNavigation) {
           // Direct save from floating navbar - redirect to new CID
-          console.log('💾 Direct save - redirecting to new CID:', cid);
           setTimeout(() => {
             window.location.href = newUrl;
           }, 1000);
@@ -747,12 +657,12 @@ const EditorPage = () => {
     } finally {
       setIsSaving(false);
     }
-  };
+  }, [address, signMessageAsync, ensureAuthenticated, cid, toast, setPendingNavigation, setShowUnsavedDialog, setIsSaving]);
 
   // Public save function for direct saves (clears pending navigation)
-  const saveToAPI = async () => {
+  const saveToAPI = useCallback(async () => {
     return await saveToAPIInternal(true);
-  };
+  }, [saveToAPIInternal]);
 
   // Set editor props in context for TopHeader
   useEffect(() => {
@@ -762,15 +672,11 @@ const EditorPage = () => {
       isSaving,
       isAuthenticated,
     });
-  }, [saveToAPI, isSaving, isAuthenticated, setEditorProps]);
+  }, [isSaving, isAuthenticated]);
 
   // Handle save action from dialog (preserves pending navigation)
   const handleSave = async () => {
-    console.log('💾 Dialog save button clicked');
-    console.log('💾 pendingNavigation exists:', !!pendingNavigation);
-    console.log('💾 dialogType:', dialogType);
     const success = await saveToAPIInternal(false);
-    console.log('💾 saveToAPIInternal result:', success);
     // The handleSuccessfulSave function will handle the navigation logic
     // No need to duplicate it here
   };
@@ -779,81 +685,42 @@ const EditorPage = () => {
 
   // fetchAndLoadContent function removed - using redirect approach instead
 
-  // Debug function to check update/redirect status
-  const checkUpdateDebug = () => {
-    const updateDebug = localStorage.getItem('debug-update');
-    const redirectDebug = localStorage.getItem('debug-redirect');
-    
-    console.log('🔍 Update Debug Info:');
-    if (updateDebug) {
-      console.log(JSON.parse(updateDebug));
-    } else {
-      console.log('No update debug info found');
-    }
-    
-    console.log('🔍 Redirect Debug Info:');
-    if (redirectDebug) {
-      console.log(JSON.parse(redirectDebug));
-    } else {
-      console.log('No redirect debug info found');
-    }
-  };
-
-  // Make debug function available globally
-  (window as any).checkUpdateDebug = checkUpdateDebug;
-
   // Reload content from IPFS after successful save using /fileByCid API
   const reloadContentFromIPFS = async () => {
     const cidFromUrl = getCidFromUrl();
-    console.log('🔄 reloadContentFromIPFS called, CID from URL:', cidFromUrl);
     if (!cidFromUrl) {
-      console.log('❌ No CID found in URL, cannot reload content');
       return;
     }
 
     setIsLoadingContent(true);
     try {
-      console.log('🔄 Reloading content using /fileByCid API for CID:', cidFromUrl);
       
       // Import fetchFileContentByCid from dXService
       const { fetchFileContentByCid } = await import('@/services/dXService');
       
       const contentData = await fetchFileContentByCid(cidFromUrl);
-      console.log('🔍 /fileByCid API result:', contentData);
-      
+
       if (contentData) {
-        console.log('🔍 Content data type:', typeof contentData);
-        console.log('🔍 Content data keys:', Object.keys(contentData || {}));
-        
         try {
           // Parse the JSON response that contains title and content
           const parsedResponse = typeof contentData === 'string' ? JSON.parse(contentData) : contentData;
-          console.log('🔍 Parsed response:', parsedResponse);
-          console.log('🔍 Parsed response keys:', Object.keys(parsedResponse));
-          console.log('🔍 Content field:', parsedResponse.content);
-          console.log('🔍 Title field:', parsedResponse.title);
+
           
           if (parsedResponse.content) {
-            console.log('✅ Successfully loaded content from /fileByCid API');
-            console.log('🔍 Content structure:', Object.keys(parsedResponse.content));
-            console.log('🔍 Content blocks count:', parsedResponse.content.blocks?.length);
             
             // Store the loaded content in localStorage for consistency
             // localStorage removed - no need to store content
             
             // Clear old image size data to ensure fresh content is used
             // localStorage removed - no image sizes to clear
-            console.log('🧹 Cleared old localStorage data after reloading from API');
             
-            // Set the title
-            if (parsedResponse.title) {
-              setDocumentTitle(parsedResponse.title);
-              console.log('🔍 Title set to:', parsedResponse.title);
-            }
+              // Set the title
+              if (parsedResponse.title) {
+                setDocumentTitle(parsedResponse.title);
+              }
             
             // Force editor re-initialization by destroying and recreating
             if (editorRef.current && editorRef.current.destroy) {
-              console.log('🔄 Destroying existing editor before reload');
               editorRef.current.destroy();
               editorRef.current = null;
             }
@@ -861,22 +728,16 @@ const EditorPage = () => {
             // Small delay to ensure DOM cleanup is complete
             setTimeout(() => {
               // Set preview data to trigger editor re-initialization
-              console.log('🔍 Setting preview data:', parsedResponse.content);
               setPreviewData(parsedResponse.content);
-              console.log('✅ Preview data set, editor will re-initialize');
             }, 100);
             
           } else {
             // Fallback to the original content if structure is different
-            console.log('⚠️ No content field in parsed response, using fallback structure');
-            console.log('🔍 Using raw contentData:', contentData);
             // localStorage removed - no need to store content
             setPreviewData(contentData);
           }
         } catch (error) {
           // If parsing fails, use the content as-is
-          console.log('⚠️ JSON parsing failed, using raw content:', error);
-          console.log('🔍 Raw contentData:', contentData);
           // localStorage removed - no need to store content
           setPreviewData(contentData);
         }
@@ -892,17 +753,13 @@ const EditorPage = () => {
 
   // Handle successful save from dialog - execute user's intended navigation
   const handleSuccessfulSave = () => {
-    console.log('🔄 handleSuccessfulSave called (dialog save)');
-    console.log('🔄 pendingNavigation exists:', !!pendingNavigation);
-    console.log('🔄 dialogType:', dialogType);
-    
+
     setHasUnsavedChanges(false);
     setShowUnsavedDialog(false);
     // localStorage removed - no need to clear
     
     // This function is only called for dialog saves, so there should always be a pendingNavigation
     if (pendingNavigation) {
-      console.log('✅ Executing pending navigation after save');
       toast({
         title: "Success", 
         description: "Content saved! Redirecting...",
@@ -914,12 +771,10 @@ const EditorPage = () => {
       
       // Check if this is a write button navigation - use full page refresh for clean editor
       if (dialogType === 'write') {
-        console.log('📝 Write navigation from save dialog - using full page refresh');
         setTimeout(() => {
           window.location.href = '/app/editor';
         }, 1000);
       } else {
-        console.log('🏠 Other navigation from save dialog - using normal navigation');
         // For other navigation, use normal navigation
         setTimeout(() => {
           navFunction();
@@ -941,11 +796,9 @@ const EditorPage = () => {
 
   // Handle discard action from dialog
   const handleDiscard = () => {
-    console.log('Discard button clicked, pendingNavigation exists:', !!pendingNavigation);
     
     // Execute the pending navigation when discarding
     if (pendingNavigation) {
-      console.log('Executing pending navigation after discard');
       
       // Close dialog and clear state
       setShowUnsavedDialog(false);
@@ -954,7 +807,6 @@ const EditorPage = () => {
       
       // Check if destination is /app/editor (write button) - use full page refresh
       if (dialogType === 'write') {
-        console.log('Write navigation detected - using full page refresh to clear editor');
         setTimeout(() => {
           window.location.href = '/app/editor';
         }, 0);
@@ -966,7 +818,6 @@ const EditorPage = () => {
         }, 0);
       }
     } else {
-      console.log('No pending navigation to execute');
       // Still close dialog even if no navigation
       setShowUnsavedDialog(false);
       setHasUnsavedChanges(false);
@@ -998,19 +849,16 @@ const EditorPage = () => {
 
   // Force apply image dimensions - more aggressive approach
   const forceApplyImageDimensions = async () => {
-    if (!editorRef.current || !holderRef.current) {
-      console.log('⚠️ Editor or holder not ready for force image dimension application');
+    if (!editorRef.current || !holderRef.current || !editorRef.current.save) {
       return;
     }
 
     try {
-      console.log('🔧 Force applying image dimensions...');
       
       // Get current editor data
       const outputData = await editorRef.current.save();
       const images = holderRef.current.querySelectorAll('img');
       
-      console.log('🔧 Found', images.length, 'images for force application');
       
       let imageIndex = 0;
       let appliedCount = 0;
@@ -1025,12 +873,6 @@ const EditorPage = () => {
             const customWidth = block.data.customWidth || block.data.width || block.data.file?.width;
             const customHeight = block.data.customHeight || block.data.height || block.data.file?.height;
             
-            console.log(`🔧 Force applying to image ${imageIndex}:`, {
-              customWidth,
-              customHeight,
-              currentWidth: imageElement.offsetWidth,
-              currentHeight: imageElement.offsetHeight
-            });
             
             if (customWidth && customHeight) {
               // Force apply with !important and multiple methods
@@ -1047,7 +889,6 @@ const EditorPage = () => {
               imageElement.offsetHeight;
               
               appliedCount++;
-              console.log(`✅ Force applied dimensions to image ${imageIndex}:`, { customWidth, customHeight });
             }
           }
           
@@ -1055,7 +896,6 @@ const EditorPage = () => {
         }
       });
       
-      console.log(`🔧 Force application completed: ${appliedCount}/${images.length} images processed`);
     } catch (error) {
       console.error('❌ Error in force apply image dimensions:', error);
     }
@@ -1070,7 +910,6 @@ const EditorPage = () => {
 
       setIsLoadingContent(true);
       try {
-        console.log('🔄 Loading existing post content using /fileByCid API for CID:', cidFromUrl);
         
         // Import fetchFileContentByCid from dXService
         const { fetchFileContentByCid } = await import('@/services/dXService');
@@ -1082,28 +921,13 @@ const EditorPage = () => {
             const parsedResponse = typeof contentData === 'string' ? JSON.parse(contentData) : contentData;
             if (parsedResponse.content) {
               // Debug: Log the loaded content to check for image size data
-              console.log('🔍 Loaded content structure:', {
-                hasBlocks: !!parsedResponse.content.blocks,
-                blockCount: parsedResponse.content.blocks?.length || 0,
-                imageBlocks: parsedResponse.content.blocks?.filter((b: any) => b.type === 'image').map((b: any, i: number) => ({
-                  index: i,
-                  url: b.data?.file?.url || b.data?.url,
-                  customWidth: b.data?.customWidth,
-                  customHeight: b.data?.customHeight,
-                  width: b.data?.width,
-                  height: b.data?.height,
-                  fileWidth: b.data?.file?.width,
-                  fileHeight: b.data?.file?.height
-                })) || []
-              });
               
               // Set the content as preview data to be loaded into editor
               setPreviewData(parsedResponse.content);
-              // Also set the title
-              if (parsedResponse.title) {
-                setDocumentTitle(parsedResponse.title);
-              }
-              console.log('✅ Successfully loaded existing post content from /fileByCid API');
+                // Also set the title
+                if (parsedResponse.title) {
+                  setDocumentTitle(parsedResponse.title);
+                }
               
               // Store the loaded content in localStorage as well for consistency
               // localStorage removed - no need to store content
@@ -1114,17 +938,14 @@ const EditorPage = () => {
               if (cidFromUrl) {
                 // Clear old data to ensure fresh content is used
                 // localStorage removed - no image sizes to clear
-                console.log('🧹 Cleared old localStorage data after loading fresh content from server');
               }
             } else {
               // Fallback to the original content if structure is different
               setPreviewData(contentData);
-              console.log('✅ Loaded existing post content (fallback structure)');
             }
           } catch (error) {
             // If parsing fails, use the content as-is
             setPreviewData(contentData);
-            console.log('✅ Loaded existing post content (raw format)');
           }
         } else {
           console.error('❌ Failed to load existing post content: No content data');
@@ -1140,24 +961,16 @@ const EditorPage = () => {
   }, []); // Run once on mount
 
   useEffect(() => {
-    console.log('🔍 Editor initialization useEffect triggered');
-    console.log('🔍 holderRef.current:', !!holderRef.current);
-    console.log('🔍 isPreviewMode:', isPreviewMode);
-    console.log('🔍 isLoadingContent:', isLoadingContent);
-    console.log('🔍 previewData:', previewData);
     
     if (!holderRef.current || isPreviewMode || isLoadingContent) {
-      console.log('🔍 Skipping editor initialization - conditions not met');
       return;
     }
 
     // Small delay to ensure DOM is ready
     const timer = setTimeout(() => {
-      console.log('🔍 Starting editor initialization...');
       
       // Destroy existing editor if it exists
       if (editorRef.current && editorRef.current.destroy) {
-        console.log('🔍 Destroying existing editor');
         editorRef.current.destroy();
         editorRef.current = null;
       }
@@ -1168,28 +981,12 @@ const EditorPage = () => {
       
       if (cidFromUrl) {
         // Editing existing post - use preview data from IPFS
-        console.log('🔍 Editing existing post - using preview data:', previewData);
         initialData = previewData;
       } else {
-        // New post - check if we should clear content or preserve it
-        const wasComingFromExistingPost = sessionStorage.getItem('coming-from-existing-post') === 'true';
-        
-        if (wasComingFromExistingPost) {
-          // Coming from existing post - start empty
-          console.log('🔍 New post after existing post - starting with empty editor');
-          setDocumentTitle('');
-          setHasUnsavedChanges(false);
-          initialData = null;
-          // Clear the flag
-          sessionStorage.removeItem('coming-from-existing-post');
-        } else {
-          // Regular new post - start empty (no localStorage to preserve)
-          console.log('🔍 New post - starting with empty editor');
-          initialData = null; // Always start empty for new posts
-        }
+        // New post - always start empty
+        initialData = null;
       }
       
-      console.log('🔍 Initial data for editor:', initialData);
 
       const editor = new EditorJS({
       holder: holderRef.current,
@@ -1296,13 +1093,11 @@ const EditorPage = () => {
         }
       },
       onChange: async () => {
-        console.log('Content changed - checking for unsaved changes');
         // Check if content has meaningful changes
         const hasChanges = await hasContentChanged();
         setHasUnsavedChanges(hasChanges);
       },
       onReady: () => {
-        console.log('Editor.js is ready to work!');
         // Delay initialization to ensure DOM is ready
         setTimeout(() => {
           initializeImageResizing();
@@ -1312,33 +1107,26 @@ const EditorPage = () => {
             // If editing existing content, also apply sizes from block data with multiple retries
             const cidFromUrl = getCidFromUrl();
             if (cidFromUrl) {
-              console.log('🔄 Detected CID in URL, will apply saved image sizes with retries...');
               
               // Immediate attempt - try right away
-              console.log('🔄 Immediate attempt: Applying image sizes from block data...');
               applyImageSizesFromBlockData();
               
               // Multiple attempts with increasing delays to ensure images are fully loaded
               setTimeout(() => {
-                console.log('🔄 Attempt 1: Applying image sizes from block data...');
                 applyImageSizesFromBlockData();
               }, 300);
               setTimeout(() => {
-                console.log('🔄 Attempt 2: Applying image sizes from block data...');
                 applyImageSizesFromBlockData();
               }, 800);
               setTimeout(() => {
-                console.log('🔄 Attempt 3: Applying image sizes from block data...');
                 applyImageSizesFromBlockData();
               }, 1500);
               setTimeout(() => {
-                console.log('🔄 Attempt 4: Applying image sizes from block data...');
                 applyImageSizesFromBlockData();
               }, 3000);
               
               // Additional aggressive approach - force apply dimensions after editor is fully loaded
               setTimeout(() => {
-                console.log('🔄 Final attempt: Force applying image dimensions...');
                 forceApplyImageDimensions();
               }, 5000);
             }
@@ -1348,9 +1136,6 @@ const EditorPage = () => {
     });
 
       editorRef.current = editor;
-      console.log('✅ Editor created successfully:', !!editorRef.current);
-      console.log('🔍 Editor holder element:', holderRef.current);
-      console.log('🔍 Editor holder children:', holderRef.current?.children.length);
     }, 100); // Small delay to ensure DOM is ready
 
     return () => {
@@ -1368,10 +1153,13 @@ const EditorPage = () => {
   useEffect(() => {
     const cidFromUrl = getCidFromUrl();
     if (!cidFromUrl) {
-      console.log('🔍 New post detected - clearing all content');
+      // Always clear title when navigating to write page (new post)
       setPreviewData(null);
       setDocumentTitle('');
       setHasUnsavedChanges(false);
+      
+      // Clear the coming-from-existing-post flag if it exists
+      sessionStorage.removeItem('coming-from-existing-post');
     }
   }, [cid]); // Run whenever CID changes
 
@@ -1380,7 +1168,6 @@ const EditorPage = () => {
     // Disable browser beforeunload warning - we handle this with our custom dialog
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       // Don't show browser warning - our custom dialog handles this better
-      console.log('Beforeunload triggered - using custom dialog instead of browser warning');
     };
 
     // Removed aggressive visibility and focus handlers to prevent multiple dialogs
@@ -1390,7 +1177,6 @@ const EditorPage = () => {
       // Save shortcut (Ctrl/Cmd+S)
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
-        console.log('Save shortcut triggered');
         saveToAPI();
         return;
       }
@@ -1404,7 +1190,6 @@ const EditorPage = () => {
           (e.metaKey && e.key === 'q'); // Cmd+Q on Mac
           
         if (isCloseAttempt) {
-          console.log('Close attempt detected via keyboard shortcut - showing CUSTOM dialog only');
           e.preventDefault();
           setShowUnsavedDialog(true);
         }
@@ -1447,7 +1232,6 @@ const EditorPage = () => {
       if (link && !link.hasAttribute('data-ignore-unsaved') && hasUnsavedChanges && !showUnsavedDialog) {
         e.preventDefault();
         e.stopPropagation();
-        console.log('Navigation attempt from editor with unsaved changes - showing save dialog');
         
         // Clear any existing timeout
         if (dialogTimeout) {
@@ -1464,8 +1248,6 @@ const EditorPage = () => {
           setDialogType(isWriteNavigation ? 'write' : 'other');
           setShowUnsavedDialog(true);
           setPendingNavigation(() => () => {
-            // Use React Router navigate instead of window.location
-            console.log('Link navigation function created, will navigate to:', path);
             
             // Check if navigating from existing post to new post
             const cidFromUrl = getCidFromUrl();
@@ -1489,7 +1271,6 @@ const EditorPage = () => {
 
     // Handle browser back/forward buttons - show dialog only when there are unsaved changes
     const handlePopState = (e: PopStateEvent) => {
-      console.log('Browser navigation from editor', { hasUnsavedChanges });
       if (hasUnsavedChanges) {
         // Push the current state back to prevent navigation
         window.history.pushState(null, '', window.location.href);
@@ -1535,7 +1316,6 @@ const EditorPage = () => {
 
 
   const initializeImageResizing = () => {
-    console.log('Initializing image resizing...');
     
     // Function to scan for all images and add resize handles
     const scanAndAddHandles = () => {
@@ -1569,14 +1349,12 @@ const EditorPage = () => {
             // Image size management removed - localStorage not used
             // No stored sizes to apply
               imageElement.style.maxWidth = 'none';
-            // console.log(`Applied saved size to new image ${imageId}:`, { width, height });
             
             foundImages++;
           }
         });
       });
       
-      // console.log(`Scan found ${foundImages} new images to add handles to`);
       return foundImages;
     };
     
@@ -1725,8 +1503,6 @@ const EditorPage = () => {
     imageElement.style.border = 'none';
     imageElement.style.outline = 'none';
     
-    // console.log('Adding resize handles to image:', imageElement);
-
     // Create resize handles
     const leftHandle = document.createElement('div');
     leftHandle.className = 'resize-handle left';

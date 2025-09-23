@@ -201,60 +201,16 @@ export const SavedPostCard = ({ savedPost, onDelete }: SavedPostCardProps) => {
     try {
       // Parse and prepare content for editor
       const contentData = typeof content === 'string' ? JSON.parse(content) : content;
-      
-      // localStorage removed - no need to clear or store content
-
-      // Store content based on structure with detailed logging
-      console.log('🔍 SavedPostCard: Preparing content for editor...');
-      console.log('📋 Content structure:', {
-        hasDirectBlocks: !!contentData.blocks,
-        hasNestedContent: !!contentData.content,
-        hasNestedBlocks: !!(contentData.content && contentData.content.blocks),
-        editorContent: !!editorContent
-      });
-      
+            
       if (editorContent) {
-        console.log('✅ Using editorContent with', editorContent.blocks?.length || 0, 'blocks');
-        console.log('🖼️ Image blocks in editorContent:', 
-          editorContent.blocks?.filter((b: any) => b.type === 'image').map((b: any, i: number) => ({
-            index: i,
-            url: b.data?.file?.url || b.data?.url,
-            customWidth: b.data?.customWidth,
-            customHeight: b.data?.customHeight,
-            width: b.data?.width,
-            height: b.data?.height
-          }))
-        );
         // localStorage removed - no need to store content
       } else if (contentData.blocks) {
-        console.log('✅ Using contentData.blocks with', contentData.blocks.length, 'blocks');
-        console.log('🖼️ Image blocks in contentData:', 
-          contentData.blocks.filter((b: any) => b.type === 'image').map((b: any, i: number) => ({
-            index: i,
-            url: b.data?.file?.url || b.data?.url,
-            customWidth: b.data?.customWidth,
-            customHeight: b.data?.customHeight,
-            width: b.data?.width,
-            height: b.data?.height
-          }))
-        );
         // localStorage removed - no need to store content
       } else if (contentData.content) {
         // Try to use nested content
         const nestedContent = typeof contentData.content === 'string' 
           ? JSON.parse(contentData.content) 
           : contentData.content;
-        console.log('✅ Using nested content with', nestedContent.blocks?.length || 0, 'blocks');
-        console.log('🖼️ Image blocks in nested content:', 
-          nestedContent.blocks?.filter((b: any) => b.type === 'image').map((b: any, i: number) => ({
-            index: i,
-            url: b.data?.file?.url || b.data?.url,
-            customWidth: b.data?.customWidth,
-            customHeight: b.data?.customHeight,
-            width: b.data?.width,
-            height: b.data?.height
-          }))
-        );
         // localStorage removed - no need to store content
       } else {
         console.warn('⚠️ No suitable content structure found for editor');

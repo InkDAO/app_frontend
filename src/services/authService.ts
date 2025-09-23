@@ -80,7 +80,6 @@ export class AuthService {
         }),
       });
 
-      console.log('4. Auth response status:', response.status);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -89,11 +88,7 @@ export class AuthService {
       }
 
       const data: LoginResponse = await response.json();
-      
-      console.log('✅ Authentication successful');
-      console.log('   - Token received:', data.token.substring(0, 20) + '...');
-      console.log('   - Address:', data.address);
-      
+
       // Store JWT in cookie
       this.setAuthToken(data.token, '2h'); // 2 hours expiry, matching backend
       
@@ -154,7 +149,6 @@ export class AuthService {
   // Logout
   logout() {
     deleteCookie(JWT_COOKIE_NAME);
-    console.log('🚪 User logged out');
   }
 
   // Auto-authentication removed - users must manually authenticate

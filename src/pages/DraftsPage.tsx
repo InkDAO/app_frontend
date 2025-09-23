@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { SavedPostCard } from "@/components/SavedPostCard";
 import { AuthGuard } from "@/components/AuthGuard";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Bookmark, RefreshCw } from "lucide-react";
-import { fetchSavedPosts } from "@/services/dXService";
+import { MessageSquare, Bookmark, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
+import { fetchSavedPosts, fetchSavedPostsByNextPageToken } from "@/services/dXService";
 import { useAccount } from "wagmi";
 
 export const DraftsPage = () => {
@@ -11,20 +11,94 @@ export const DraftsPage = () => {
   const [savedPosts, setSavedPosts] = useState<any[]>([]);
   const [isSavedPostsLoading, setIsSavedPostsLoading] = useState(false);
   const [savedPostsError, setSavedPostsError] = useState<string | null>(null);
+  const [nextPageToken, setNextPageToken] = useState<string | null>(null);
+  const [pageHistory, setPageHistory] = useState<{token: string | null, page: number}[]>([]); // Track page history
+  const [currentPage, setCurrentPage] = useState(0);
 
   // Fetch saved posts when component mounts
   const handleFetchSavedPosts = async () => {
     if (!address) return;
     
+    
     setIsSavedPostsLoading(true);
     setSavedPostsError(null);
     
     try {
-      const savedPostsData = await fetchSavedPosts(address);
-      setSavedPosts(savedPostsData);
+      const result = await fetchSavedPosts(address);
+      
+      setSavedPosts(result.posts);
+      setNextPageToken(result.nextPageToken || null);
+      setPageHistory([{token: null, page: 0}]); // Initialize with first page
+      setCurrentPage(0);
     } catch (error) {
       console.error('Failed to fetch saved posts:', error);
       setSavedPostsError(error instanceof Error ? error.message : 'Failed to fetch saved posts');
+    } finally {
+      setIsSavedPostsLoading(false);
+    }
+  };
+
+  // Fetch next page of saved posts
+  const handleFetchNextPage = async () => {
+    if (!address || !nextPageToken) return;
+    
+    setIsSavedPostsLoading(true);
+    setSavedPostsError(null);
+    
+    try {
+      // Add current page to history before fetching next page
+      setPageHistory(prev => {
+        const newHistory = [...prev, {token: nextPageToken, page: currentPage + 1}];
+        return newHistory;
+      });
+      
+      const result = await fetchSavedPostsByNextPageToken(address, nextPageToken);
+      
+      setSavedPosts(result.posts);
+      setNextPageToken(result.nextPageToken || null);
+      setCurrentPage(prev => prev + 1);
+    } catch (error) {
+      console.error('Failed to fetch next page of saved posts:', error);
+      setSavedPostsError(error instanceof Error ? error.message : 'Failed to fetch next page');
+    } finally {
+      setIsSavedPostsLoading(false);
+    }
+  };
+
+  // Fetch previous page of saved posts
+  const handleFetchPreviousPage = async () => {
+    if (!address || currentPage === 0) return;
+    
+    setIsSavedPostsLoading(true);
+    setSavedPostsError(null);
+    
+    try {
+      // Remove current page from history
+      const newPageHistory = [...pageHistory];
+      newPageHistory.pop(); // Remove current page
+      setPageHistory(newPageHistory);
+      
+      // Get the previous page info
+      const previousPageInfo = newPageHistory[newPageHistory.length - 1];
+      
+      if (previousPageInfo) {
+        if (previousPageInfo.token === null) {
+          // Go back to first page
+          const result = await fetchSavedPosts(address);
+          setSavedPosts(result.posts);
+          setNextPageToken(result.nextPageToken || null);
+          setCurrentPage(0);
+        } else {
+          // Go back to a specific page using its token
+          const result = await fetchSavedPostsByNextPageToken(address, previousPageInfo.token);
+          setSavedPosts(result.posts);
+          setNextPageToken(result.nextPageToken || null);
+          setCurrentPage(previousPageInfo.page);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch previous page of saved posts:', error);
+      setSavedPostsError(error instanceof Error ? error.message : 'Failed to fetch previous page');
     } finally {
       setIsSavedPostsLoading(false);
     }
@@ -94,6 +168,38 @@ export const DraftsPage = () => {
                     onDelete={handleDeleteSavedPost}
                   />
                 ))}
+              </div>
+              
+              {/* Pagination Controls */}
+              <div className="flex items-center justify-center gap-4 mt-8">
+                <Button
+                  onClick={handleFetchPreviousPage}
+                  disabled={isSavedPostsLoading || currentPage === 0}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Previous
+                </Button>
+                
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span>Page {currentPage + 1}</span>
+                  {isSavedPostsLoading && (
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                  )}
+                </div>
+                
+                <Button
+                  onClick={handleFetchNextPage}
+                  disabled={isSavedPostsLoading || !nextPageToken}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
               </div>
             </div>
           ) : (

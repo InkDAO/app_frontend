@@ -27,24 +27,11 @@ export const useAuth = () => {
     
     return () => clearInterval(interval);
   }, []);
-
-  // Debug effect to monitor authentication state changes
-  useEffect(() => {
-    console.log('🔍 Auth state changed:', {
-      isAuthenticated: authState.isAuthenticated,
-      isAuthenticating,
-      isSigning,
-      address: authState.address,
-      walletAddress: address
-    });
-  }, [authState.isAuthenticated, isAuthenticating, isSigning, authState.address, address]);
-
   // Auto-authentication removed - users must manually authenticate
 
   // Logout when wallet disconnects
   useEffect(() => {
     if (!isConnected && authState.isAuthenticated) {
-      console.log('🔌 Wallet disconnected, logging out...');
       authService.logout();
       setAuthState({
         isAuthenticated: false,
@@ -68,14 +55,12 @@ export const useAuth = () => {
     }
 
     if (authState.isAuthenticated) {
-      console.log('Already authenticated');
       return true;
     }
 
     // Check if wallet is accessible (not locked)
     try {
       // Try to get account info to check if wallet is accessible
-      console.log('🔍 Checking wallet accessibility...');
     } catch (error) {
       toast.error("Your MetaMask wallet appears to be locked. Please unlock it and try again.", {
         description: "Wallet Not Accessible",
@@ -90,13 +75,6 @@ export const useAuth = () => {
       // Generate salt (current timestamp in seconds)
       const timestamp = Math.floor(Date.now() / 1000);
       const salt = `I want to authenticate for read operations at timestamp - ${timestamp}`;
-      
-      console.log('🔐 Starting authentication process...');
-      console.log('1. Generated salt:', salt);
-      console.log('2. User address:', address);
-      
-      // Sign the message and wait for user confirmation
-      console.log('3. Requesting signature from user...');
       
        // Create a timeout promise to handle locked/unresponsive wallets
        const timeoutPromise = new Promise<never>((_, reject) => {
@@ -117,9 +95,7 @@ export const useAuth = () => {
       if (!signature) {
         throw new Error('User cancelled signature or signature failed');
       }
-      
-      console.log('4. Signature received:', signature);
-      
+            
       // Continue with the authentication process
       await authService.login(address, salt, signature);
       

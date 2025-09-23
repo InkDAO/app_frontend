@@ -157,21 +157,6 @@ const EditorJSRenderer: React.FC<EditorJSRendererProps> = ({ data }) => {
         const customWidth = blockData.customWidth || blockData.width || blockData.file?.width;
         const customHeight = blockData.customHeight || blockData.height || blockData.file?.height;
         
-        // Debug: Log the dimensions being used
-        console.log('🎨 EditorJSRenderer - Image dimensions:', {
-          url: imageUrl,
-          customWidth,
-          customHeight,
-          blockData: {
-            customWidth: blockData.customWidth,
-            customHeight: blockData.customHeight,
-            width: blockData.width,
-            height: blockData.height,
-            fileWidth: blockData.file?.width,
-            fileHeight: blockData.file?.height
-          }
-        });
-        
         
         // Calculate image dimensions and styling
         let imageStyle: React.CSSProperties = {};

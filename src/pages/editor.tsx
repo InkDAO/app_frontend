@@ -21,6 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useEditor } from '@/context/EditorContext';
+import { PublishData } from '@/components/PublishOverlay';
 import '../styles/editor.css';
 
 // localStorage removed - users must manually save using save button
@@ -43,6 +44,7 @@ const EditorPage = () => {
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [isEmpty, setIsEmpty] = useState(true);
   const [pendingNavigation, setPendingNavigation] = useState<(() => void) | null>(null);
   const [dialogType, setDialogType] = useState<'write' | 'other'>('other');
   const [idleTimer, setIdleTimer] = useState<NodeJS.Timeout | null>(null);
@@ -75,6 +77,9 @@ const EditorPage = () => {
   const { ensureAuthenticated, isAuthenticated } = useAuth();
   const { setEditorProps } = useEditor();
   const { addAsset, isPending: isContractPending, isConfirmed: isContractConfirmed, isError: isContractError, hash } = useAddAsset();
+  
+  // State for publish overlay
+  const [showPublishOverlay, setShowPublishOverlay] = useState(false);
 
 
   // Create a blocked navigate function that shows dialog only when there are unsaved changes
@@ -413,6 +418,42 @@ const EditorPage = () => {
       console.error('Error checking content changes:', error);
       return false;
     }
+  };
+
+  // Check if editor is empty (no meaningful content)
+  const isEditorEmpty = async () => {
+    if (!editorRef.current || !editorRef.current.save) return true;
+    
+    try {
+      const currentData = await editorRef.current.save();
+      const currentTitle = documentTitleRef.current;
+      
+      // Check if there's any meaningful content
+      const currentBlocks = currentData?.blocks || [];
+      const hasContent = currentBlocks.some(block => {
+        if (block.type === 'paragraph' && block.data?.text?.trim()) return true;
+        if (block.type === 'header' && block.data?.text?.trim()) return true;
+        if (block.type === 'list' && block.data?.items?.length > 0) return true;
+        if (block.type === 'quote' && (block.data?.text?.trim() || block.data?.caption?.trim())) return true;
+        if (block.type === 'code' && block.data?.code?.trim()) return true;
+        if (block.type === 'image' && block.data?.file?.url) return true;
+        if (block.type === 'table' && block.data?.content?.length > 0) return true;
+        return false;
+      });
+      
+      const hasTitle = currentTitle && currentTitle.trim() !== '';
+      
+      return !hasContent && !hasTitle;
+    } catch (error) {
+      console.error('Error checking if editor is empty:', error);
+      return true;
+    }
+  };
+
+  // Update empty state
+  const updateEmptyState = async () => {
+    const empty = await isEditorEmpty();
+    setIsEmpty(empty);
   };
 
   // Inject current image sizes into EditorJS blocks
@@ -796,6 +837,107 @@ const EditorPage = () => {
     return await publishToAPIInternal(true);
   }, [publishToAPIInternal]);
 
+  // New publish function that handles data from overlay
+  const publishWithData = useCallback(async (publishData: PublishData) => {
+    const currentTitle = documentTitleRef.current;
+    
+    // Reset publishing state if it's stuck
+    if (isPublishing) {
+      console.log('🔄 Resetting stuck publishing state before new publish attempt');
+      setIsPublishing(false);
+    }
+    
+    if (!editorRef.current || !address) {
+      toast({
+        title: "Error",
+        description: "Please connect your wallet to publish.",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    // Get CID from URL - required for publishing
+    const cidFromUrl = getCidFromUrl();
+    if (!cidFromUrl) {
+      toast({
+        title: "Error",
+        description: "No content to publish. Please save your content first.",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    // Ensure user is authenticated before publishing
+    const authenticated = await ensureAuthenticated();
+    if (!authenticated) {
+      toast({
+        title: "Authentication Required",
+        description: "Please authenticate with your wallet to publish content.",
+        variant: "destructive"
+      });
+      return false;
+    }
+    
+    setIsPublishing(true);
+    try {
+      const timestamp = Math.floor(Date.now() / 1000);
+      
+      // Convert price to wei (assuming 18 decimals for ETH)
+      const priceInWei = (parseFloat(publishData.price) * Math.pow(10, 18)).toString();
+      
+      // Call the smart contract to add the asset to blockchain
+      try {
+        console.log('🟢 Calling addAsset contract with:', {
+          salt: timestamp.toString(16),
+          assetTitle: currentTitle,
+          assetCid: cidFromUrl,
+          costInNative: priceInWei,
+          description: publishData.description,
+          thumbnail: publishData.thumbnail?.name || 'No thumbnail'
+        });
+        
+        await addAsset({
+          salt: timestamp.toString(16),
+          assetTitle: currentTitle,
+          assetCid: cidFromUrl,
+          costInNative: priceInWei
+        });
+        
+        console.log('🟢 Transaction submitted successfully');
+        
+        // Show intermediate success message
+        toast({
+          title: "Transaction Submitted", 
+          description: "Content published to blockchain! Waiting for confirmation...",
+        });
+        
+        // Close the overlay
+        setShowPublishOverlay(false);
+        
+        return true;
+        
+      } catch (contractError) {
+        console.error('❌ Error calling addAsset contract:', contractError);
+        toast({
+          title: "Error",
+          description: "Failed to publish to blockchain. Please try again.",
+          variant: "destructive"
+        });
+        return false;
+      }
+      
+    } catch (error: any) {
+      console.error('Error publishing to API:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to publish content.",
+        variant: "destructive"
+      });
+      setIsPublishing(false); // Only set to false on error
+      return false;
+    }
+  }, [address, ensureAuthenticated, toast, setIsPublishing, addAsset, getCidFromUrl, setShowPublishOverlay]);
+
   // Monitor contract transaction confirmation
   useEffect(() => {
     if (isContractConfirmed) {
@@ -872,12 +1014,16 @@ const EditorPage = () => {
     setEditorProps({
       onSave: saveToAPI,
       onPublish: publishToAPI,
+      onPublishWithData: publishWithData,
       isSaving,
       isPublishing,
       isAuthenticated,
       hasUnsavedChanges,
+      isEmpty,
+      showPublishOverlay,
+      setShowPublishOverlay,
     });
-  }, [isSaving, isPublishing, isAuthenticated, hasUnsavedChanges]);
+  }, [isSaving, isPublishing, isAuthenticated, hasUnsavedChanges, isEmpty, showPublishOverlay, setShowPublishOverlay, saveToAPI, publishToAPI, publishWithData]);
 
   // Handle save action from dialog (preserves pending navigation)
   const handleSave = async () => {
@@ -1303,6 +1449,9 @@ const EditorPage = () => {
         // Check if content has meaningful changes
         const hasChanges = await hasContentChanged();
         setHasUnsavedChanges(hasChanges);
+        
+        // Update empty state
+        await updateEmptyState();
       },
       onReady: () => {
         // Delay initialization to ensure DOM is ready
@@ -1337,6 +1486,9 @@ const EditorPage = () => {
                 forceApplyImageDimensions();
               }, 5000);
             }
+            
+            // Update empty state after editor is ready
+            updateEmptyState();
           }, 100);
         }, 300);
       }
@@ -1896,7 +2048,11 @@ const EditorPage = () => {
           <input
             type="text"
             value={documentTitle}
-            onChange={(e) => setDocumentTitle(e.target.value)}
+            onChange={async (e) => {
+              setDocumentTitle(e.target.value);
+              // Update empty state when title changes
+              await updateEmptyState();
+            }}
             className="text-5xl font-bold bg-transparent border-none outline-none flex-1 text-gray-900 dark:text-gray-100 placeholder-gray-400"
             placeholder="Untitled"
             disabled={isPreviewMode}

@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CustomConnectButton } from './ConnectButton';
+import PublishOverlay from './PublishOverlay';
 import { useSearch } from "@/context/SearchContext";
 import { Search, X, Wallet, User, CheckCircle, Loader2, Save } from "lucide-react";
 import { useState, useMemo } from "react";
@@ -10,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useEditor } from "@/context/EditorContext";
+import { PublishData } from './PublishOverlay';
 
 interface TopHeaderProps {
   onMenuClick: () => void;
@@ -34,7 +36,7 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
   
   // Get editor context
   const editorContext = useEditor();
-  const { onSave, onPublish, isSaving, isPublishing, isAuthenticated: editorIsAuthenticated, hasUnsavedChanges } = editorContext;
+  const { onSave, onPublish, onPublishWithData, isSaving, isPublishing, isAuthenticated: editorIsAuthenticated, hasUnsavedChanges, isEmpty, showPublishOverlay, setShowPublishOverlay } = editorContext;
   
   // Determine user state - use useMemo to make it reactive
   const userState = useMemo(() => {
@@ -43,6 +45,18 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
     if (isConnected && isAuthenticated) return 'authenticated';
     return 'disconnected';
   }, [isConnected, isAuthenticated]);
+
+  // Handle publish with data from overlay
+  const handlePublishWithData = (publishData: PublishData) => {
+    if (onPublishWithData) {
+      onPublishWithData(publishData);
+    }
+  };
+
+  // Handle publish button click - show overlay instead of direct publish
+  const handlePublishClick = () => {
+    setShowPublishOverlay(true);
+  };
   return (
         <header className="fixed top-0 left-0 right-0 z-40 bg-background border-b border-gray-100 dark:border-gray-900">
       <div className="flex items-center justify-between px-4 py-3">
@@ -133,10 +147,10 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
 
                   {/* Publish Button */}
                   <button
-                    onClick={onPublish}
-                    disabled={hasUnsavedChanges || isSaving || isPublishing || !address}
+                    onClick={handlePublishClick}
+                    disabled={hasUnsavedChanges || isSaving || isPublishing || !address || isEmpty}
                     className="group relative px-4 py-2 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 disabled:hover:scale-100 mr-3"
-                    title={!editorIsAuthenticated ? "Authentication required to publish" : hasUnsavedChanges ? "Save changes before publishing" : "Publish content to blockchain"}
+                    title={!editorIsAuthenticated ? "Authentication required to publish" : hasUnsavedChanges ? "Save changes before publishing" : isEmpty ? "Add content to publish" : "Publish content to blockchain"}
                   >
                     <div className="flex items-center space-x-2">
                       {isPublishing ? (
@@ -229,6 +243,14 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
           </div>
         </div>
       )}
+
+      {/* Publish Overlay */}
+      <PublishOverlay
+        isOpen={showPublishOverlay}
+        onClose={() => setShowPublishOverlay(false)}
+        onPublish={handlePublishWithData}
+        isPublishing={isPublishing}
+      />
     </header>
   );
 };

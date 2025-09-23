@@ -16,6 +16,7 @@ interface TopHeaderProps {
   onSave?: () => void;
   onPublish?: () => void;
   isSaving?: boolean;
+  isPublishing?: boolean;
   isAuthenticated?: boolean;
 }
 
@@ -33,7 +34,7 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
   
   // Get editor context
   const editorContext = useEditor();
-  const { onSave, onPublish, isSaving, isAuthenticated: editorIsAuthenticated } = editorContext;
+  const { onSave, onPublish, isSaving, isPublishing, isAuthenticated: editorIsAuthenticated, hasUnsavedChanges } = editorContext;
   
   // Determine user state - use useMemo to make it reactive
   const userState = useMemo(() => {
@@ -111,12 +112,12 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
                   {/* Save Button */}
                   <button
                     onClick={onSave}
-                    disabled={isSaving || !address}
+                    disabled={!hasUnsavedChanges || isSaving || isPublishing || !address}
                     className="group relative px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 disabled:hover:scale-100 mr-2"
-                    title={!editorIsAuthenticated ? "Authentication required to save" : "Save content to IPFS (Ctrl/Cmd+S)"}
+                    title={!editorIsAuthenticated ? "Authentication required to save" : !hasUnsavedChanges ? "No unsaved changes to save" : "Save content to IPFS (Ctrl/Cmd+S)"}
                   >
                     <div className="flex items-center space-x-2">
-                      {isSaving ? (
+                      {isSaving && !isPublishing ? (
                         <>
                           <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                           <span className="text-sm">Saving...</span>
@@ -133,15 +134,15 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
                   {/* Publish Button */}
                   <button
                     onClick={onPublish}
-                    disabled={isSaving || !address}
+                    disabled={hasUnsavedChanges || isSaving || isPublishing || !address}
                     className="group relative px-4 py-2 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 disabled:hover:scale-100 mr-3"
-                    title={!editorIsAuthenticated ? "Authentication required to publish" : "Publish content to IPFS"}
+                    title={!editorIsAuthenticated ? "Authentication required to publish" : hasUnsavedChanges ? "Save changes before publishing" : "Publish content to blockchain"}
                   >
                     <div className="flex items-center space-x-2">
-                      {isSaving ? (
+                      {isPublishing ? (
                         <>
                           <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                          <span className="text-sm">Publishing...</span>
+                          <span className="text-sm">Publishing to blockchain...</span>
                         </>
                       ) : (
                         <>

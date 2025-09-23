@@ -1,7 +1,7 @@
 import { Search, BookOpen } from "lucide-react";
 
 interface EmptyStateProps {
-  type: "no-posts" | "no-search-results";
+  type: "no-assets" | "no-search-results";
   searchTerm?: string;
 }
 

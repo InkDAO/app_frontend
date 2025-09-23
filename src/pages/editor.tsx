@@ -16,7 +16,7 @@ import Underline from '@editorjs/underline';
 import Delimiter from '@editorjs/delimiter';
 import { Edit3, Eye } from 'lucide-react';
 import { useAccount, useSignMessage } from 'wagmi';
-import { createGroupPost, updateFileById } from '@/services/dXService';
+import { createGroupPost, updateFileById, useAddAsset } from '@/services/dXService';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -29,6 +29,7 @@ const EditorPage = () => {
   const editorRef = useRef<EditorJS | null>(null);
   const holderRef = useRef<HTMLDivElement>(null);
   const [documentTitle, setDocumentTitle] = useState('');
+  const [originalLoadedTitle, setOriginalLoadedTitle] = useState('');
   
   // Use ref to store latest documentTitle to avoid stale closure issues
   const documentTitleRef = useRef(documentTitle);
@@ -41,6 +42,7 @@ const EditorPage = () => {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
   const [pendingNavigation, setPendingNavigation] = useState<(() => void) | null>(null);
   const [dialogType, setDialogType] = useState<'write' | 'other'>('other');
   const [idleTimer, setIdleTimer] = useState<NodeJS.Timeout | null>(null);
@@ -72,6 +74,7 @@ const EditorPage = () => {
   const { cid } = useParams();
   const { ensureAuthenticated, isAuthenticated } = useAuth();
   const { setEditorProps } = useEditor();
+  const { addAsset, isPending: isContractPending, isConfirmed: isContractConfirmed, isError: isContractError, hash } = useAddAsset();
 
 
   // Create a blocked navigate function that shows dialog only when there are unsaved changes
@@ -352,33 +355,60 @@ const EditorPage = () => {
     
     try {
       const currentData = await editorRef.current.save();
-      // localStorage removed - no saved data to compare
+      const currentTitle = documentTitleRef.current;
       
-      // Check if title is different
-      // localStorage removed - no saved title to compare
-      // Title comparison removed - localStorage not used
+      // Get the saved content (content loaded from IPFS when editing existing post)
+      const savedContent = previewData;
+      const savedTitle = originalLoadedTitle;
       
-      // If no saved data exists, check if current content has meaningful data
-      // Always check for meaningful content since localStorage is removed
-      {
-      const currentBlocks = currentData?.blocks || [];
-        return currentBlocks.some(block => {
-        if (block.type === 'paragraph' && block.data?.text?.trim()) return true;
-        if (block.type === 'header' && block.data?.text?.trim()) return true;
-        if (block.type === 'list' && block.data?.items?.length > 0) return true;
-        if (block.type === 'quote' && (block.data?.text?.trim() || block.data?.caption?.trim())) return true;
-        if (block.type === 'code' && block.data?.code?.trim()) return true;
+      // If we're editing an existing post (has CID in URL), compare with saved content
+      const cidFromUrl = getCidFromUrl();
+      if (cidFromUrl && savedContent) {
+        // Compare current content with saved content
+        const currentBlocks = currentData?.blocks || [];
+        const savedBlocks = savedContent?.blocks || [];
+        
+        // Check if blocks are different
+        const blocksChanged = JSON.stringify(currentBlocks) !== JSON.stringify(savedBlocks);
+        
+        // Check if title is different
+        const titleChanged = currentTitle !== savedTitle;
+        
+        console.log('🔍 Change detection:', {
+          blocksChanged,
+          titleChanged,
+          currentTitle,
+          savedTitle,
+          currentBlocksCount: currentBlocks.length,
+          savedBlocksCount: savedBlocks.length
+        });
+        
+        return blocksChanged || titleChanged;
+      } else {
+        // For new posts (no CID), check if there's any meaningful content
+        const currentBlocks = currentData?.blocks || [];
+        const hasContent = currentBlocks.some(block => {
+          if (block.type === 'paragraph' && block.data?.text?.trim()) return true;
+          if (block.type === 'header' && block.data?.text?.trim()) return true;
+          if (block.type === 'list' && block.data?.items?.length > 0) return true;
+          if (block.type === 'quote' && (block.data?.text?.trim() || block.data?.caption?.trim())) return true;
+          if (block.type === 'code' && block.data?.code?.trim()) return true;
           if (block.type === 'image' && block.data?.file?.url) return true;
           if (block.type === 'table' && block.data?.content?.length > 0) return true;
-        return false;
-      });
+          return false;
+        });
+        
+        const hasTitle = currentTitle && currentTitle.trim() !== '';
+        
+        console.log('🔍 New post change detection:', {
+          hasContent,
+          hasTitle,
+          currentTitle,
+          blocksCount: currentBlocks.length
+        });
+        
+        return hasContent || hasTitle;
       }
-      
-      // localStorage removed - no saved data to compare
-      
-      // localStorage removed - no comparison needed
-      
-      // localStorage removed - no comparison needed
     } catch (error) {
       console.error('Error checking content changes:', error);
       return false;
@@ -664,15 +694,190 @@ const EditorPage = () => {
     return await saveToAPIInternal(true);
   }, [saveToAPIInternal]);
 
+
+  const publishToAPIInternal = useCallback(async (clearPendingNavigation = false) => {
+    const currentTitle = documentTitleRef.current;
+    
+    // Reset publishing state if it's stuck
+    if (isPublishing) {
+      console.log('🔄 Resetting stuck publishing state before new publish attempt');
+      setIsPublishing(false);
+    }
+    
+    if (!editorRef.current || !address) {
+      toast({
+        title: "Error",
+        description: "Please connect your wallet to publish.",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    // Get CID from URL - required for publishing
+    const cidFromUrl = getCidFromUrl();
+    if (!cidFromUrl) {
+      toast({
+        title: "Error",
+        description: "No content to publish. Please save your content first.",
+        variant: "destructive"
+      });
+      return false;
+    }
+
+    // Ensure user is authenticated before publishing
+    const authenticated = await ensureAuthenticated();
+    if (!authenticated) {
+      toast({
+        title: "Authentication Required",
+        description: "Please authenticate with your wallet to publish content.",
+        variant: "destructive"
+      });
+      return false;
+    }
+    
+    setIsPublishing(true);
+    try {
+      const timestamp = Math.floor(Date.now() / 1000);
+      
+      // Call the smart contract to add the asset to blockchain
+      try {
+        console.log('🟢 Calling addAsset contract with:', {
+          salt: timestamp.toString(16),
+          assetTitle: currentTitle,
+          assetCid: cidFromUrl,
+          costInNative: "0"
+        });
+        
+        await addAsset({
+          salt: timestamp.toString(16),
+          assetTitle: currentTitle,
+          assetCid: cidFromUrl,
+          costInNative: "0" // Set cost to 0 for now
+        });
+        
+        console.log('🟢 Transaction submitted successfully');
+        
+        // Show intermediate success message
+        toast({
+          title: "Transaction Submitted", 
+          description: "Content published to blockchain! Waiting for confirmation...",
+        });
+        
+        // Don't set isPublishing to false here - let it stay true until transaction is confirmed
+        // The useEffect will handle setting it to false when isContractConfirmed becomes true
+        
+        return true;
+        
+      } catch (contractError) {
+        console.error('❌ Error calling addAsset contract:', contractError);
+        toast({
+          title: "Error",
+          description: "Failed to publish to blockchain. Please try again.",
+          variant: "destructive"
+        });
+        return false;
+      }
+      
+    } catch (error: any) {
+      console.error('Error publishing to API:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to publish content.",
+        variant: "destructive"
+      });
+      setIsPublishing(false); // Only set to false on error
+      return false;
+    }
+    // Note: Don't set isPublishing to false in finally block
+    // Let it stay true until transaction is confirmed
+  }, [address, ensureAuthenticated, toast, setIsPublishing, addAsset]);
+
+  const publishToAPI = useCallback(async () => {
+    return await publishToAPIInternal(true);
+  }, [publishToAPIInternal]);
+
+  // Monitor contract transaction confirmation
+  useEffect(() => {
+    if (isContractConfirmed) {
+      console.log('🟢 Contract transaction confirmed!');
+      setIsPublishing(false); // Stop loading state when transaction is confirmed
+      toast({
+        title: "Success", 
+        description: "Content published to blockchain successfully!",
+      });
+    }
+  }, [isContractConfirmed, toast, setIsPublishing]);
+
+  // Monitor contract transaction hash
+  useEffect(() => {
+    if (hash) {
+      console.log('🟢 Transaction hash received:', hash);
+      // Reset publishing state when a new transaction starts
+      // This ensures we don't get stuck in publishing state
+      if (isPublishing) {
+        console.log('🔄 New transaction detected, ensuring publishing state is active');
+      }
+    }
+  }, [hash, isPublishing]);
+
+  // Monitor contract transaction errors and timeouts
+  useEffect(() => {
+    if (isContractPending === false && !isContractConfirmed && isPublishing) {
+      // If contract is no longer pending, not confirmed, but we're still publishing
+      // This might indicate an error or the transaction was rejected
+      console.log('🟡 Contract transaction may have failed or been rejected');
+      
+      // Add a timeout to reset publishing state if confirmation takes too long
+      const timeout = setTimeout(() => {
+        if (isPublishing) {
+          console.log('⏰ Transaction confirmation timeout - resetting publishing state');
+          setIsPublishing(false);
+          toast({
+            title: "Transaction Timeout",
+            description: "Transaction confirmation is taking longer than expected. Please check your wallet or try again.",
+            variant: "destructive"
+          });
+        }
+      }, 30000); // 30 second timeout
+
+      return () => clearTimeout(timeout);
+    }
+  }, [isContractPending, isContractConfirmed, isPublishing, toast, setIsPublishing]);
+
+  // Monitor contract transaction errors
+  useEffect(() => {
+    if (isContractError && isPublishing) {
+      console.log('❌ Contract transaction error detected');
+      setIsPublishing(false);
+      toast({
+        title: "Transaction Failed",
+        description: "The blockchain transaction failed. Please try again.",
+        variant: "destructive"
+      });
+    }
+  }, [isContractError, isPublishing, toast, setIsPublishing]);
+
+  // Cleanup effect to reset publishing state on unmount
+  useEffect(() => {
+    return () => {
+      if (isPublishing) {
+        console.log('🧹 Component unmounting, resetting publishing state');
+        setIsPublishing(false);
+      }
+    };
+  }, [isPublishing]);
+
   // Set editor props in context for TopHeader
   useEffect(() => {
     setEditorProps({
       onSave: saveToAPI,
-      onPublish: saveToAPI,
+      onPublish: publishToAPI,
       isSaving,
+      isPublishing,
       isAuthenticated,
+      hasUnsavedChanges,
     });
-  }, [isSaving, isAuthenticated]);
+  }, [isSaving, isPublishing, isAuthenticated, hasUnsavedChanges]);
 
   // Handle save action from dialog (preserves pending navigation)
   const handleSave = async () => {
@@ -717,6 +922,7 @@ const EditorPage = () => {
               // Set the title
               if (parsedResponse.title) {
                 setDocumentTitle(parsedResponse.title);
+                setOriginalLoadedTitle(parsedResponse.title);
               }
             
             // Force editor re-initialization by destroying and recreating
@@ -927,6 +1133,7 @@ const EditorPage = () => {
                 // Also set the title
                 if (parsedResponse.title) {
                   setDocumentTitle(parsedResponse.title);
+                  setOriginalLoadedTitle(parsedResponse.title);
                 }
               
               // Store the loaded content in localStorage as well for consistency
@@ -1156,6 +1363,7 @@ const EditorPage = () => {
       // Always clear title when navigating to write page (new post)
       setPreviewData(null);
       setDocumentTitle('');
+      setOriginalLoadedTitle('');
       setHasUnsavedChanges(false);
       
       // Clear the coming-from-existing-post flag if it exists

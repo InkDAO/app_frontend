@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { CommentForm } from "@/components/CommentForm";
 import { Post, Comment } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDistanceToNow } from "date-fns";
@@ -9,7 +8,6 @@ import { CommentCard } from "@/components/CommentCard";
 import { RichTextRenderer } from "@/components/RichTextRenderer";
 import { fetchFromIPFS, handleGetFileMetadataByCid } from "@/services/pinataService";
 import { useReadContract } from "wagmi"
-import { maxterdXConfig } from "@/contracts/MasterdX";
 import { toast } from "@/components/ui/sonner";
 
 export const PostInfoPage = () => {
@@ -25,50 +23,6 @@ export const PostInfoPage = () => {
   const [contentError, setContentError] = useState<string | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
   const [hashtags, setHashtags] = useState<string[]>([]);
-
-  const { data: postInfo, isLoading: isPostLoading } = useReadContract({
-    address: maxterdXConfig.address as `0x${string}`,
-    abi: maxterdXConfig.abi,
-    functionName: "getPostInfo",
-    args: [id as `0x${string}`],
-  });
-
-  const { data: commentsInfo, isLoading: isCommentsLoading, refetch: refetchComments } = useReadContract({
-    address: maxterdXConfig.address as `0x${string}`,
-    abi: maxterdXConfig.abi,
-    functionName: "getCommentsInfo",
-    args: [id as `0x${string}`],
-  });
-
-  useEffect(() => {
-    if (postInfo) {
-      const convertedPost: Post = {
-        postId: postInfo.postId,
-        postTitle: postInfo.postTitle,
-        postCid: postInfo.postcid,
-        imageCid: postInfo.imagecid,
-        owner: postInfo.owner,
-        endTime: postInfo.endTime.toString(), // Convert bigint to string
-        archived: postInfo.archived
-      };
-      setPost(convertedPost);
-    }
-  }, [postInfo]);
-
-  useEffect(() => {
-    if (commentsInfo) {
-      const convertedComments: Comment[] = commentsInfo.map((comment: any) => ({
-        postId: comment.postId,
-        commentCid: comment.commentcid,
-        owner: comment.owner
-      }));
-      setComments(convertedComments);
-    }
-  }, [commentsInfo]);
-
-  useEffect(() => {
-    setIsLoading(isPostLoading || isCommentsLoading);
-  }, [isPostLoading, isCommentsLoading]);
 
   // Fetch hashtags when post is loaded
   useEffect(() => {
@@ -316,10 +270,6 @@ export const PostInfoPage = () => {
                 )}
               </CardContent>
             </Card>
-
-            <CommentForm postId={id as string} onCommentAdded={() => {
-              refetchComments();
-            }} />
 
             <h2 className="text-xl font-bold mb-4 mt-8">
               Comments

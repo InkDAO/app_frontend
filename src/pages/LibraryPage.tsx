@@ -1,158 +1,162 @@
-import { PostCard } from "@/components/PostCard";
-import { EmptyState } from "@/components/EmptyState";
+import { useState, useEffect } from "react";
+import { SavedPostCard } from "@/components/SavedPostCard";
 import { AuthGuard } from "@/components/AuthGuard";
 import { useSearch } from "@/context/SearchContext";
-import { usePosts } from "@/hooks/usePosts";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Archive, Clock, BookOpen } from "lucide-react";
+import { useUserAssets } from "@/hooks/useUserAssets";
+import { fetchFileContentByCid } from "@/services/dXService";
+import { MessageSquare, ArrowRight, BookOpen } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export const LibraryPage = () => {
   const { searchTerm } = useSearch();
-  const { allPosts, isAllPostLoading } = usePosts();
-  const [filter, setFilter] = useState<'all' | 'active' | 'archived'>('all');
+  const { allUserAssets, isAllUserAssetLoading } = useUserAssets();
+  const navigate = useNavigate();
+  const [assetsWithContent, setAssetsWithContent] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Filter posts based on the selected filter
-  const getFilteredPosts = () => {
-    let filteredPosts = allPosts;
+  // Fetch content for user assets
+  const fetchAssetsContent = async (assets: any[]) => {
+    setIsLoading(true);
+    try {
+      const assetsWithContent = await Promise.allSettled(
+        assets.map(async (asset) => {
+          try {
+            console.log('fetching content for user asset', asset);
+            const content = await fetchFileContentByCid(asset.assetCid);
+            return {
+              ...asset,
+              content,
+              contentError: null
+            };
+          } catch (error) {
+            console.error(`Failed to fetch content for asset ${asset.assetCid}:`, error);
+            return {
+              ...asset,
+              content: null,
+              contentError: error instanceof Error ? error.message : 'Failed to fetch content'
+            };
+          }
+        })
+      );
 
-    // Apply filter
-    if (filter === 'active') {
-      const currentTimestamp = Math.floor(Date.now() / 1000);
-      filteredPosts = allPosts.filter(post => 
-        !post.archived && currentTimestamp < parseInt(post.endTime)
-      );
-    } else if (filter === 'archived') {
-      const currentTimestamp = Math.floor(Date.now() / 1000);
-      filteredPosts = allPosts.filter(post => 
-        post.archived || currentTimestamp >= parseInt(post.endTime)
-      );
+      const successfulAssets = assetsWithContent
+        .map((result, index) => {
+          if (result.status === 'fulfilled') {
+            return result.value;
+          } else {
+            console.error(`Failed to process asset ${index}:`, result.reason);
+            return null;
+          }
+        })
+        .filter(Boolean);
+
+      setAssetsWithContent(successfulAssets);
+    } catch (error) {
+      console.error('Error fetching assets content:', error);
+      setError('Failed to load asset content');
+    } finally {
+      setIsLoading(false);
     }
-    // 'all' shows all posts without additional filtering
-
-    return filteredPosts;
   };
 
-  // Get the posts to display based on title search and filter
+  // Get the posts to display based on title search
   const getPostsToDisplay = () => {
-    let filteredPosts = getFilteredPosts();
-
-    // Apply title search filter
-    if (searchTerm.trim()) {
-      filteredPosts = filteredPosts.filter(post => 
-        post.postTitle.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    return filteredPosts;
+    if (!searchTerm.trim()) return assetsWithContent;
+    
+    return assetsWithContent.filter(asset => 
+      asset.assetTitle.toLowerCase().includes(searchTerm.toLowerCase())
+    );
   };
 
   const filteredPosts = getPostsToDisplay();
 
-  // Sort posts by creation time (newest first)
-  const sortedAndFilteredPosts = filteredPosts.sort((a, b) => {
-    const idA = parseInt(a.postId);
-    const idB = parseInt(b.postId);
-    return idB - idA; // Newest first
-  });
-
-  const getEmptyStateType = () => {
-    if (searchTerm) return "no-search-results";
-    if (filter === 'archived') return "no-posts";
-    if (filter === 'active') return "no-posts";
-    return "no-posts";
-  };
-
-  const getEmptyStateSearchTerm = () => {
-    if (searchTerm) return searchTerm;
-    if (filter === 'archived') return 'archived posts';
-    if (filter === 'active') return 'active posts';
-    return undefined;
-  };
+  // Update assets with content when allUserAssets changes
+  useEffect(() => {
+    if (allUserAssets.length > 0) {
+      fetchAssetsContent(allUserAssets);
+    }
+  }, [allUserAssets]);
 
   return (
     <AuthGuard>
-      <div className="w-full">
-        <div className="w-full px-4 sm:px-6 lg:px-8">
-          <div className="w-full max-w-4xl mx-auto">
-            {/* Header */}
-            <div className="mb-8">
-              <div className="flex items-center gap-3 mb-4">
-                <BookOpen className="h-8 w-8 text-blue-600" />
-                <h1 className="text-3xl font-bold text-foreground">Library</h1>
-              </div>
-              <p className="text-muted-foreground text-lg">
-                Browse all posts, including archived content
-              </p>
-            </div>
-
-            {/* Filter Buttons */}
-            <div className="flex flex-wrap gap-2 mb-6">
-              <Button
-                variant={filter === 'all' ? 'default' : 'outline'}
-                onClick={() => setFilter('all')}
-                className="flex items-center gap-2"
-              >
-                <BookOpen className="h-4 w-4" />
-                All Posts ({allPosts.length})
-              </Button>
-              <Button
-                variant={filter === 'active' ? 'default' : 'outline'}
-                onClick={() => setFilter('active')}
-                className="flex items-center gap-2"
-              >
-                <Clock className="h-4 w-4" />
-                Active ({allPosts.filter(post => {
-                  const currentTimestamp = Math.floor(Date.now() / 1000);
-                  return !post.archived && currentTimestamp < parseInt(post.endTime);
-                }).length})
-              </Button>
-              <Button
-                variant={filter === 'archived' ? 'default' : 'outline'}
-                onClick={() => setFilter('archived')}
-                className="flex items-center gap-2"
-              >
-                <Archive className="h-4 w-4" />
-                Archived ({allPosts.filter(post => {
-                  const currentTimestamp = Math.floor(Date.now() / 1000);
-                  return post.archived || currentTimestamp >= parseInt(post.endTime);
-                }).length})
-              </Button>
-            </div>
-
-            {/* Results */}
-            {isAllPostLoading ? (
-              <div className="flex justify-center items-center py-2 md:py-4">
-                <div className="w-full space-y-4">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="animate-pulse">
-                      <div className="h-24 bg-muted/50 rounded-lg border border-border">
-                        <div className="p-4 space-y-3">
-                          <div className="h-4 bg-muted rounded w-3/4" />
-                          <div className="h-3 bg-muted rounded w-1/2" />
-                          <div className="flex justify-between items-center">
-                            <div className="h-3 bg-muted rounded w-1/4" />
-                            <div className="h-3 bg-muted rounded w-1/4" />
-                          </div>
+      <div className="px-4 sm:px-6 py-6 lg:px-8 max-w-7xl mx-auto w-full">
+        <div className="mb-6">
+          <div className="flex items-center gap-3 mb-2">
+            <BookOpen className="h-8 w-8 text-blue-600" />
+            <h1 className="text-2xl font-bold">Library</h1>
+          </div>
+          <p className="text-muted-foreground">Your personal collection of assets and posts</p>
+        </div>
+        <div className="w-full">
+          {(isAllUserAssetLoading || isLoading) ? (
+            <div className="flex justify-center items-center py-4 md:py-8">
+              <div className="w-full space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="h-24 bg-muted/50 rounded-lg border border-border">
+                      <div className="p-4 space-y-3">
+                        <div className="h-4 bg-muted rounded w-3/4" />
+                        <div className="h-3 bg-muted rounded w-1/2" />
+                        <div className="flex justify-between items-center">
+                          <div className="h-3 bg-muted rounded w-1/4" />
+                          <div className="h-3 bg-muted rounded w-1/4" />
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-            ) : sortedAndFilteredPosts.length > 0 ? (
-              <div className="space-y-4">
-                {sortedAndFilteredPosts.map((post) => (
-                  <PostCard key={post.postId} post={post} />
+                  </div>
                 ))}
               </div>
-            ) : (
-              <EmptyState 
-                type={getEmptyStateType()} 
-                searchTerm={getEmptyStateSearchTerm()}
-              />
-            )}
-          </div>
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="text-red-500 mb-4">
+                <MessageSquare className="h-8 w-8 mx-auto mb-2" />
+                <h2 className="text-xl font-semibold">Error Loading Library</h2>
+              </div>
+              <p className="text-muted-foreground mb-4 max-w-md">
+                {error}
+              </p>
+            </div>
+          ) : filteredPosts.length > 0 ? (
+            <div className="space-y-6">
+              {/* Posts Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center">
+                {filteredPosts.map((asset, index) => (
+                  <SavedPostCard 
+                    key={asset.assetCid || index} 
+                    savedPost={{
+                      cid: asset.assetCid,
+                      name: asset.assetTitle,
+                      content: asset.content,
+                      created_at: new Date().toISOString(),
+                      keyvalues: {},
+                      contentError: asset.contentError
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-16 text-center animate-in fade-in-50 slide-in-from-bottom-4 duration-500">
+              <div className="flex items-center gap-3 mb-2 animate-in fade-in-50 zoom-in-50 duration-700">
+                <BookOpen className="h-8 w-8 animate-[float_3s_ease-in-out_infinite]" />
+                <h2 className="text-2xl font-semibold">No Assets in Library</h2>
+              </div>
+              <p className="text-muted-foreground mb-6 max-w-md animate-in fade-in-50 slide-in-from-bottom-2 duration-1000">
+                {searchTerm ? `No assets found matching "${searchTerm}"` : "Your library is empty. Start by purchasing assets."}
+              </p>
+              {!searchTerm && (
+                <div 
+                  onClick={() => navigate('/app')}
+                  className="flex items-center gap-2 text-muted-foreground mb-6 max-w-md animate-in fade-in-50 slide-in-from-bottom-2 duration-1000 cursor-pointer hover:text-foreground transition-colors"
+                >
+                  <p>Purchase your first asset</p>
+                  <ArrowRight className="h-4 w-4" />
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </AuthGuard>

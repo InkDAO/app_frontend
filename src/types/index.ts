@@ -8,6 +8,13 @@ export interface Post {
   archived: boolean,
 }
 
+export interface Asset {
+  assetTitle: string,
+  assetCid: string,
+  assetAddress: string,
+  author: string,
+}
+
 export interface Comment {
   postId: string;
   commentCid: string;

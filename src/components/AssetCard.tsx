@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Post } from "@/types";
+import { Asset } from "@/types";
 import { useAddComment } from "@/services/dXService";
 import { fetchFromIPFS, handleGetFileMetadataByCid, handleGetGroupByName, handleUpload } from "@/services/pinataService";
-import { formatDistanceToNow } from "date-fns";
-import { Eye, MessageSquare, X, Clock, Loader2, Calendar, User, Copy } from "lucide-react";
+import { Eye, MessageSquare, X, Loader2, Calendar, User, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -14,16 +13,15 @@ import { useAccount } from "wagmi";
 import { RichTextArea } from "./RichTextArea";
 import { RichTextRenderer } from "./RichTextRenderer";
 
-interface PostCardProps {
-  post: Post;
+interface AssetCardProps {
+  asset: Asset;
 }
 
-export const PostCard = ({ post }: PostCardProps) => {
+export const AssetCard = ({ asset }: AssetCardProps) => {
   
   const [isOpen, setIsOpen] = useState(false);
   const [comment, setComment] = useState("");
-  const [showCommentOverlay, setShowCommentOverlay] = useState(false);
-  const [postContent, setPostContent] = useState<string>("");
+  const [assetContent, setAssetContent] = useState<string>("");
   const [postImage, setPostImage] = useState<string>("");
   const [isLoadingContent, setIsLoadingContent] = useState(false);
   const [isLoadingImage, setIsLoadingImage] = useState(false);
@@ -36,41 +34,13 @@ export const PostCard = ({ post }: PostCardProps) => {
   const [showFullTitle, setShowFullTitle] = useState(false);
   const [hashtags, setHashtags] = useState<string[]>([]);
 
-  // Fetch image immediately for thumbnail display
-  useEffect(() => {
-    const fetchImage = async () => {
-      if (post.imageCid && !postImage) {
-        setIsLoadingImage(true);
-        setImageError(null);
-        
-        try {
-          const imgResult = await fetchFromIPFS(post.imageCid);
-          
-          if (imgResult.success && 'content' in imgResult && imgResult.content) {
-            // Create image URL using gateway
-            const gatewayUrl = import.meta.env.VITE_GATEWAY_URL;
-            const imageUrl = `https://${gatewayUrl}/ipfs/${post.imageCid}`;
-            setPostImage(imageUrl);
-          } else {
-            setImageError(imgResult.error || 'Failed to load image');
-          }
-        } catch (error) {
-          setImageError('Failed to load image from IPFS');
-        } finally {
-          setIsLoadingImage(false);
-        }
-      }
-    };
-
-    fetchImage();
-  }, [post.imageCid, postImage]);
 
   // Fetch hashtags immediately for display in collapsed state
   useEffect(() => {
     const fetchHashtags = async () => {
       if (hashtags.length === 0) {
         try {
-          const fileMetadata = await handleGetFileMetadataByCid(post.postCid);
+          const fileMetadata = await handleGetFileMetadataByCid(asset.assetCid);
           
           // Extract hashtags from metadata
           if (fileMetadata.success && fileMetadata.keyvalues) {
@@ -84,17 +54,17 @@ export const PostCard = ({ post }: PostCardProps) => {
     };
 
     fetchHashtags();
-  }, [post.postCid, hashtags.length]);
+  }, [asset.assetCid, hashtags.length]);
 
   // Fetch IPFS content when post opens
   useEffect(() => {
     const fetchContent = async () => {
-      if (isOpen && !postContent) {
+      if (isOpen && !assetContent) {
         setIsLoadingContent(true);
         setContentError(null);
         
         try {
-          const contentResult = await fetchFromIPFS(post.postCid);
+          const contentResult = await fetchFromIPFS(asset.assetCid);
 
           // Handle content result
           if (contentResult.success && contentResult.content) {
@@ -103,14 +73,14 @@ export const PostCard = ({ post }: PostCardProps) => {
               const parsedResponse = JSON.parse(contentResult.content);
               if (parsedResponse.content) {
                 // Extract only the content part
-                setPostContent(parsedResponse.content);
+                setAssetContent(parsedResponse.content);
               } else {
                 // Fallback to the original content if structure is different
-                setPostContent(contentResult.content);
+                setAssetContent(contentResult.content);
               }
             } catch (error) {
               // If parsing fails, use the content as-is
-              setPostContent(contentResult.content);
+              setAssetContent(contentResult.content);
             }
           } else {
             setContentError(contentResult.error || 'Failed to load content');
@@ -124,7 +94,7 @@ export const PostCard = ({ post }: PostCardProps) => {
     };
 
     fetchContent();
-  }, [isOpen, post.postCid, postContent]);
+  }, [isOpen, asset.assetCid, assetContent]);
 
   // Reset success flag when starting a new transaction
   useEffect(() => {
@@ -132,18 +102,6 @@ export const PostCard = ({ post }: PostCardProps) => {
       setHasShownSuccess(false);
     }
   }, [isPending]);
-
-  useEffect(() => {
-    if (showCommentOverlay) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [showCommentOverlay]);
 
   // Handle success state
   useEffect(() => {
@@ -194,7 +152,7 @@ export const PostCard = ({ post }: PostCardProps) => {
     setIsSubmittingComment(true);
 
     try {
-      const groupResponse = await handleGetGroupByName(post.postId.slice(0, 50));
+      const groupResponse = await handleGetGroupByName(asset.assetCid.slice(0, 50));
       if (groupResponse.error) {
         throw new Error(`Failed to get group by name: ${groupResponse.error}`);
       }
@@ -212,8 +170,8 @@ export const PostCard = ({ post }: PostCardProps) => {
       }
 
       await addComment({ 
-        postId: post.postId,
-        commentCid
+        assetCid: asset.assetCid,
+        comment: comment.trim()
       });
     } catch (error) {
       console.error("Error posting comment:", error);
@@ -221,12 +179,7 @@ export const PostCard = ({ post }: PostCardProps) => {
     }
   };
 
-  const handleOpenCommentOverlay = () => {
-    setShowCommentOverlay(true);
-  };
-
   const handleCloseCommentOverlay = () => {
-    setShowCommentOverlay(false);
     setComment("");
   };
 
@@ -247,16 +200,16 @@ export const PostCard = ({ post }: PostCardProps) => {
     
     // Always show full title when expanded or when user clicked show more
     if (showFullTitle || isOpen) {
-      return { displayTitle: post.postTitle, needsShowMore: false };
+      return { displayTitle: asset.assetTitle, needsShowMore: false };
     }
     
     // For smaller screens, truncate if needed
-    if (post.postTitle.length <= maxLength) {
-      return { displayTitle: post.postTitle, needsShowMore: false };
+    if (asset.assetTitle.length <= maxLength) {
+      return { displayTitle: asset.assetTitle, needsShowMore: false };
     }
     
     return { 
-      displayTitle: post.postTitle.slice(0, maxLength),
+      displayTitle: asset.assetTitle.slice(0, maxLength),
       needsShowMore: true 
     };
   };
@@ -385,7 +338,7 @@ export const PostCard = ({ post }: PostCardProps) => {
             <CardHeader className="pb-2">
               <div className="flex flex-col gap-2">
                 <CardTitle className="text-2xl md:text-3xl group-hover:text-primary transition-colors break-words leading-tight">
-                  {post.postTitle}
+                  {asset.assetTitle}
                 </CardTitle>
                 
                 {/* Hashtags in comment overlay */}
@@ -399,15 +352,14 @@ export const PostCard = ({ post }: PostCardProps) => {
                 <div className="flex flex-row gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground justify-end">
                   <div className="flex items-center gap-1 justify-end sm:justify-start">
                     <Calendar className="h-3 w-3" />
-                    <span>created {formatDistanceToNow(new Date(Number(post.endTime) * 1000 - 7 * 24 * 60 * 60 * 1000), { addSuffix: true, includeSeconds: false }).replace('about ', '')}</span>
                   </div>
                   <div className="flex items-center gap-1 justify-end sm:justify-start">
                     <User className="h-3 w-3" />
-                    <span className="font-mono text-xs">{post.owner.slice(0, 6)}...{post.owner.slice(-4)}</span>
+                    <span className="font-mono text-xs">{asset.author.slice(0, 6)}...{asset.author.slice(-4)}</span>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        copyAddress(post.owner);
+                        copyAddress(asset.author);
                       }}
                       className="ml-1 p-0.5 hover:bg-muted rounded transition-colors"
                       title="Copy address"
@@ -430,20 +382,6 @@ export const PostCard = ({ post }: PostCardProps) => {
                 <div className="text-red-500 py-4 mb-4">
                   Error loading image: {imageError}
                 </div>
-              ) : postImage ? (
-                <div className="mb-6">
-                  <div className="w-full md:w-4/5 mx-auto aspect-video rounded-lg shadow-md overflow-hidden">
-                    <img 
-                      src={postImage} 
-                      alt="Post image" 
-                      className="w-full h-full object-contain"
-                      onError={(e) => {
-                        setImageError('Failed to display image');
-                        setPostImage('');
-                      }}
-                    />
-                  </div>
-                </div>
               ) : null}
 
               {/* Content Section */}
@@ -457,7 +395,7 @@ export const PostCard = ({ post }: PostCardProps) => {
                   Error loading content: {contentError}
                 </div>
               ) : (
-                renderContent(postContent)
+                renderContent(assetContent)
               )}
             </CardContent>
           </Card>
@@ -476,7 +414,7 @@ export const PostCard = ({ post }: PostCardProps) => {
         </CardContent>
 
         <CardFooter className="flex justify-end gap-2">
-          <Link to={`/app/post/${post.postId}`} className="flex-1">
+          <Link to={`/app/post/${asset.assetCid}`} className="flex-1">
             <Button 
               variant="outline" 
               className="flex items-center gap-2 w-full justify-center"
@@ -519,7 +457,7 @@ export const PostCard = ({ post }: PostCardProps) => {
                         <CardTitle className="text-sm md:text-2xl lg:text-3xl group-hover:text-primary transition-colors hyphens-auto leading-tight mb-2">
                           {/* Full title on larger screens */}
                           <span className="hidden md:inline">
-                            {post.postTitle}
+                            {asset.assetTitle}
                           </span>
                           
                           {/* Truncated title with show more on smaller screens */}
@@ -557,15 +495,14 @@ export const PostCard = ({ post }: PostCardProps) => {
                           <div className="flex flex-row gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground justify-end mt-3">
                             <div className="flex items-center gap-1 justify-end sm:justify-start">
                               <Calendar className="h-3 w-3" />
-                              <span>created {formatDistanceToNow(new Date(Number(post.endTime) * 1000 - 7 * 24 * 60 * 60 * 1000), { addSuffix: true, includeSeconds: false }).replace('about ', '')}</span>
                             </div>
                             <div className="flex items-center gap-1 justify-end sm:justify-start">
                               <User className="h-3 w-3" />
-                              <span className="font-mono text-xs">{post.owner.slice(0, 6)}...{post.owner.slice(-4)}</span>
+                              <span className="font-mono text-xs">{asset.author.slice(0, 6)}...{asset.author.slice(-4)}</span>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  copyAddress(post.owner);
+                                  copyAddress(asset.author);
                                 }}
                                 className="ml-1 p-0.5 hover:bg-muted rounded transition-colors"
                                 title="Copy address"
@@ -584,15 +521,14 @@ export const PostCard = ({ post }: PostCardProps) => {
                         )}>
                           <div className="flex items-center gap-1 justify-end sm:justify-start">
                             <Calendar className="h-3 w-3" />
-                            <span>created {formatDistanceToNow(new Date(Number(post.endTime) * 1000 - 7 * 24 * 60 * 60 * 1000), { addSuffix: true, includeSeconds: false }).replace('about ', '')}</span>
                           </div>
                           <div className="flex items-center gap-1 justify-end sm:justify-start">
                             <User className="h-3 w-3" />
-                            <span className="font-mono text-xs">{post.owner.slice(0, 6)}...{post.owner.slice(-4)}</span>
+                            <span className="font-mono text-xs">{asset.author.slice(0, 6)}...{asset.author.slice(-4)}</span>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                copyAddress(post.owner);
+                                copyAddress(asset.author);
                               }}
                               className="ml-1 p-0.5 hover:bg-muted rounded transition-colors"
                               title="Copy address"
@@ -612,17 +548,9 @@ export const PostCard = ({ post }: PostCardProps) => {
                         <div className="w-full h-full bg-muted flex items-center justify-center rounded-lg">
                           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                         </div>
-                      ) : imageError || !post.imageCid ? (
+                      ) : imageError || !asset.assetCid ? (
                         <div className="w-full h-full bg-muted flex items-center justify-center rounded-lg">
                           <span className="text-muted-foreground text-xs">No image</span>
-                        </div>
-                      ) : postImage ? (
-                        <div className="w-full h-full overflow-hidden rounded-lg">
-                          <img 
-                            src={postImage} 
-                            alt="Post thumbnail" 
-                            className="w-full h-full object-cover rounded-lg"
-                          />
                         </div>
                       ) : null}
                     </div>
@@ -671,12 +599,12 @@ export const PostCard = ({ post }: PostCardProps) => {
                   Error loading content: {contentError}
                 </div>
               ) : (
-                renderContent(postContent)
+                renderContent(assetContent)
               )}
             </CardContent>
             
             <CardFooter className="flex flex-row justify-end gap-2 md:gap-5 pt-0 pb-6 px-3 md:px-6">
-              <Link to={`/app/post/${post.postId}`} className="w-1/2">
+              <Link to={`/app/post/${asset.assetCid}`} className="w-1/2">
                 <Button 
                   variant="outline" 
                   className="flex items-center gap-2 w-full justify-center text-sm"
@@ -685,23 +613,11 @@ export const PostCard = ({ post }: PostCardProps) => {
                   See Comments
                 </Button>
               </Link>
-              {!post.archived && (
-                <Button 
-                  variant="default"
-                  className="flex items-center gap-2 w-1/2 justify-center text-sm"
-                  disabled={!isConnected}
-                  onClick={handleOpenCommentOverlay}
-                >
-                  <MessageSquare className="h-4 w-4" />
-                  Post Comment
-                </Button>
-              )}
             </CardFooter>
           </CollapsibleContent>
         </Collapsible>
       </Card>
 
-      {showCommentOverlay && renderCommentOverlay()}
     </>
   );
 };

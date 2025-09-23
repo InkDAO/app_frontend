@@ -1,26 +1,26 @@
 import { useState } from "react";
-import { PostCard } from "@/components/PostCard";
+import { AssetCard } from "@/components/AssetCard";
 import { TagSearch } from "@/components/TagSearch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, ArrowUpDown, Archive, Hash, Megaphone } from "lucide-react";
-import { usePosts } from "@/hooks/usePosts";
+import { useAssets } from "@/hooks/useAssets";
 import { handleGetFilesByTags } from "@/services/pinataService";
-import { Post } from "@/types";
-import { admin } from "@/contracts/MasterdX";
+import { Asset, Post } from "@/types";
+import { admin } from "@/contracts/dXmaster";
 
 export const AnnouncementPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [searchMode, setSearchMode] = useState<'title' | 'tags'>('title');
-  const [taggedPosts, setTaggedPosts] = useState<Post[]>([]);
+  const [taggedPosts, setTaggedPosts] = useState<Asset[]>([]);
   const [isTagSearchLoading, setIsTagSearchLoading] = useState(false);
   const [hasSelectedTags, setHasSelectedTags] = useState(false);
-  const { allPosts, isAllPostLoading } = usePosts();
+  const { allAssets, isAllAssetLoading } = useAssets();
 
   // Filter posts that are made by admin
-  const announcementsPost = allPosts.filter((post) => {
-    return post.owner.toLowerCase() === admin.toLowerCase();
+  const announcementsPost = allAssets.filter((asset) => {
+    return asset.author.toLowerCase() === admin.toLowerCase();
   });
 
   // Handle tag search
@@ -37,11 +37,11 @@ export const AnnouncementPage = () => {
       const fileMetadataList = await handleGetFilesByTags(tags);
       
       // Convert file metadata to posts by matching CIDs and filter by admin
-      const matchedPosts = announcementsPost.filter(post => 
-        fileMetadataList.some(file => file.cid === post.postCid)
+      const matchedAssets = announcementsPost.filter(asset => 
+        fileMetadataList.some(file => file.cid === asset.assetCid)
       );
       
-      setTaggedPosts(matchedPosts);
+      setTaggedPosts(matchedAssets);
     } catch (error) {
       console.error('Failed to search by tags:', error);
       setTaggedPosts([]);
@@ -62,20 +62,11 @@ export const AnnouncementPage = () => {
       return taggedPosts;
     } else {
       // Filter posts based on search term (title search)
-      return announcementsPost.filter(post => 
-        post.postTitle.toLowerCase().includes(searchTerm.toLowerCase())
+      return announcementsPost.filter(asset => 
+        asset.assetTitle.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
   };
-
-  const filteredPosts = getPostsToDisplay();
-
-  // Sort posts based on expiration time
-  const sortedAndFilteredPosts = filteredPosts.sort((a, b) => {
-    const timeA = parseInt(a.endTime);
-    const timeB = parseInt(b.endTime);
-    return sortDirection === 'asc' ? timeA - timeB : timeB - timeA;
-  });
 
   const toggleSort = () => {
     setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
@@ -100,7 +91,7 @@ export const AnnouncementPage = () => {
           </div>
         </div>
         
-        {isAllPostLoading ? (
+        {isAllAssetLoading ? (
           <div className="flex justify-center items-center py-4 md:py-8">
             <div className="w-full space-y-4">
               {[1, 2, 3].map((i) => (
@@ -207,9 +198,9 @@ export const AnnouncementPage = () => {
                   ))}
                 </div>
               </div>
-            ) : sortedAndFilteredPosts.length > 0 ? (
-              sortedAndFilteredPosts.map((post) => (
-                <PostCard key={post.postId} post={post} />
+            ) : taggedPosts.length > 0 ? (
+              taggedPosts.map((asset) => (
+                <AssetCard key={asset.assetCid} asset={asset} />
               ))
             ) : (searchTerm || searchMode === 'tags') ? (
               <div className="text-center py-10">

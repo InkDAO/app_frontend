@@ -4,12 +4,16 @@ interface EditorContextType {
   onSave?: () => void;
   onPublish?: () => void;
   isSaving: boolean;
+  isPublishing: boolean;
   isAuthenticated: boolean;
+  hasUnsavedChanges: boolean;
   setEditorProps: (props: {
     onSave?: () => void;
     onPublish?: () => void;
     isSaving: boolean;
+    isPublishing: boolean;
     isAuthenticated: boolean;
+    hasUnsavedChanges: boolean;
   }) => void;
 }
 
@@ -20,16 +24,23 @@ export const EditorProvider = ({ children }: { children: ReactNode }) => {
     onSave: undefined as (() => void) | undefined,
     onPublish: undefined as (() => void) | undefined,
     isSaving: false,
+    isPublishing: false,
     isAuthenticated: false,
+    hasUnsavedChanges: false,
   });
 
   const setEditorPropsHandler = (props: {
     onSave?: () => void;
     onPublish?: () => void;
     isSaving: boolean;
+    isPublishing: boolean;
     isAuthenticated: boolean;
+    hasUnsavedChanges: boolean;
   }) => {
-    setEditorProps(props);
+    setEditorProps(prev => ({
+      ...prev,
+      ...props
+    }));
   };
 
   return (

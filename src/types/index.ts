@@ -13,6 +13,9 @@ export interface Asset {
   assetCid: string,
   assetAddress: string,
   author: string,
+  thumbnailCid?: string,
+  description?: string,
+  costInNative?: string,
 }
 
 export interface Comment {

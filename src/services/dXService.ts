@@ -47,12 +47,62 @@ export const createGroupPost = async (content: any, title: string, address: stri
   }
 };
 
+// API function to publish file (upload thumbnail image) with wallet signature
+export const publishFile = async (file: File, address: string, signMessage: any, cid: string): Promise<{ thumbnailCid: string }> => {
+  try {
+    // Generate salt (current timestamp in seconds)
+    const timestamp = Math.floor(Date.now() / 1000);
+    const salt = `I want to publish ${cid} at timestamp - ${timestamp}`;
+    
+    // Sign the salt with wallet
+    const signature = await signMessage({ 
+      message: salt,
+      account: address as `0x${string}`
+    });
+    
+    // Create FormData for file upload
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('salt', salt);
+    formData.append('address', address);
+    formData.append('signature', signature);
+    
+    // Make authenticated API call to publish file
+    const response = await fetch(`http://localhost:8888/publish/file?cid=${cid}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${authService.getAuthToken()}`
+      },
+      body: formData
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Publish file API error response:', errorText);
+      throw new Error(`Failed to publish file: ${response.status} - ${errorText}`);
+    }
+    
+    const result = await response.json();
+    
+    // Extract thumbnail CID from response
+    const thumbnailCid = result?.thumbnailCid || result?.cid || result?.data?.thumbnailCid;
+    if (!thumbnailCid) {
+      throw new Error('No thumbnail CID returned from publish file API');
+    }
+    
+    return { thumbnailCid };
+  } catch (error) {
+    console.error('❌ Error publishing file:', error);
+    throw error;
+  }
+};
+
 export const useAddAsset = () => {
   const { address } = useAccount();
   const { writeContract, isPending, isSuccess, isError, data: hash } = useWriteContract();
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({hash});
 
-  const addAsset = async (assetData: { salt: string, assetTitle: string, assetCid: string, costInNative: string }) => {
+  const addAsset = async (assetData: { salt: string, assetTitle: string, assetCid: string, thumbnailCid: string, description: string, costInNative: string }) => {
     if (!address) {
       throw new Error("No account connected");
     }
@@ -65,12 +115,17 @@ export const useAddAsset = () => {
         address: dXmasterContract.address as `0x${string}`,
         abi: dXmasterContract.abi,
         functionName: 'addAsset',
-        args: [saltBytes32, assetData.assetTitle, assetData.assetCid, BigInt(assetData.costInNative)],
+        args: [saltBytes32, {
+          assetCid: assetData.assetCid,
+          assetTitle: assetData.assetTitle,
+          thumbnailCid: assetData.thumbnailCid,
+          description: assetData.description,
+          costInNativeInWei: BigInt(assetData.costInNative)
+        }],
         account: address,
         chain: sepolia,
       });
 
-      console.log('🟢 Transaction submitted successfully');
       // The hash will be available in the hook's data property after the transaction is submitted
       return true;
 
@@ -140,7 +195,7 @@ export const useBuyAsset = () => {
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({hash});
   
   
-  const buyAsset = async (assetData: { assetCid: string, amount: string, costInNativeInWei: string }) => {
+  const buyAsset = async (assetData: { assetAddress: string, amount: string, costInNativeInWei: string }) => {
     if (!address) {
       throw new Error("No account connected");
     }
@@ -152,13 +207,12 @@ export const useBuyAsset = () => {
         address: dXmasterContract.address as `0x${string}`,
         abi: dXmasterContract.abi,
         functionName: 'buyAsset',
-        args: [assetData.assetCid as `0x${string}`, BigInt(assetData.amount)],
+        args: [assetData.assetAddress as `0x${string}`, BigInt(assetData.amount)],
         account: address,
         chain: sepolia,
         value: amountInWei,
       });
 
-      console.log('🟢 Transaction submitted successfully');
       return true;
 
     } catch (error: any) {
@@ -188,8 +242,6 @@ export const getAssetCost = (assetAddress: string) => {
     functionName: 'costInNativeInWei',
     args: []
   });
-
-  console.log('🟢 cost', cost);
 
   return cost;
 };
@@ -236,6 +288,35 @@ export const fetchFileContentByCid = async (cid: string): Promise<any> => {
     return data;
   } catch (error) {
     console.error('❌ Error fetching file content for CID:', cid, error);
+    throw error;
+  }
+};
+
+// API function to fetch file content by asset address (with JWT authentication)
+export const fetchFileContentByAssetAddress = async (assetAddress: string, userAddress: string): Promise<any> => {
+  try {
+    
+    // Make authenticated API call to get file content by asset address
+    // The endpoint requires both user and assetAddress parameters
+    const data = await apiService.get(`/fileByAssetAddress?user=${userAddress}&assetAddress=${assetAddress}`);
+    
+    // Check if the response has the content nested under a specific key
+    if (data && typeof data === 'object') {
+      if (data.files && data.files.length > 0) {
+        // Return the first file from the files array
+        return data.files[0];
+      } else if (data.content) {
+        return data.content;
+      } else if (data.file) {
+        return data.file;
+      } else if (data.data) {
+        return data.data;
+      }
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('❌ Error fetching file content for asset address:', assetAddress, error);
     throw error;
   }
 };

@@ -76,11 +76,21 @@ const PublishOverlay: React.FC<PublishOverlayProps> = ({
   };
 
   const handlePublish = () => {
+    
     // Validate required fields
     if (!description.trim()) {
       toast({
         title: "Description required",
         description: "Please provide a description for your post.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!thumbnail) {
+      toast({
+        title: "Thumbnail required",
+        description: "Please select a thumbnail image for your post.",
         variant: "destructive"
       });
       return;
@@ -106,6 +116,11 @@ const PublishOverlay: React.FC<PublishOverlayProps> = ({
       return;
     }
 
+      description: description.trim(),
+      thumbnail,
+      price: price.trim()
+    });
+    
     onPublish({
       description: description.trim(),
       thumbnail,
@@ -248,7 +263,7 @@ const PublishOverlay: React.FC<PublishOverlayProps> = ({
             </Button>
             <Button
               onClick={handlePublish}
-              disabled={isPublishing || !description.trim() || !price.trim()}
+              disabled={isPublishing || !description.trim() || !thumbnail || !price.trim()}
               className="bg-emerald-600 hover:bg-emerald-700"
             >
               {isPublishing ? (

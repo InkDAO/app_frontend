@@ -1,22 +1,33 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Calendar, User, Copy, FileImage } from "lucide-react";
+import { Loader2, Calendar, User, Copy, FileImage, Lock, ShoppingCart, ArrowLeft } from "lucide-react";
 import EditorPreview from "@/components/EditorPreview";
-import { fetchFileContentByCid, useAssetCidByAddress, useAssetData } from "@/services/dXService";
+import { fetchFileContentByAssetAddress, useAssetCidByAddress, useAssetData, useBuyAsset } from "@/services/dXService";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import '../styles/editor.css';
+import { useAccount } from "wagmi";
+import { useNavigate } from "react-router-dom";
 
 export const PostPreviewPage = () => {
   const { assetAddress } = useParams<{ assetAddress: string }>();
+  const { address } = useAccount();
+  const navigate = useNavigate();
   const { cid: assetCid, isLoading: isCidLoading, isError: isCidError } = useAssetCidByAddress(assetAddress || '');
   const { assetData, isLoading: isAssetDataLoading, isError: isAssetDataError } = useAssetData(assetCid || '');
+  const { buyAsset, isPending: isBuying, isConfirmed: isBuyConfirmed, isError: isBuyError } = useBuyAsset();
   const [isLoading, setIsLoading] = useState(true);
   const [previewData, setPreviewData] = useState<any>(null);
   const [contentError, setContentError] = useState<string | null>(null);
   const [postTitle, setPostTitle] = useState<string>("");
   const [postImage, setPostImage] = useState<string | null>(null);
+  const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = useState(false);
+  const [purchaseAmount, setPurchaseAmount] = useState("1");
+  const [isAccessDenied, setIsAccessDenied] = useState(false);
 
   // Update post title when asset data is loaded
   useEffect(() => {
@@ -40,8 +51,7 @@ export const PostPreviewPage = () => {
         setIsLoading(true);
         setContentError(null);
         
-        console.log('Fetching content for CID:', assetCid);
-        const contentData = await fetchFileContentByCid(assetCid);
+        const contentData = await fetchFileContentByAssetAddress(assetAddress || '', address || '');
         
         if (contentData) {
           try {
@@ -81,7 +91,14 @@ export const PostPreviewPage = () => {
         }
       } catch (error) {
         console.error('Error fetching content:', error);
-        setContentError(error instanceof Error ? error.message : 'Failed to load content');
+        
+        // Check if it's a 404 error (user doesn't have access)
+        if (error instanceof Error && error.message.includes('404')) {
+          setIsAccessDenied(true);
+          setContentError(null);
+        } else {
+          setContentError(error instanceof Error ? error.message : 'Failed to load content');
+        }
       } finally {
         setIsLoading(false);
       }
@@ -101,6 +118,29 @@ export const PostPreviewPage = () => {
     }
   };
 
+  const handlePurchase = async () => {
+    if (!assetAddress || !assetData) return;
+
+    try {
+      const costInWei = assetData.costInNativeInWei ? assetData.costInNativeInWei.toString() : "0";
+      await buyAsset({
+        assetAddress,
+        amount: purchaseAmount,
+        costInNativeInWei: costInWei
+      });
+      
+      toast.success("Purchase transaction submitted!");
+      setIsPurchaseDialogOpen(false);
+    } catch (error) {
+      console.error('Error purchasing asset:', error);
+      toast.error("Failed to purchase asset");
+    }
+  };
+
+  const handleBackToHome = () => {
+    navigate('/app');
+  };
+
   if (isLoading || isCidLoading || isAssetDataLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -118,6 +158,154 @@ export const PostPreviewPage = () => {
     );
   }
 
+  if (isAccessDenied) {
+    const pricePerAsset = assetData?.costInNativeInWei ? parseFloat(assetData.costInNativeInWei.toString()) / 1e18 : 0;
+    const totalPrice = pricePerAsset * parseInt(purchaseAmount);
+
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-4xl mx-auto">
+            {/* Back Button */}
+            <div className="mb-6">
+              <Button 
+                variant="ghost" 
+                onClick={handleBackToHome}
+                className="flex items-center gap-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Home
+              </Button>
+            </div>
+
+            {/* Access Denied Card */}
+            <Card className="border-2 border-dashed border-muted-foreground/25">
+              <CardHeader className="text-center pb-4">
+                <div className="mx-auto mb-4 p-4 rounded-full bg-muted/50 w-fit">
+                  <Lock className="h-12 w-12 text-muted-foreground" />
+                </div>
+                <CardTitle className="text-2xl">Premium Content</CardTitle>
+                <p className="text-muted-foreground">
+                  This content requires purchase to view
+                </p>
+              </CardHeader>
+              
+              <CardContent className="space-y-6">
+                {/* Asset Information */}
+                <div className="text-center space-y-2">
+                  <h3 className="text-xl font-semibold">{assetData?.assetTitle || 'Untitled'}</h3>
+                  {assetData?.description && (
+                    <p className="text-muted-foreground line-clamp-3">
+                      {assetData.description}
+                    </p>
+                  )}
+                </div>
+
+                {/* Price Information */}
+                <div className="bg-muted/30 rounded-lg p-4 text-center">
+                  <div className="text-3xl font-bold text-primary">
+                    {pricePerAsset.toFixed(4)} ETH
+                  </div>
+                  <p className="text-sm text-muted-foreground">per asset</p>
+                </div>
+
+                {/* Purchase Button */}
+                <div className="text-center">
+                  <Button 
+                    onClick={() => setIsPurchaseDialogOpen(true)}
+                    size="lg"
+                    className="bg-primary hover:bg-primary/90"
+                  >
+                    <ShoppingCart className="h-4 w-4 mr-2" />
+                    Purchase to View
+                  </Button>
+                </div>
+
+                {/* Asset Details */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Asset Address:</span>
+                    <span className="font-mono text-xs">
+                      {assetAddress?.slice(0, 6)}...{assetAddress?.slice(-4)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Author:</span>
+                    <span className="font-mono text-xs">
+                      {assetData?.author?.slice(0, 6)}...{assetData?.author?.slice(-4)}
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Purchase Dialog */}
+            <Dialog open={isPurchaseDialogOpen} onOpenChange={setIsPurchaseDialogOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Purchase Asset</DialogTitle>
+                  <DialogDescription>
+                    Enter the number of assets you want to purchase.
+                  </DialogDescription>
+                </DialogHeader>
+                
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="amount">Quantity</Label>
+                    <Input
+                      id="amount"
+                      type="number"
+                      min="1"
+                      value={purchaseAmount}
+                      onChange={(e) => setPurchaseAmount(e.target.value)}
+                      className="mt-1"
+                    />
+                  </div>
+                  
+                  <div className="bg-muted/30 rounded-lg p-4">
+                    <div className="flex justify-between items-center">
+                      <span>Price per asset:</span>
+                      <span className="font-semibold">{pricePerAsset.toFixed(4)} ETH</span>
+                    </div>
+                    <div className="flex justify-between items-center font-bold text-lg">
+                      <span>Total:</span>
+                      <span>{totalPrice.toFixed(4)} ETH</span>
+                    </div>
+                  </div>
+                </div>
+
+                <DialogFooter>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setIsPurchaseDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handlePurchase}
+                    disabled={isBuying || !purchaseAmount || parseInt(purchaseAmount) < 1}
+                  >
+                    {isBuying ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingCart className="h-4 w-4 mr-2" />
+                        Purchase
+                      </>
+                    )}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (contentError) {
     return (
       <div className="min-h-screen bg-background">
@@ -128,6 +316,10 @@ export const PostPreviewPage = () => {
                 <FileImage className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
                 <h2 className="text-2xl font-semibold mb-2">Content Not Found</h2>
                 <p className="text-muted-foreground mb-6">{contentError}</p>
+                <Button onClick={handleBackToHome} variant="outline">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back to Home
+                </Button>
               </div>
             </div>
           </div>
@@ -138,6 +330,18 @@ export const PostPreviewPage = () => {
 
   return (
     <div className="px-4 sm:px-6 py-6 lg:px-8 max-w-7xl mx-auto w-full">
+      {/* Back Button */}
+      <div className="max-w-4xl mx-auto mb-6">
+        <Button 
+          variant="ghost" 
+          onClick={handleBackToHome}
+          className="flex items-center gap-2 mb-4"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Home
+        </Button>
+      </div>
+
       {/* Header */}
       <div className="max-w-4xl mx-auto mb-6">
         <div className="flex items-center justify-between">

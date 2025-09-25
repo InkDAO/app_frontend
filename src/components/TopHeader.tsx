@@ -50,6 +50,8 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
   const handlePublishWithData = (publishData: PublishData) => {
     if (onPublishWithData) {
       onPublishWithData(publishData);
+    } else {
+      console.error('❌ onPublishWithData is not available');
     }
   };
 

@@ -4,31 +4,42 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { FileImage, ShoppingCart, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useBuyAsset, getAssetCost } from "@/services/dXService";
+import { useBuyAsset, getAssetCost, fetchFileContentByAssetAddress } from "@/services/dXService";
+import { useAccount } from "wagmi";
 import { toast } from "@/components/ui/sonner";
 import { useState, useEffect } from "react";
 
 interface HomeCardProps {
-  savedPost: {
-    id?: string;
-    name?: string;
-    cid?: string;
-    size?: number;
-    created_at?: string;
-    keyvalues?: Record<string, string>;
-    content?: any;
-    contentError?: string | null;
+  asset: {
+    assetTitle: string;
+    assetCid: string;
+    assetAddress: string;
+    author: string;
+    thumbnailCid?: string;
+    description?: string;
+    costInNative?: string;
   };
-  assetAddress?: string;
 }
 
-export const HomeCard = ({ savedPost, assetAddress }: HomeCardProps) => {
-  const { name, cid, content, contentError } = savedPost;
+export const HomeCard = ({ asset }: HomeCardProps) => {
   const navigate = useNavigate();
+  const { address } = useAccount();
   const { buyAsset, isPending, isConfirmed, isError } = useBuyAsset();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [amount, setAmount] = useState(1);
   const [isBuying, setIsBuying] = useState(false);
+  const [thumbnailImage, setThumbnailImage] = useState<string>("");
+  const [isLoadingThumbnail, setIsLoadingThumbnail] = useState(false);
+  const [thumbnailError, setThumbnailError] = useState<string | null>(null);
+  const [fileContent, setFileContent] = useState<any>(null);
+  const [isLoadingContent, setIsLoadingContent] = useState(false);
+  const [contentError, setContentError] = useState<string | null>(null);
+
+  // Safety check for asset
+  if (!asset) {
+    console.error('HomeCard: asset prop is undefined');
+    return null;
+  }
 
   // Monitor transaction confirmation
   useEffect(() => {
@@ -46,81 +57,72 @@ export const HomeCard = ({ savedPost, assetAddress }: HomeCardProps) => {
       toast.error("Transaction failed. Please try again.");
     }
   }, [isError, isBuying]);
+
+  // Fetch thumbnail image when component mounts
+  useEffect(() => {
+    const fetchThumbnail = async () => {
+      if (asset.thumbnailCid && !thumbnailImage) {
+        setIsLoadingThumbnail(true);
+        setThumbnailError(null);
+        
+        try {
+          // Use the Vite gateway URL to fetch the thumbnail
+          const gatewayUrl = import.meta.env.VITE_GATEWAY_URL || 'gateway.pinata.cloud';
+          const thumbnailUrl = `https://${gatewayUrl}/ipfs/${asset.thumbnailCid}`;
+          
+          // Test if the image loads
+          const img = new Image();
+          img.onload = () => {
+            setThumbnailImage(thumbnailUrl);
+            setIsLoadingThumbnail(false);
+          };
+          img.onerror = () => {
+            setThumbnailError('Failed to load thumbnail');
+            setIsLoadingThumbnail(false);
+          };
+          img.src = thumbnailUrl;
+        } catch (error) {
+          console.error('Failed to load thumbnail:', error);
+          setThumbnailError('Failed to load thumbnail');
+          setIsLoadingThumbnail(false);
+        }
+      }
+    };
+
+    fetchThumbnail();
+  }, [asset.thumbnailCid, thumbnailImage]);
+
+  // Fetch file content when user clicks on card
+  const fetchContent = async () => {
+    if (asset.assetAddress && address && !fileContent && !isLoadingContent) {
+      setIsLoadingContent(true);
+      setContentError(null);
+      
+      try {
+        const content = await fetchFileContentByAssetAddress(asset.assetAddress, address);
+        setFileContent(content);
+      } catch (error) {
+        console.error('❌ HomeCard - Error loading file content:', error);
+        setContentError(error instanceof Error ? error.message : 'Failed to load content');
+      } finally {
+        setIsLoadingContent(false);
+      }
+    }
+  };
   
-  // Get asset cost from smart contract
-  const costInWei = getAssetCost(assetAddress || '');
+  // Get asset cost from asset data or smart contract
+  const costInWei = asset.costInNative || getAssetCost(asset.assetAddress);
   const pricePerAsset = costInWei ? parseFloat(costInWei.toString()) / 1e18 : 0; // Convert from wei to ETH with decimals
 
-  let postTitle = (name && name.trim()) ? name.trim() : 'Untitled';
-  let postImage: string | null = null;
-  let postPreview: string | null = null;
-  let editorContent = null;
+  // Use asset data from contract
+  const postTitle = asset.assetTitle || 'Untitled';
+  const postDescription = asset.description || '';
 
-  if (content && !contentError) {
-    try {
-      const contentData = typeof content === 'string' ? JSON.parse(content) : content;
-      
-      if (contentData.title && contentData.title.trim()) {
-        postTitle = contentData.title.trim();
-      } else {
-        postTitle = 'Untitled';
-      }
-      
-      if (contentData.content && contentData.content.blocks) {
-        editorContent = contentData.content;
-      } else if (contentData.blocks) {
-        editorContent = contentData;
-      } else if (contentData.content && typeof contentData.content === 'object') {
-        try {
-          const nestedContent = typeof contentData.content === 'string' 
-            ? JSON.parse(contentData.content) 
-            : contentData.content;
-          if (nestedContent.blocks) {
-            editorContent = nestedContent;
-          }
-        } catch (e) {
-          console.warn('Failed to parse nested content:', e);
-        }
-      }
-
-      if (editorContent && editorContent.blocks && Array.isArray(editorContent.blocks)) {
-        const imageBlock = editorContent.blocks.find((block: any) => 
-          block.type === 'image' && block.data && (block.data.file?.url || block.data.url)
-        );
-        if (imageBlock) {
-          postImage = imageBlock.data.file?.url || imageBlock.data.url;
-        }
-      }
-
-      if (editorContent && editorContent.blocks && Array.isArray(editorContent.blocks)) {
-        let previewText = '';
-        for (const block of editorContent.blocks) {
-          if (previewText.length >= 200) break;
-          let blockText = '';
-          switch (block.type) {
-            case 'paragraph': blockText = block.data?.text || ''; break;
-            case 'header': blockText = block.data?.text || ''; break;
-            case 'quote': blockText = block.data?.text || ''; break;
-            case 'list':
-              if (block.data?.items && Array.isArray(block.data.items)) {
-                blockText = block.data.items.map((item: any) => item).join(' ');
-              }
-              break;
-            case 'code': blockText = block.data?.code || ''; break;
-            default: break;
-          }
-          previewText += (previewText.length > 0 ? ' ' : '') + blockText;
-        }
-        postPreview = previewText.length > 200 ? previewText.substring(0, 200) + '...' : previewText;
-      }
-    } catch (error) {
-      console.warn('Failed to parse content for preview:', error);
-    }
-  }
-
-  const handleCardClick = () => {
-    if (!assetAddress) return;
-    navigate(`/app/post/${assetAddress}`);
+  const handleCardClick = async () => {
+    if (!asset.assetAddress) return;
+    
+    // Navigate directly to the post page - let PostPreviewPage handle access control
+    navigate(`/app/post/${asset.assetAddress}`);
   };
 
   const handleBuyClick = (e: React.MouseEvent) => {
@@ -135,7 +137,7 @@ export const HomeCard = ({ savedPost, assetAddress }: HomeCardProps) => {
   };
 
   const handleConfirmBuy = async () => {
-    if (!cid) {
+    if (!asset.assetCid) {
       toast.error("No asset CID available");
       return;
     }
@@ -143,7 +145,7 @@ export const HomeCard = ({ savedPost, assetAddress }: HomeCardProps) => {
     setIsBuying(true);
     try {
       await buyAsset({
-        assetCid: cid,
+        assetAddress: asset.assetAddress,
         amount: amount.toString(),
         costInNativeInWei: costInWei.toString()
       });
@@ -166,9 +168,17 @@ export const HomeCard = ({ savedPost, assetAddress }: HomeCardProps) => {
       onClick={handleCardClick}
     >
       <div className="relative h-48 bg-muted/30 overflow-hidden flex items-center justify-center">
-        {postImage ? (
+        {isLoadingThumbnail ? (
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted/50 to-muted/80">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : thumbnailError || !asset.thumbnailCid ? (
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted/50 to-muted/80">
+            <FileImage className="h-16 w-16 text-muted-foreground/50" />
+          </div>
+        ) : thumbnailImage ? (
           <img 
-            src={postImage} 
+            src={thumbnailImage} 
             alt={postTitle}
             className="group-hover:scale-105 transition-transform duration-300 w-full h-full object-cover"
           />
@@ -267,19 +277,20 @@ export const HomeCard = ({ savedPost, assetAddress }: HomeCardProps) => {
           </h3>
         </div>
 
-        {postPreview && (
+        {postDescription && (
           <div className="mb-3">
-            <p className="text-sm text-muted-foreground leading-relaxed line-clamp-5">
-              {postPreview}
+            <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
+              {postDescription}
             </p>
           </div>
         )}
 
-        {contentError && (
-          <div className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 p-2 rounded">
-            Failed to load content
-          </div>
-        )}
+        {/* Price Display */}
+        <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
+          <span className="text-sm font-medium text-foreground">
+            Price: {pricePerAsset.toFixed(4)} ETH
+          </span>
+        </div>
       </CardContent>
     </Card>
   );

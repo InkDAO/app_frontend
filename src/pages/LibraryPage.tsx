@@ -3,7 +3,6 @@ import { LibraryCard } from "@/components/LibraryCard";
 import { AuthGuard } from "@/components/AuthGuard";
 import { useSearch } from "@/context/SearchContext";
 import { useUserAssets } from "@/hooks/useUserAssets";
-import { fetchFileContentByCid } from "@/services/dXService";
 import { MessageSquare, ArrowRight, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -11,78 +10,17 @@ export const LibraryPage = () => {
   const { searchTerm } = useSearch();
   const { allUserAssets, isAllUserAssetLoading } = useUserAssets();
   const navigate = useNavigate();
-  const [assetsWithContent, setAssetsWithContent] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  console.log('allUserAssets 0', allUserAssets);
-  // Fetch content for user assets
-  const fetchAssetsContent = async (assets: any[]) => {
-    setIsLoading(true);
-    try {
-      const assetsWithContent = await Promise.allSettled(
-        assets.map(async (asset) => {
-          try {
-            console.log('fetching content for user asset', asset);
-            const content = await fetchFileContentByCid(asset.assetCid);
-            return {
-              ...asset,
-              content,
-              contentError: null
-            };
-          } catch (error) {
-            console.error(`Failed to fetch content for asset ${asset.assetCid}:`, error);
-            return {
-              ...asset,
-              content: null,
-              contentError: error instanceof Error ? error.message : 'Failed to fetch content'
-            };
-          }
-        })
-      );
-
-      const successfulAssets = assetsWithContent
-        .map((result, index) => {
-          if (result.status === 'fulfilled') {
-            return result.value;
-          } else {
-            console.error(`Failed to process asset ${index}:`, result.reason);
-            return null;
-          }
-        })
-        .filter(Boolean);
-
-      setAssetsWithContent(successfulAssets);
-    } catch (error) {
-      console.error('Error fetching assets content:', error);
-      setError('Failed to load asset content');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   // Get the posts to display based on title search
   const getPostsToDisplay = () => {
-    if (!searchTerm.trim()) return assetsWithContent;
+    if (!searchTerm.trim()) return allUserAssets;
     
-    return assetsWithContent.filter(asset => 
+    return allUserAssets.filter(asset => 
       asset.assetTitle.toLowerCase().includes(searchTerm.toLowerCase())
     );
   };
 
   const filteredPosts = getPostsToDisplay();
-
-  // Update assets with content when allUserAssets changes
-  useEffect(() => {
-    if (allUserAssets.length > 0) {
-      fetchAssetsContent(allUserAssets);
-    } else {
-      // Reset content when no assets
-      setAssetsWithContent([]);
-    }
-  }, [allUserAssets]);
-
-  console.log('allUserAssets', allUserAssets);
 
   return (
     <AuthGuard>
@@ -114,43 +52,16 @@ export const LibraryPage = () => {
                 ))}
               </div>
             </div>
-          ) : error ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="text-red-500 mb-4">
-                <MessageSquare className="h-8 w-8 mx-auto mb-2" />
-                <h2 className="text-xl font-semibold">Error Loading Library</h2>
-              </div>
-              <p className="text-muted-foreground mb-4 max-w-md">
-                {error}
-              </p>
-            </div>
           ) : allUserAssets.length > 0 ? (
             <div className="space-y-6">
               {/* Posts Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center">
-                {allUserAssets
-                  .filter(asset => 
-                    !searchTerm.trim() || 
-                    asset.assetTitle.toLowerCase().includes(searchTerm.toLowerCase())
-                  )
-                  .map((asset, index) => {
-                    // Find the asset with content if available
-                    const assetWithContent = filteredPosts.find(a => a.assetCid === asset.assetCid);
-                    return (
-                      <LibraryCard 
-                        key={asset.assetCid || index} 
-                        savedPost={{
-                          cid: asset.assetCid,
-                          name: asset.assetTitle,
-                          content: assetWithContent?.content || null,
-                          created_at: new Date().toISOString(),
-                          keyvalues: {},
-                          contentError: assetWithContent?.contentError || null
-                        }}
-                        assetAddress={asset.assetAddress}
-                      />
-                    );
-                  })}
+                {filteredPosts.map((asset, index) => (
+                  <LibraryCard 
+                    key={asset.assetCid || index} 
+                    asset={asset}
+                  />
+                ))}
               </div>
             </div>
           ) : (

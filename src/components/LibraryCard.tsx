@@ -1,95 +1,107 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { FileImage } from "lucide-react";
+import { FileImage, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { fetchFileContentByAssetAddress } from "@/services/dXService";
+import { useAccount } from "wagmi";
 
 interface LibraryCardProps {
-  savedPost: {
-    id?: string;
-    name?: string;
-    cid?: string;
-    size?: number;
-    created_at?: string;
-    keyvalues?: Record<string, string>;
-    content?: any;
-    contentError?: string | null;
+  asset: {
+    assetTitle: string;
+    assetCid: string;
+    assetAddress: string;
+    author: string;
+    thumbnailCid?: string;
+    description?: string;
+    costInNative?: string;
   };
-  assetAddress?: string;
 }
 
-export const LibraryCard = ({ savedPost, assetAddress }: LibraryCardProps) => {
-  const { name, cid, content, contentError } = savedPost;
+export const LibraryCard = ({ asset }: LibraryCardProps) => {
   const navigate = useNavigate();
+  const { address } = useAccount();
+  const [thumbnailImage, setThumbnailImage] = useState<string>("");
+  const [isLoadingThumbnail, setIsLoadingThumbnail] = useState(false);
+  const [thumbnailError, setThumbnailError] = useState<string | null>(null);
+  const [fileContent, setFileContent] = useState<any>(null);
+  const [isLoadingContent, setIsLoadingContent] = useState(false);
+  const [contentError, setContentError] = useState<string | null>(null);
 
-  let postTitle = (name && name.trim()) ? name.trim() : 'Untitled';
-  let postImage: string | null = null;
-  let postPreview: string | null = null;
-  let editorContent = null;
-
-  if (content && !contentError) {
-    try {
-      const contentData = typeof content === 'string' ? JSON.parse(content) : content;
-      
-      if (contentData.title && contentData.title.trim()) {
-        postTitle = contentData.title.trim();
-      } else {
-        postTitle = 'Untitled';
-      }
-      
-      if (contentData.content && contentData.content.blocks) {
-        editorContent = contentData.content;
-      } else if (contentData.blocks) {
-        editorContent = contentData;
-      } else if (contentData.content && typeof contentData.content === 'object') {
-        try {
-          const nestedContent = typeof contentData.content === 'string' 
-            ? JSON.parse(contentData.content) 
-            : contentData.content;
-          if (nestedContent.blocks) {
-            editorContent = nestedContent;
-          }
-        } catch (e) {
-          console.warn('Failed to parse nested content:', e);
-        }
-      }
-
-      if (editorContent && editorContent.blocks && Array.isArray(editorContent.blocks)) {
-        const imageBlock = editorContent.blocks.find((block: any) => 
-          block.type === 'image' && block.data && (block.data.file?.url || block.data.url)
-        );
-        if (imageBlock) {
-          postImage = imageBlock.data.file?.url || imageBlock.data.url;
-        }
-      }
-
-      if (editorContent && editorContent.blocks && Array.isArray(editorContent.blocks)) {
-        let previewText = '';
-        for (const block of editorContent.blocks) {
-          if (previewText.length >= 200) break;
-          let blockText = '';
-          switch (block.type) {
-            case 'paragraph': blockText = block.data?.text || ''; break;
-            case 'header': blockText = block.data?.text || ''; break;
-            case 'quote': blockText = block.data?.text || ''; break;
-            case 'list':
-              if (block.data?.items && Array.isArray(block.data.items)) {
-                blockText = block.data.items.map((item: any) => item).join(' ');
-              }
-              break;
-            case 'code': blockText = block.data?.code || ''; break;
-            default: break;
-          }
-          previewText += (previewText.length > 0 ? ' ' : '') + blockText;
-        }
-        postPreview = previewText.length > 200 ? previewText.substring(0, 200) + '...' : previewText;
-      }
-    } catch (error) {
-      console.warn('Failed to parse content for preview:', error);
-    }
+  // Safety check for asset
+  if (!asset) {
+    console.error('LibraryCard: asset prop is undefined');
+    return null;
   }
 
-  const handleCardClick = () => {
-    if (!assetAddress) return;
-    navigate(`/app/post/${assetAddress}`);
+  // Fetch thumbnail image when component mounts
+  useEffect(() => {
+    const fetchThumbnail = async () => {
+      
+      if (asset.thumbnailCid && !thumbnailImage) {
+        setIsLoadingThumbnail(true);
+        setThumbnailError(null);
+        
+        try {
+          // Use the Vite gateway URL to fetch the thumbnail
+          const gatewayUrl = import.meta.env.VITE_GATEWAY_URL || 'gateway.pinata.cloud';
+          const thumbnailUrl = `https://${gatewayUrl}/ipfs/${asset.thumbnailCid}`;
+          
+          
+          // Test if the image loads
+          const img = new Image();
+          img.onload = () => {
+            setThumbnailImage(thumbnailUrl);
+            setIsLoadingThumbnail(false);
+          };
+          img.onerror = () => {
+            console.error('❌ LibraryCard - Thumbnail failed to load');
+            setThumbnailError('Failed to load thumbnail');
+            setIsLoadingThumbnail(false);
+          };
+          img.src = thumbnailUrl;
+        } catch (error) {
+          console.error('❌ LibraryCard - Error loading thumbnail:', error);
+          setThumbnailError('Failed to load thumbnail');
+          setIsLoadingThumbnail(false);
+        }
+      } else {
+      }
+    };
+
+    fetchThumbnail();
+  }, [asset.thumbnailCid, thumbnailImage]);
+
+  // Fetch file content when user clicks on card
+  const fetchContent = async () => {
+    if (asset.assetAddress && address && !fileContent && !isLoadingContent) {
+      setIsLoadingContent(true);
+      setContentError(null);
+      
+      try {
+        const content = await fetchFileContentByAssetAddress(asset.assetAddress, address);
+        setFileContent(content);
+      } catch (error) {
+        console.error('❌ LibraryCard - Error loading file content:', error);
+        setContentError(error instanceof Error ? error.message : 'Failed to load content');
+      } finally {
+        setIsLoadingContent(false);
+      }
+    }
+  };
+
+  // Use asset data from contract
+  const postTitle = asset.assetTitle || 'Untitled';
+  const postDescription = asset.description || '';
+  
+  // Calculate price from asset data
+  const costInWei = asset.costInNative || '0';
+  const pricePerAsset = costInWei ? parseFloat(costInWei.toString()) / 1e18 : 0; // Convert from wei to ETH with decimals
+
+  const handleCardClick = async () => {
+    if (!asset.assetAddress) return;
+    
+    // Navigate directly to the post page - let PostPreviewPage handle access control
+    navigate(`/app/post/${asset.assetAddress}`);
   };
 
   return (
@@ -98,9 +110,17 @@ export const LibraryCard = ({ savedPost, assetAddress }: LibraryCardProps) => {
       onClick={handleCardClick}
     >
       <div className="relative h-48 bg-muted/30 overflow-hidden flex items-center justify-center">
-        {postImage ? (
+        {isLoadingThumbnail ? (
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted/50 to-muted/80">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : thumbnailError || !asset.thumbnailCid ? (
+          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted/50 to-muted/80">
+            <FileImage className="h-16 w-16 text-muted-foreground/50" />
+          </div>
+        ) : thumbnailImage ? (
           <img 
-            src={postImage} 
+            src={thumbnailImage} 
             alt={postTitle}
             className="group-hover:scale-105 transition-transform duration-300 w-full h-full object-cover"
           />
@@ -119,19 +139,20 @@ export const LibraryCard = ({ savedPost, assetAddress }: LibraryCardProps) => {
           </h3>
         </div>
 
-        {postPreview && (
+        {postDescription && (
           <div className="mb-3">
-            <p className="text-sm text-muted-foreground leading-relaxed line-clamp-5">
-              {postPreview}
+            <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
+              {postDescription}
             </p>
           </div>
         )}
 
-        {contentError && (
-          <div className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 p-2 rounded">
-            Failed to load content
-          </div>
-        )}
+        {/* Price Display */}
+        <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
+          <span className="text-sm font-medium text-foreground">
+            Price: {pricePerAsset.toFixed(4)} ETH
+          </span>
+        </div>
       </CardContent>
     </Card>
   );

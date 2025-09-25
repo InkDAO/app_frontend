@@ -3,7 +3,6 @@ import { HomeCard } from "@/components/HomeCard";
 import { EmptyState } from "@/components/EmptyState";
 import { useSearch } from "@/context/SearchContext";
 import { useAssets } from "@/hooks/useAssets";
-import { fetchFileContentByCid } from "@/services/dXService";
 import { MessageSquare, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -11,72 +10,17 @@ const HomePage = () => {
   const { searchTerm } = useSearch();
   const { allAssets, isAllAssetLoading } = useAssets();
   const navigate = useNavigate();
-  const [assetsWithContent, setAssetsWithContent] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // Fetch content for assets
-  const fetchAssetsContent = async (assets: any[]) => {
-    setIsLoading(true);
-    try {
-      const assetsWithContent = await Promise.allSettled(
-        assets.map(async (asset) => {
-          try {
-            console.log('fetching content for asset', asset);
-            const content = await fetchFileContentByCid(asset.assetCid);
-            return {
-              ...asset,
-              content,
-              contentError: null
-            };
-          } catch (error) {
-            console.error(`Failed to fetch content for asset ${asset.assetCid}:`, error);
-            return {
-              ...asset,
-              content: null,
-              contentError: error instanceof Error ? error.message : 'Failed to fetch content'
-            };
-          }
-        })
-      );
-
-      const successfulAssets = assetsWithContent
-        .map((result, index) => {
-          if (result.status === 'fulfilled') {
-            return result.value;
-          } else {
-            console.error(`Failed to process asset ${index}:`, result.reason);
-            return null;
-          }
-        })
-        .filter(Boolean);
-
-      setAssetsWithContent(successfulAssets);
-    } catch (error) {
-      console.error('Error fetching assets content:', error);
-      setError('Failed to load asset content');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   // Get the posts to display based on title search only
   const getPostsToDisplay = () => {
-    if (!searchTerm.trim()) return assetsWithContent;
+    if (!searchTerm.trim()) return allAssets;
     
-    return assetsWithContent.filter(asset => 
+    return allAssets.filter(asset => 
       asset.assetTitle.toLowerCase().includes(searchTerm.toLowerCase())
     );
   };
 
   const filteredPosts = getPostsToDisplay();
-
-  // Update assets with content when allAssets changes
-  useEffect(() => {
-    if (allAssets.length > 0) {
-      fetchAssetsContent(allAssets);
-    }
-  }, [allAssets]);
 
   return (
     <div className="px-4 sm:px-6 py-6 lg:px-8 max-w-7xl mx-auto w-full">
@@ -85,7 +29,7 @@ const HomePage = () => {
         <p className="text-muted-foreground">Discover content from the community</p>
       </div>
       <div className="w-full">
-        {(isAllAssetLoading || isLoading) ? (
+        {isAllAssetLoading ? (
           <div className="flex justify-center items-center py-4 md:py-8">
             <div className="w-full space-y-4">
               {[1, 2, 3].map((i) => (
@@ -104,16 +48,6 @@ const HomePage = () => {
               ))}
             </div>
           </div>
-        ) : error ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="text-red-500 mb-4">
-              <MessageSquare className="h-8 w-8 mx-auto mb-2" />
-              <h2 className="text-xl font-semibold">Error Loading Posts</h2>
-            </div>
-            <p className="text-muted-foreground mb-4 max-w-md">
-              {error}
-            </p>
-          </div>
         ) : filteredPosts.length > 0 ? (
           <div className="space-y-6">
             {/* Posts Grid */}
@@ -121,15 +55,7 @@ const HomePage = () => {
                      {filteredPosts.map((asset, index) => (
                        <HomeCard 
                          key={asset.assetCid || index} 
-                         savedPost={{
-                           cid: asset.assetCid,
-                           name: asset.assetTitle,
-                           content: asset.content,
-                           created_at: new Date().toISOString(),
-                           keyvalues: {},
-                           contentError: asset.contentError
-                         }}
-                         assetAddress={asset.assetAddress}
+                         asset={asset}
                        />
                      ))}
                    </div>

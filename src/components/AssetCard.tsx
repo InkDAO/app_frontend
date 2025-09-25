@@ -18,15 +18,17 @@ interface AssetCardProps {
 }
 
 export const AssetCard = ({ asset }: AssetCardProps) => {
-  
   const [isOpen, setIsOpen] = useState(false);
   const [comment, setComment] = useState("");
   const [assetContent, setAssetContent] = useState<string>("");
   const [postImage, setPostImage] = useState<string>("");
+  const [thumbnailImage, setThumbnailImage] = useState<string>("");
   const [isLoadingContent, setIsLoadingContent] = useState(false);
   const [isLoadingImage, setIsLoadingImage] = useState(false);
+  const [isLoadingThumbnail, setIsLoadingThumbnail] = useState(false);
   const [contentError, setContentError] = useState<string | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
+  const [thumbnailError, setThumbnailError] = useState<string | null>(null);
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
   const { address, isConnected } = useAccount();
   const { addComment, isPending, isSuccess, isError, isConfirming, isConfirmed, hash } = useAddComment();
@@ -55,6 +57,40 @@ export const AssetCard = ({ asset }: AssetCardProps) => {
 
     fetchHashtags();
   }, [asset.assetCid, hashtags.length]);
+
+  // Fetch thumbnail image when component mounts
+  useEffect(() => {
+    const fetchThumbnail = async () => {
+      if (asset.thumbnailCid && !thumbnailImage) {
+        setIsLoadingThumbnail(true);
+        setThumbnailError(null);
+        
+        try {
+          // Use the Vite gateway URL to fetch the thumbnail
+          const gatewayUrl = import.meta.env.VITE_GATEWAY_URL || 'gateway.pinata.cloud';
+          const thumbnailUrl = `https://${gatewayUrl}/ipfs/${asset.thumbnailCid}`;
+          
+          // Test if the image loads
+          const img = new Image();
+          img.onload = () => {
+            setThumbnailImage(thumbnailUrl);
+            setIsLoadingThumbnail(false);
+          };
+          img.onerror = () => {
+            setThumbnailError('Failed to load thumbnail');
+            setIsLoadingThumbnail(false);
+          };
+          img.src = thumbnailUrl;
+        } catch (error) {
+          console.error('Failed to load thumbnail:', error);
+          setThumbnailError('Failed to load thumbnail');
+          setIsLoadingThumbnail(false);
+        }
+      }
+    };
+
+    fetchThumbnail();
+  }, [asset.thumbnailCid, thumbnailImage]);
 
   // Fetch IPFS content when post opens
   useEffect(() => {
@@ -457,7 +493,7 @@ export const AssetCard = ({ asset }: AssetCardProps) => {
                         <CardTitle className="text-sm md:text-2xl lg:text-3xl group-hover:text-primary transition-colors hyphens-auto leading-tight mb-2">
                           {/* Full title on larger screens */}
                           <span className="hidden md:inline">
-                            {asset.assetTitle}
+                            {asset.assetTitle || 'No title'}
                           </span>
                           
                           {/* Truncated title with show more on smaller screens */}
@@ -486,6 +522,11 @@ export const AssetCard = ({ asset }: AssetCardProps) => {
                             })()}
                           </span>
                         </CardTitle>
+                        
+                        {/* Description display */}
+                        <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
+                          {asset.description || 'No description available'}
+                        </p>
                         
                         {/* Hashtags display */}
                         {renderHashtags(!isOpen)}
@@ -544,13 +585,25 @@ export const AssetCard = ({ asset }: AssetCardProps) => {
                   {/* Image Thumbnail - Responsive size (hidden when expanded) */}
                   {!isOpen && (
                     <div className="w-24 h-24 sm:w-60 sm:h-36 md:w-72 md:h-40 flex-shrink-0 self-end">
-                      {isLoadingImage ? (
+                      {isLoadingThumbnail ? (
                         <div className="w-full h-full bg-muted flex items-center justify-center rounded-lg">
                           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                         </div>
-                      ) : imageError || !asset.assetCid ? (
+                      ) : thumbnailError || !asset.thumbnailCid ? (
                         <div className="w-full h-full bg-muted flex items-center justify-center rounded-lg">
-                          <span className="text-muted-foreground text-xs">No image</span>
+                          <span className="text-muted-foreground text-xs">No thumbnail</span>
+                        </div>
+                      ) : thumbnailImage ? (
+                        <div className="w-full h-full rounded-lg overflow-hidden">
+                          <img 
+                            src={thumbnailImage} 
+                            alt="Asset thumbnail" 
+                            className="w-full h-full object-cover"
+                            onError={() => {
+                              setThumbnailError('Failed to display thumbnail');
+                              setThumbnailImage('');
+                            }}
+                          />
                         </div>
                       ) : null}
                     </div>

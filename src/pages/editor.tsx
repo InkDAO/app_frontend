@@ -16,7 +16,7 @@ import Underline from '@editorjs/underline';
 import Delimiter from '@editorjs/delimiter';
 import { Edit3, Eye } from 'lucide-react';
 import { useAccount, useSignMessage } from 'wagmi';
-import { createGroupPost, updateFileById, useAddAsset } from '@/services/dXService';
+import { createGroupPost, updateFileById, useAddAsset, publishFile } from '@/services/dXService';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -379,15 +379,6 @@ const EditorPage = () => {
         // Check if title is different
         const titleChanged = currentTitle !== savedTitle;
         
-        console.log('🔍 Change detection:', {
-          blocksChanged,
-          titleChanged,
-          currentTitle,
-          savedTitle,
-          currentBlocksCount: currentBlocks.length,
-          savedBlocksCount: savedBlocks.length
-        });
-        
         return blocksChanged || titleChanged;
       } else {
         // For new posts (no CID), check if there's any meaningful content
@@ -404,13 +395,6 @@ const EditorPage = () => {
         });
         
         const hasTitle = currentTitle && currentTitle.trim() !== '';
-        
-        console.log('🔍 New post change detection:', {
-          hasContent,
-          hasTitle,
-          currentTitle,
-          blocksCount: currentBlocks.length
-        });
         
         return hasContent || hasTitle;
       }
@@ -741,7 +725,6 @@ const EditorPage = () => {
     
     // Reset publishing state if it's stuck
     if (isPublishing) {
-      console.log('🔄 Resetting stuck publishing state before new publish attempt');
       setIsPublishing(false);
     }
     
@@ -782,21 +765,14 @@ const EditorPage = () => {
       
       // Call the smart contract to add the asset to blockchain
       try {
-        console.log('🟢 Calling addAsset contract with:', {
-          salt: timestamp.toString(16),
-          assetTitle: currentTitle,
-          assetCid: cidFromUrl,
-          costInNative: "0"
-        });
-        
         await addAsset({
           salt: timestamp.toString(16),
           assetTitle: currentTitle,
           assetCid: cidFromUrl,
+          thumbnailCid: "",
+          description: "",
           costInNative: "0" // Set cost to 0 for now
         });
-        
-        console.log('🟢 Transaction submitted successfully');
         
         // Show intermediate success message
         toast({
@@ -843,7 +819,6 @@ const EditorPage = () => {
     
     // Reset publishing state if it's stuck
     if (isPublishing) {
-      console.log('🔄 Resetting stuck publishing state before new publish attempt');
       setIsPublishing(false);
     }
     
@@ -885,25 +860,43 @@ const EditorPage = () => {
       // Convert price to wei (assuming 18 decimals for ETH)
       const priceInWei = (parseFloat(publishData.price) * Math.pow(10, 18)).toString();
       
-      // Call the smart contract to add the asset to blockchain
+      // Step 1: Upload thumbnail image to get thumbnail CID
+      let thumbnailCid: string;
       try {
-        console.log('🟢 Calling addAsset contract with:', {
-          salt: timestamp.toString(16),
-          assetTitle: currentTitle,
-          assetCid: cidFromUrl,
-          costInNative: priceInWei,
-          description: publishData.description,
-          thumbnail: publishData.thumbnail?.name || 'No thumbnail'
+        toast({
+          title: "Uploading Thumbnail",
+          description: "Please sign the transaction to upload your thumbnail image...",
         });
         
+        const result = await publishFile(publishData.thumbnail!, address, signMessageAsync, cidFromUrl);
+        thumbnailCid = result.thumbnailCid;
+        
+        toast({
+          title: "Thumbnail Uploaded",
+          description: "Thumbnail uploaded successfully! Now publishing to blockchain...",
+        });
+        
+      } catch (uploadError) {
+        console.error('❌ Error uploading thumbnail:', uploadError);
+        toast({
+          title: "Upload Error",
+          description: "Failed to upload thumbnail image. Please try again.",
+          variant: "destructive"
+        });
+        setIsPublishing(false);
+        return false;
+      }
+      
+      // Step 2: Call the smart contract to add the asset to blockchain
+      try {
         await addAsset({
           salt: timestamp.toString(16),
           assetTitle: currentTitle,
           assetCid: cidFromUrl,
+          thumbnailCid: thumbnailCid,
+          description: publishData.description,
           costInNative: priceInWei
         });
-        
-        console.log('🟢 Transaction submitted successfully');
         
         // Show intermediate success message
         toast({
@@ -941,7 +934,6 @@ const EditorPage = () => {
   // Monitor contract transaction confirmation
   useEffect(() => {
     if (isContractConfirmed) {
-      console.log('🟢 Contract transaction confirmed!');
       setIsPublishing(false); // Stop loading state when transaction is confirmed
       toast({
         title: "Success", 
@@ -950,29 +942,14 @@ const EditorPage = () => {
     }
   }, [isContractConfirmed, toast, setIsPublishing]);
 
-  // Monitor contract transaction hash
-  useEffect(() => {
-    if (hash) {
-      console.log('🟢 Transaction hash received:', hash);
-      // Reset publishing state when a new transaction starts
-      // This ensures we don't get stuck in publishing state
-      if (isPublishing) {
-        console.log('🔄 New transaction detected, ensuring publishing state is active');
-      }
-    }
-  }, [hash, isPublishing]);
-
   // Monitor contract transaction errors and timeouts
   useEffect(() => {
     if (isContractPending === false && !isContractConfirmed && isPublishing) {
       // If contract is no longer pending, not confirmed, but we're still publishing
-      // This might indicate an error or the transaction was rejected
-      console.log('🟡 Contract transaction may have failed or been rejected');
-      
+      // This might indicate an error or the transaction was rejected      
       // Add a timeout to reset publishing state if confirmation takes too long
       const timeout = setTimeout(() => {
         if (isPublishing) {
-          console.log('⏰ Transaction confirmation timeout - resetting publishing state');
           setIsPublishing(false);
           toast({
             title: "Transaction Timeout",
@@ -989,7 +966,6 @@ const EditorPage = () => {
   // Monitor contract transaction errors
   useEffect(() => {
     if (isContractError && isPublishing) {
-      console.log('❌ Contract transaction error detected');
       setIsPublishing(false);
       toast({
         title: "Transaction Failed",
@@ -1003,7 +979,6 @@ const EditorPage = () => {
   useEffect(() => {
     return () => {
       if (isPublishing) {
-        console.log('🧹 Component unmounting, resetting publishing state');
         setIsPublishing(false);
       }
     };

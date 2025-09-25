@@ -4,13 +4,6 @@ import { useAccount, useReadContract } from "wagmi";
 import { dXmasterContract } from "@/contracts/dXmaster";
 import { useAssets } from "./useAssets";
 
-interface AssetInfo {
-  assetTitle: string;
-  assetCid: string;
-  assetAddress: string;
-  author: `0x${string}`;
-}
-
 export const useUserAssets = () => {
   const { address } = useAccount();
   const [allUserAssets, setAllUserAssets] = useState<Asset[]>([]);
@@ -29,11 +22,14 @@ export const useUserAssets = () => {
       const userAssets = allAssets.filter((asset) => allUserAssetInfo.some((userAsset) => userAsset.assetAddress === asset.assetAddress));
       
       if (userAssets) {
-        const convertedUserAssets: Asset[] = (userAssets as unknown as AssetInfo[]).map(asset => ({
+        const convertedUserAssets: Asset[] = userAssets.map(asset => ({
           assetTitle: asset.assetTitle,
           assetCid: asset.assetCid,
           assetAddress: asset.assetAddress,
           author: asset.author,
+          thumbnailCid: asset.thumbnailCid,
+          description: asset.description,
+          costInNative: asset.costInNative,
         }));
         setAllUserAssets(convertedUserAssets);
       }

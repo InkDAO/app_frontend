@@ -1,7 +1,5 @@
 import { authService } from './authService';
 
-const API_BASE_URL = 'http://localhost:8888';
-
 // Enhanced fetch wrapper that automatically includes JWT token
 export const authenticatedFetch = async (url: string, options: RequestInit = {}): Promise<Response> => {
   const token = authService.getAuthToken();
@@ -49,7 +47,7 @@ export class ApiService {
 
   // Helper method to build full URL
   private buildUrl(endpoint: string): string {
-    return `${API_BASE_URL}${endpoint}`;
+    return `${import.meta.env.VITE_SERVER_URL}${endpoint}`;
   }
 
   // GET request with authentication

@@ -116,11 +116,6 @@ const PublishOverlay: React.FC<PublishOverlayProps> = ({
       return;
     }
 
-      description: description.trim(),
-      thumbnail,
-      price: price.trim()
-    });
-    
     onPublish({
       description: description.trim(),
       thumbnail,

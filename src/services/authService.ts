@@ -91,6 +91,9 @@ export class AuthService {
       // Store JWT in cookie
       this.setAuthToken(data.token, '2h'); // 2 hours expiry, matching backend
       
+      // Trigger immediate state update
+      window.dispatchEvent(new CustomEvent('authStateChanged'));
+      
       return data;
     } catch (error) {
       console.error('❌ Authentication error:', error);
@@ -148,6 +151,8 @@ export class AuthService {
   // Logout
   logout() {
     deleteCookie(JWT_COOKIE_NAME);
+    // Trigger immediate state update by dispatching a custom event
+    window.dispatchEvent(new CustomEvent('authStateChanged'));
   }
 
   // Auto-authentication removed - users must manually authenticate

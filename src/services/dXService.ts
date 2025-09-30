@@ -1,7 +1,7 @@
 import { dXmasterContract } from "@/contracts/dXmaster";
 import { useWriteContract, useAccount, useWaitForTransactionReceipt, useReadContract } from "wagmi";
 import { sepolia } from "wagmi/chains";
-import { apiService } from "./httpClient";
+import { apiService, authenticatedFetch } from "./httpClient";
 import { authService } from "./authService";
 import { dXassetContract } from "@/contracts/dXasset";
 
@@ -21,11 +21,10 @@ export const createGroupPost = async (content: any, title: string, address: stri
       content: contentJson
     };
 
-    const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/create/group`, {
+    const response = await authenticatedFetch(`${import.meta.env.VITE_SERVER_URL}/create/group`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${authService.getAuthToken()}`
       },
       body: JSON.stringify(payload)
     });
@@ -68,11 +67,8 @@ export const publishFile = async (file: File, address: string, signMessage: any,
     formData.append('signature', signature);
     
     // Make authenticated API call to publish file
-    const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/publish/file?cid=${cid}`, {
+    const response = await authenticatedFetch(`${import.meta.env.VITE_SERVER_URL}/publish/file?cid=${cid}`, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${authService.getAuthToken()}`
-      },
       body: formData
     });
     

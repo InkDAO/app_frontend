@@ -29,6 +29,13 @@ export const authenticatedFetch = async (url: string, options: RequestInit = {})
     throw new Error('Authentication required. Please reconnect your wallet.');
   }
 
+  // Handle 403 Forbidden - user cannot access files for different owner
+  if (response.status === 403) {
+    console.warn('🔒 Access forbidden: Cannot access files for different owner');
+    authService.logout();
+    throw new Error('Access forbidden. You have been signed out. Please sign in again.');
+  }
+
   return response;
 };
 

@@ -22,10 +22,20 @@ export const useAuth = () => {
 
     updateAuthState();
     
-    // Listen for auth changes (you could implement an event system)
-    const interval = setInterval(updateAuthState, 5000); // Check every 5 seconds
+    // Listen for immediate auth state changes via custom event
+    const handleAuthStateChange = () => {
+      updateAuthState();
+    };
     
-    return () => clearInterval(interval);
+    window.addEventListener('authStateChanged', handleAuthStateChange);
+    
+    // Also check periodically for other auth changes
+    const interval = setInterval(updateAuthState, 5000); // Check every 5 seconds for other changes
+    
+    return () => {
+      window.removeEventListener('authStateChanged', handleAuthStateChange);
+      clearInterval(interval);
+    };
   }, []);
   // Auto-authentication removed - users must manually authenticate
 

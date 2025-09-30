@@ -6,9 +6,11 @@ import { MessageSquare, Bookmark, RefreshCw, ChevronLeft, ChevronRight, ArrowRig
 import { fetchSavedPosts, fetchSavedPostsByNextPageToken } from "@/services/dXService";
 import { useAccount } from "wagmi";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 export const DraftsPage = () => {
   const { address } = useAccount();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [savedPosts, setSavedPosts] = useState<any[]>([]);
   const [isSavedPostsLoading, setIsSavedPostsLoading] = useState(false);
@@ -16,6 +18,7 @@ export const DraftsPage = () => {
   const [nextPageToken, setNextPageToken] = useState<string | null>(null);
   const [pageHistory, setPageHistory] = useState<{token: string | null, page: number}[]>([]); // Track page history
   const [currentPage, setCurrentPage] = useState(0);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // Fetch saved posts when component mounts
   const handleFetchSavedPosts = async () => {
@@ -34,7 +37,22 @@ export const DraftsPage = () => {
       setCurrentPage(0);
     } catch (error) {
       console.error('Failed to fetch saved posts:', error);
-      setSavedPostsError(error instanceof Error ? error.message : 'Failed to fetch saved posts');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch saved posts';
+      
+      // If it's a 403 error, the user has been logged out automatically
+      if (errorMessage.includes('Access forbidden')) {
+        // Set logout state to prevent error display
+        setIsLoggingOut(true);
+        // Clear any existing data since user was logged out
+        setSavedPosts([]);
+        setNextPageToken(null);
+        setPageHistory([]);
+        setCurrentPage(0);
+        setSavedPostsError(null); // Don't show error message
+        // The AuthGuard will handle showing the sign-in page
+      } else {
+        setSavedPostsError(errorMessage);
+      }
     } finally {
       setIsSavedPostsLoading(false);
     }
@@ -61,7 +79,19 @@ export const DraftsPage = () => {
       setCurrentPage(prev => prev + 1);
     } catch (error) {
       console.error('Failed to fetch next page of saved posts:', error);
-      setSavedPostsError(error instanceof Error ? error.message : 'Failed to fetch next page');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch next page';
+      
+      // If it's a 403 error, the user has been logged out automatically
+      if (errorMessage.includes('Access forbidden')) {
+        setIsLoggingOut(true);
+        setSavedPosts([]);
+        setNextPageToken(null);
+        setPageHistory([]);
+        setCurrentPage(0);
+        setSavedPostsError(null);
+      } else {
+        setSavedPostsError(errorMessage);
+      }
     } finally {
       setIsSavedPostsLoading(false);
     }
@@ -100,7 +130,19 @@ export const DraftsPage = () => {
       }
     } catch (error) {
       console.error('Failed to fetch previous page of saved posts:', error);
-      setSavedPostsError(error instanceof Error ? error.message : 'Failed to fetch previous page');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch previous page';
+      
+      // If it's a 403 error, the user has been logged out automatically
+      if (errorMessage.includes('Access forbidden')) {
+        setIsLoggingOut(true);
+        setSavedPosts([]);
+        setNextPageToken(null);
+        setPageHistory([]);
+        setCurrentPage(0);
+        setSavedPostsError(null);
+      } else {
+        setSavedPostsError(errorMessage);
+      }
     } finally {
       setIsSavedPostsLoading(false);
     }
@@ -113,12 +155,19 @@ export const DraftsPage = () => {
     );
   };
 
-  // Fetch saved posts when component mounts
+  // Reset logout state when authentication state changes
   useEffect(() => {
-    if (address) {
+    if (isAuthenticated) {
+      setIsLoggingOut(false);
+    }
+  }, [isAuthenticated]);
+
+  // Fetch saved posts when component mounts or when authentication state changes
+  useEffect(() => {
+    if (address && isAuthenticated) {
       handleFetchSavedPosts();
     }
-  }, [address]);
+  }, [address, isAuthenticated]);
 
   return (
     <AuthGuard>
@@ -128,7 +177,7 @@ export const DraftsPage = () => {
           <p className="text-muted-foreground">Your saved posts and drafts</p>
         </div>
         <div className="w-full">
-          {isSavedPostsLoading ? (
+          {isSavedPostsLoading || isLoggingOut ? (
             <div className="flex justify-center items-center py-4 md:py-8">
               <div className="w-full space-y-4">
                 {[1, 2, 3].map((i) => (

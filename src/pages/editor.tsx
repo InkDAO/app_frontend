@@ -2016,62 +2016,64 @@ const EditorPage = () => {
   };
 
   return (
-    <div className={`min-h-screen bg-background ${isPreviewMode ? 'preview-mode' : ''}`}>
-      {/* Title input and auto-save indicator */}
-      <div className="max-w-4xl mx-auto px-8 pt-6 pb-4">
-        <div className="flex items-center justify-between mb-6">
-          <input
-            type="text"
-            value={documentTitle}
-            onChange={async (e) => {
-              setDocumentTitle(e.target.value);
-              // Update empty state when title changes
-              await updateEmptyState();
-            }}
-            className="text-5xl font-bold bg-transparent border-none outline-none flex-1 text-gray-900 dark:text-gray-100 placeholder-gray-400"
-            placeholder="Untitled"
-            disabled={isPreviewMode}
-          />
+    <div className={`min-h-screen bg-background overflow-x-hidden ${isPreviewMode ? 'preview-mode' : ''}`}>
+      {/* Main container with consistent padding */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Title input and auto-save indicator */}
+        <div className="pt-6 pb-4">
+          <div className="flex items-center justify-between mb-6">
+            <input
+              type="text"
+              value={documentTitle}
+              onChange={async (e) => {
+                setDocumentTitle(e.target.value);
+                // Update empty state when title changes
+                await updateEmptyState();
+              }}
+              className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-transparent border-none outline-none flex-1 text-gray-900 dark:text-gray-100 placeholder-gray-400 w-full"
+              placeholder="Untitled"
+              disabled={isPreviewMode}
+            />
+          </div>
+
+          {/* Tab Navigation */}
+          <div className="mb-2">
+            <nav className="flex justify-between items-center" aria-label="Tabs">
+              <div className="flex items-center bg-gray-100 dark:bg-gray-900 rounded-lg p-1 shadow-sm">
+                <button
+                  onClick={() => {
+                    if (isPreviewMode) {
+                      setIsPreviewMode(false);
+                    }
+                  }}
+                  className={`flex items-center space-x-2 px-4 py-2.5 text-sm font-medium rounded-md transition-all duration-200 ${
+                    !isPreviewMode
+                      ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm border border-gray-200 dark:border-gray-600'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-700/50'
+                  }`}
+                >
+                  <Edit3 className="w-4 h-4" />
+                  <span>Edit</span>
+                </button>
+                <button
+                  onClick={togglePreview}
+                  className={`flex items-center space-x-2 px-4 py-2.5 text-sm font-medium rounded-md transition-all duration-200 ${
+                    isPreviewMode
+                      ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm border border-gray-200 dark:border-gray-600'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-700/50'
+                  }`}
+                >
+                  <Eye className="w-4 h-4" />
+                  <span>Preview</span>
+                </button>
+              </div>
+              
+            </nav>
+          </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="mb-2">
-          <nav className="flex justify-between items-center" aria-label="Tabs">
-            <div className="flex items-center bg-gray-100 dark:bg-gray-900 rounded-lg p-1 shadow-sm">
-              <button
-                onClick={() => {
-                  if (isPreviewMode) {
-                    setIsPreviewMode(false);
-                  }
-                }}
-                className={`flex items-center space-x-2 px-4 py-2.5 text-sm font-medium rounded-md transition-all duration-200 ${
-                  !isPreviewMode
-                    ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm border border-gray-200 dark:border-gray-600'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-700/50'
-                }`}
-              >
-                <Edit3 className="w-4 h-4" />
-                <span>Edit</span>
-              </button>
-              <button
-                onClick={togglePreview}
-                className={`flex items-center space-x-2 px-4 py-2.5 text-sm font-medium rounded-md transition-all duration-200 ${
-                  isPreviewMode
-                    ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm border border-gray-200 dark:border-gray-600'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-700/50'
-                }`}
-              >
-                <Eye className="w-4 h-4" />
-                <span>Preview</span>
-              </button>
-            </div>
-            
-          </nav>
-        </div>
-      </div>
-
-      {/* Main editor or preview */}
-      <div className="max-w-4xl mx-auto px-8 pb-64">
+        {/* Main editor or preview */}
+        <div className="pb-64">
         <div className="tab-content">
           {isLoadingContent ? (
             <div className="min-h-[400px] flex items-center justify-center">
@@ -2088,12 +2090,18 @@ const EditorPage = () => {
           ) : (
             <div 
               ref={holderRef}
-              className="min-h-[400px] focus:outline-none"
+              className="min-h-[400px] focus:outline-none overflow-x-hidden w-full"
               style={{
-                minHeight: '400px'
+                minHeight: '400px',
+                maxWidth: '100%',
+                width: '100%',
+                paddingLeft: '0',
+                marginLeft: '0',
+                left: '0'
               }}
             />
           )}
+        </div>
         </div>
       </div>
 

@@ -1,4 +1,49 @@
 /* EditorJS Notion-like styles */
+/* Global alignment and scrollbar fixes */
+.ce-toolbar__content,
+.ce-block__content,
+.codex-editor,
+.ce-redactor {
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+  word-wrap: break-word !important;
+  word-break: break-word !important;
+}
+
+/* Ensure consistent content alignment */
+.tab-content {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+  position: relative !important;
+}
+
+/* Hide unwanted scrollbars globally */
+.tab-content::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+
+.tab-content {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+/* Ensure all editor content is contained */
+.ce-block,
+.ce-paragraph,
+.ce-header,
+.ce-quote,
+.ce-code,
+.ce-table,
+.ce-image,
+.ce-list {
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+  word-wrap: break-word !important;
+}
+
 /* Show block tools but hide unwanted toolbars */
 .ce-toolbar__content::before,
 .ce-toolbar__content::after {
@@ -1181,4 +1226,300 @@ textarea[placeholder*="Author"]:focus,
   display: block !important;
   visibility: visible !important;
   opacity: 1 !important;
+}
+
+/* Mobile responsive fixes for editor */
+@media (max-width: 640px) {
+  .ce-toolbar,
+  .ce-inline-toolbar,
+  .ce-popover {
+    max-width: calc(100vw - 32px) !important;
+    left: 16px !important;
+    right: 16px !important;
+    transform: none !important;
+  }
+  
+  /* Hide unnecessary scrollbars on mobile */
+  .tab-content,
+  .ce-redactor,
+  .codex-editor {
+    overflow-x: hidden !important;
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+  
+  .tab-content::-webkit-scrollbar,
+  .ce-redactor::-webkit-scrollbar,
+  .codex-editor::-webkit-scrollbar {
+    display: none !important;
+  }
+  
+  /* Ensure proper alignment on mobile */
+  .ce-block__content {
+    padding-left: 0 !important;
+    margin-left: 0 !important;
+  }
+  
+  .ce-block:first-child .ce-block__content {
+    padding-left: 0 !important;
+    margin-left: 0 !important;
+  }
+  
+  .ce-paragraph[data-placeholder] {
+    padding-left: 0 !important;
+    margin-left: 0 !important;
+  }
+  
+  .ce-table {
+    overflow-x: auto !important;
+    display: block !important;
+    white-space: nowrap !important;
+  }
+  
+  .ce-table__cell {
+    min-width: 120px !important;
+  }
+  
+  .ce-code__textarea {
+    font-size: 12px !important;
+    line-height: 1.3 !important;
+  }
+  
+  .ce-image {
+    max-width: 100% !important;
+    overflow: hidden !important;
+  }
+  
+  .ce-image__image {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+  
+  /* Ensure all text content wraps properly */
+  .ce-paragraph,
+  .ce-header,
+  .ce-quote__text,
+  .ce-list__item {
+    word-wrap: break-word !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    hyphens: auto !important;
+  }
+}
+
+/* Additional mobile fixes for very small screens */
+@media (max-width: 480px) {
+  .ce-toolbar,
+  .ce-inline-toolbar,
+  .ce-popover {
+    max-width: calc(100vw - 16px) !important;
+    left: 8px !important;
+    right: 8px !important;
+  }
+  
+  .ce-table {
+    font-size: 12px !important;
+  }
+  
+  .ce-table__cell {
+    padding: 4px 6px !important;
+    min-width: 100px !important;
+  }
+}
+
+/* Ensure proper content alignment and spacing */
+.tab-content {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+}
+
+/* Force EditorJS to start at the very left edge */
+.tab-content > div {
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+  left: 0 !important;
+}
+
+/* Fix for editor content alignment */
+.ce-redactor,
+.codex-editor {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Force editor content to align with tab navigation */
+.ce-block__content {
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+  position: relative !important;
+}
+
+/* Align the first block content with tab navigation */
+.ce-block:first-child .ce-block__content {
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+}
+
+/* Force all EditorJS content to align */
+.ce-redactor .ce-block__content,
+.codex-editor .ce-block__content {
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+  left: 0 !important;
+}
+
+/* Ensure placeholder text aligns properly */
+.ce-paragraph[data-placeholder] {
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+  left: 0 !important;
+}
+
+/* Target EditorJS placeholder specifically */
+.ce-paragraph[data-placeholder]:before {
+  left: 0 !important;
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+}
+
+/* Ensure all paragraph content aligns with tabs */
+.ce-paragraph {
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+  left: 0 !important;
+}
+
+/* Force alignment for all text content */
+.ce-paragraph,
+.ce-header,
+.ce-quote,
+.ce-list,
+.ce-code {
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+  left: 0 !important;
+}
+
+/* Override any EditorJS default positioning */
+.ce-block {
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+}
+
+/* Force the entire editor content area to start at 0 */
+.tab-content .ce-redactor,
+.tab-content .codex-editor {
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+}
+
+/* Target the EditorJS holder div specifically */
+.tab-content > div[ref] {
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+  left: 0 !important;
+}
+
+/* Force all EditorJS elements to start at 0 */
+.tab-content * {
+  box-sizing: border-box !important;
+}
+
+.tab-content .ce-redactor *,
+.tab-content .codex-editor * {
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+  left: 0 !important;
+}
+
+/* Nuclear option - force everything to align */
+.tab-content div[ref] * {
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+  left: 0 !important;
+  transform: translateX(0) !important;
+}
+
+/* Target the specific EditorJS structure */
+.tab-content div[ref] .ce-redactor,
+.tab-content div[ref] .codex-editor,
+.tab-content div[ref] .ce-block,
+.tab-content div[ref] .ce-block__content,
+.tab-content div[ref] .ce-paragraph {
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+  left: 0 !important;
+  transform: translateX(0) !important;
+}
+
+/* Force placeholder text to align with tabs */
+.tab-content div[ref] .ce-paragraph[data-placeholder],
+.tab-content div[ref] .ce-paragraph[data-placeholder]:before,
+.tab-content div[ref] .ce-paragraph[data-placeholder]::before {
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+  left: 0 !important;
+  transform: translateX(0) !important;
+  position: relative !important;
+}
+
+/* Override any EditorJS default text positioning */
+.tab-content div[ref] .ce-paragraph[data-placeholder] {
+  text-indent: 0 !important;
+  text-align: left !important;
+}
+
+/* Ensure first block starts properly */
+.ce-block:first-child {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* Remove any unwanted borders or lines */
+.ce-redactor::after,
+.codex-editor::after,
+.tab-content::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* Prevent any bottom lines on mobile */
+@media (max-width: 640px) {
+  .tab-content::after,
+  .ce-redactor::after,
+  .codex-editor::after,
+  .ce-block::after,
+  .ce-paragraph::after {
+    display: none !important;
+    content: none !important;
+    border: none !important;
+    height: 0 !important;
+    width: 0 !important;
+  }
+  
+  /* Remove any borders that might create lines */
+  .tab-content,
+  .ce-redactor,
+  .codex-editor,
+  .ce-block,
+  .ce-paragraph {
+    border-bottom: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+  
+  /* Ensure no bottom margin or padding creating visual lines */
+  .tab-content {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+  }
+  
+  /* Override the pb-64 class on mobile to prevent visual artifacts */
+  .pb-64 {
+    padding-bottom: 2rem !important;
+  }
 }

@@ -25,6 +25,9 @@ export const useAssets = () => {
     functionName: "getAllAssetInfos",
   });
 
+  console.log('dXmasterContract.address', dXmasterContract.address);
+  console.log('allAssetInfo', allAssetInfo);
+
   useEffect(() => {
     if (!isAllAssetInfoLoading) {
       if (allAssetInfo) {

@@ -1,13 +1,15 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { FileImage, ShoppingCart, Loader2 } from "lucide-react";
+import { FileImage, ShoppingCart, Loader2, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useBuyAsset, getAssetCost, fetchFileContentByAssetAddress } from "@/services/dXService";
 import { useAccount } from "wagmi";
 import { toast } from "@/components/ui/sonner";
 import { useState, useEffect } from "react";
+import { useAssetOwnership } from "@/hooks/useAssetOwnership";
 
 interface HomeCardProps {
   asset: {
@@ -25,6 +27,7 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
   const navigate = useNavigate();
   const { address } = useAccount();
   const { buyAsset, isPending, isConfirmed, isError } = useBuyAsset();
+  const { isOwned, isLoading: isOwnershipLoading } = useAssetOwnership(asset.assetAddress);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [amount, setAmount] = useState(1);
   const [isBuying, setIsBuying] = useState(false);
@@ -188,86 +191,6 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
           </div>
         )}
         
-        {/* Buy Button - Top Right */}
-        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button
-                onClick={handleBuyClick}
-                size="sm"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg flex items-center gap-1 shadow-lg"
-              >
-                <ShoppingCart className="h-3 w-3" />
-                Buy
-              </Button>
-            </DialogTrigger>
-            <DialogContent 
-              className="sm:max-w-sm max-h-[90vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <DialogHeader>
-                <DialogTitle>Purchase Asset</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Price per asset: {pricePerAsset.toFixed(4)} ETH</label>
-                  
-                  <div className="flex items-center space-x-2">
-                    <label className="text-sm font-medium">Amount to purchase:</label>
-                    <Input
-                      type="number"
-                      min="1"
-                      value={amount}
-                      onChange={(e) => handleAmountChange(parseInt(e.target.value) || 1)}
-                      className="text-center w-20"
-                    />
-                  </div>
-                  
-                  <div className="p-3 bg-muted rounded-lg">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium">Total Price:</span>
-                      <span className="text-lg font-bold">{totalPrice.toFixed(4)} ETH</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex space-x-2 pt-4">
-                  <Button
-                    variant="outline"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsDialogOpen(false);
-                    }}
-                    className="flex-1"
-                    disabled={isBuying}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleConfirmBuy();
-                    }}
-                    disabled={isBuying}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700"
-                  >
-                    {isBuying ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Purchasing...
-                      </>
-                    ) : (
-                      <>
-                        <ShoppingCart className="h-4 w-4 mr-2" />
-                        Confirm Purchase
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
       </div>
 
       <CardContent className="p-4">
@@ -285,11 +208,105 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
           </div>
         )}
 
-        {/* Price Display */}
-        <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
-          <span className="text-sm font-medium text-foreground">
-            Price: {pricePerAsset.toFixed(4)} ETH
-          </span>
+        {/* Price and Action Tags */}
+        <div className="flex items-center justify-end mt-3 gap-2">
+          <Badge 
+            variant="secondary" 
+            className={isOwned 
+              ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-600 hover:to-emerald-600"
+              : "bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600"
+            }
+          >
+            {pricePerAsset.toFixed(4)} ETH
+          </Badge>
+          
+          {isOwned ? (
+            <Badge 
+              variant="secondary"
+              className="bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-600 hover:to-emerald-600 cursor-pointer"
+              onClick={handleCardClick}
+            >
+              <Eye className="h-3 w-3 mr-1" />
+              Read
+            </Badge>
+          ) : (
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Badge 
+                  variant="secondary"
+                  className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 cursor-pointer"
+                >
+                  <ShoppingCart className="h-3 w-3 mr-1" />
+                  Buy
+                </Badge>
+              </DialogTrigger>
+              <DialogContent 
+                className="sm:max-w-sm max-h-[90vh] overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <DialogHeader>
+                  <DialogTitle>Purchase Asset</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Price per asset: {pricePerAsset.toFixed(4)} ETH</label>
+                    
+                    <div className="flex items-center space-x-2">
+                      <label className="text-sm font-medium">Amount to purchase:</label>
+                      <Input
+                        type="number"
+                        min="1"
+                        value={amount}
+                        onChange={(e) => handleAmountChange(parseInt(e.target.value) || 1)}
+                        className="text-center w-20"
+                      />
+                    </div>
+                    
+                    <div className="p-3 bg-muted rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium">Total Price:</span>
+                        <span className="text-lg font-bold">{totalPrice.toFixed(4)} ETH</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex space-x-2 pt-4">
+                    <Button
+                      variant="outline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsDialogOpen(false);
+                      }}
+                      className="flex-1"
+                      disabled={isBuying}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleConfirmBuy();
+                      }}
+                      disabled={isBuying}
+                      className="flex-1 bg-blue-600 hover:bg-blue-700"
+                    >
+                      {isBuying ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Purchasing...
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingCart className="h-4 w-4 mr-2" />
+                          Confirm Purchase
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
       </CardContent>
     </Card>

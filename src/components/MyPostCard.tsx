@@ -1,4 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { FileImage, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -148,12 +149,6 @@ export const MyPostCard = ({ asset }: MyPostCardProps) => {
           </div>
         )}
 
-        {/* Price Display */}
-        <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
-          <span className="text-sm font-medium text-foreground">
-            Price: {pricePerAsset.toFixed(4)} ETH
-          </span>
-        </div>
       </CardContent>
     </Card>
   );

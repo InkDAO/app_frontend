@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { MyPostCard } from "@/components/MyPostCard";
 import { AuthGuard } from "@/components/AuthGuard";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, ArrowRight, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
+import { MessageSquare, ArrowRight, RefreshCw, ChevronLeft, ChevronRight, Edit3 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAssets } from "@/hooks/useAssets";
 import { useAccount } from "wagmi";
@@ -120,15 +120,12 @@ export const MyPostsPage = () => {
                 Your published posts will appear here when you have any
               </p>
               <div 
-                onClick={() => navigate('/app')}
+                onClick={() => navigate('/app/editor')}
                 className="flex items-center gap-2 text-muted-foreground mb-6 max-w-md animate-in fade-in-50 slide-in-from-bottom-2 duration-1000 cursor-pointer hover:text-foreground transition-colors"
               >
                 <p>Create your first post to get started</p>
                 <ArrowRight className="h-4 w-4" />
               </div>
-              <Button onClick={handleRefresh} variant="outline">
-                Refresh
-              </Button>
             </div>
           )}
         </div>

@@ -27,7 +27,7 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
   const navigate = useNavigate();
   const { address } = useAccount();
   const { buyAsset, isPending, isConfirmed, isError } = useBuyAsset();
-  const { isOwned, isLoading: isOwnershipLoading } = useAssetOwnership(asset.assetAddress);
+  const { isOwned, isLoading: isOwnershipLoading } = useAssetOwnership(asset.assetAddress, asset);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [amount, setAmount] = useState(1);
   const [isBuying, setIsBuying] = useState(false);
@@ -95,9 +95,9 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
     fetchThumbnail();
   }, [asset.thumbnailCid, thumbnailImage]);
 
-  // Fetch file content when user clicks on card
+  // Fetch file content when user clicks on card (only for owned assets)
   const fetchContent = async () => {
-    if (asset.assetAddress && address && !fileContent && !isLoadingContent) {
+    if (asset.assetAddress && address && !fileContent && !isLoadingContent && isOwned && !isOwnershipLoading) {
       setIsLoadingContent(true);
       setContentError(null);
       

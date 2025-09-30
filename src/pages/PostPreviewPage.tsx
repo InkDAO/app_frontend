@@ -19,7 +19,7 @@ export const PostPreviewPage = () => {
   const { cid: assetCid, isLoading: isCidLoading, isError: isCidError } = useAssetCidByAddress(assetAddress || '');
   const { assetData, isLoading: isAssetDataLoading, isError: isAssetDataError } = useAssetData(assetCid || '');
   const { buyAsset, isPending: isBuying, isConfirmed: isBuyConfirmed, isError: isBuyError } = useBuyAsset();
-  const { isOwned, isLoading: isOwnershipLoading } = useAssetOwnership(assetAddress || '');
+  const { isOwned, isLoading: isOwnershipLoading } = useAssetOwnership(assetAddress || '', assetData);
   const [isLoading, setIsLoading] = useState(true);
   const [previewData, setPreviewData] = useState<any>(null);
   const [contentError, setContentError] = useState<string | null>(null);
@@ -36,6 +36,15 @@ export const PostPreviewPage = () => {
     }
   }, [assetData]);
 
+  // Set access denied when user doesn't own the asset
+  useEffect(() => {
+    if (!isOwnershipLoading && !isOwned && assetData) {
+      setIsAccessDenied(true);
+    } else if (isOwned) {
+      setIsAccessDenied(false);
+    }
+  }, [isOwned, isOwnershipLoading, assetData]);
+
   // Fetch content when asset CID is available
   useEffect(() => {
     const fetchContent = async () => {
@@ -44,6 +53,12 @@ export const PostPreviewPage = () => {
           setContentError("Failed to load asset CID");
           setIsLoading(false);
         }
+        return;
+      }
+
+      // Only fetch content if user owns the asset
+      if (!isOwned || isOwnershipLoading) {
+        setIsLoading(false);
         return;
       }
 
@@ -105,7 +120,7 @@ export const PostPreviewPage = () => {
     };
 
     fetchContent();
-  }, [assetCid, isCidError]);
+  }, [assetCid, isCidError, isOwned, isOwnershipLoading]);
 
   const handleCopyCid = async () => {
     if (assetCid) {
@@ -138,7 +153,7 @@ export const PostPreviewPage = () => {
   };
 
 
-  if (isLoading || isCidLoading || isAssetDataLoading) {
+  if (isLoading || isCidLoading || isAssetDataLoading || isOwnershipLoading) {
     return (
       <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">

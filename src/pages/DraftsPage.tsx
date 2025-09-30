@@ -2,12 +2,14 @@ import { useState, useEffect } from "react";
 import { SavedPostCard } from "@/components/SavedPostCard";
 import { AuthGuard } from "@/components/AuthGuard";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Bookmark, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
+import { MessageSquare, Bookmark, RefreshCw, ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import { fetchSavedPosts, fetchSavedPostsByNextPageToken } from "@/services/dXService";
 import { useAccount } from "wagmi";
+import { useNavigate } from "react-router-dom";
 
 export const DraftsPage = () => {
   const { address } = useAccount();
+  const navigate = useNavigate();
   const [savedPosts, setSavedPosts] = useState<any[]>([]);
   const [isSavedPostsLoading, setIsSavedPostsLoading] = useState(false);
   const [savedPostsError, setSavedPostsError] = useState<string | null>(null);
@@ -211,9 +213,13 @@ export const DraftsPage = () => {
               <p className="text-muted-foreground mb-6 max-w-md animate-in fade-in-50 slide-in-from-bottom-2 duration-1000">
                 Your saved posts and drafts will appear here when you have any
               </p>
-              <Button onClick={handleFetchSavedPosts} variant="outline">
-                Refresh
-              </Button>
+              <div 
+                onClick={() => navigate('/app/editor')}
+                className="flex items-center gap-2 text-muted-foreground mb-6 max-w-md animate-in fade-in-50 slide-in-from-bottom-2 duration-1000 cursor-pointer hover:text-foreground transition-colors"
+              >
+                <p>Start writing your first post</p>
+                <ArrowRight className="h-4 w-4" />
+              </div>
             </div>
           )}
         </div>

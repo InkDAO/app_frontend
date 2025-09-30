@@ -72,7 +72,7 @@ export const LibraryCard = ({ asset }: LibraryCardProps) => {
     fetchThumbnail();
   }, [asset.thumbnailCid, thumbnailImage]);
 
-  // Fetch file content when user clicks on card
+  // Fetch file content when user clicks on card (LibraryCard shows owned assets, so always fetch)
   const fetchContent = async () => {
     if (asset.assetAddress && address && !fileContent && !isLoadingContent) {
       setIsLoadingContent(true);

@@ -11,6 +11,8 @@ const HomePage = () => {
   const { allAssets, isAllAssetLoading } = useAssets();
   const navigate = useNavigate();
 
+  console.log('allAssets', allAssets);
+
   // Get the posts to display based on title search only
   const getPostsToDisplay = () => {
     if (!searchTerm.trim()) return allAssets;

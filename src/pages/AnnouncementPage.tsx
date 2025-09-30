@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AssetCard } from "@/components/AssetCard";
+import { HomeCardSkeleton } from "@/components/HomeCardSkeleton";
 import { TagSearch } from "@/components/TagSearch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -92,23 +93,10 @@ export const AnnouncementPage = () => {
         </div>
         
         {isAllAssetLoading ? (
-          <div className="flex justify-center items-center py-4 md:py-8">
-            <div className="w-full space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="animate-pulse">
-                  <div className="h-24 bg-muted/50 rounded-lg border border-border">
-                    <div className="p-4 space-y-3">
-                      <div className="h-4 bg-muted rounded w-3/4" />
-                      <div className="h-3 bg-muted rounded w-1/2" />
-                      <div className="flex justify-between items-center">
-                        <div className="h-3 bg-muted rounded w-1/4" />
-                        <div className="h-3 bg-muted rounded w-1/4" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+              <HomeCardSkeleton key={i} />
+            ))}
           </div>
         ) : announcementsPost.length > 0 ? (
           <div>

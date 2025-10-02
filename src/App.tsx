@@ -48,11 +48,11 @@ const App = () => (
                     <HomePage />
                   </AppLayout>
                 } />
-                       <Route path="/app/post/:assetAddress" element={
-                         <AppLayout>
-                           <PostPreviewPage />
-                         </AppLayout>
-                       } />
+                <Route path="/app/post/:assetAddress" element={
+                  <AppLayout>
+                    <PostPreviewPage />
+                  </AppLayout>
+                } />
                 <Route path="/app/post/:id" element={
                   <AppLayout>
                     <PostInfoPage />

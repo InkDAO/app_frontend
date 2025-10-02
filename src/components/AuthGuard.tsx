@@ -18,7 +18,7 @@ export const AuthGuard = ({ children, fallback }: AuthGuardProps) => {
   // If not connected to wallet
   if (!isConnected) {
     return fallback || (
-      <div className="min-h-screen flex flex-col items-center justify-start text-center animate-in fade-in-50 slide-in-from-bottom-4 duration-500 px-4 pt-32">
+      <div className="h-[calc(100vh-4rem)] flex flex-col items-center justify-center text-center animate-in fade-in-50 slide-in-from-bottom-4 duration-500 px-4 -mt-4">
         <div className="max-w-2xl mx-auto">
           {/* Large Icon Container */}
           <div className="mb-8 animate-in fade-in-50 zoom-in-50 duration-700">
@@ -52,7 +52,7 @@ export const AuthGuard = ({ children, fallback }: AuthGuardProps) => {
   // If connected but not authenticated
   if (!isAuthenticated) {
     return fallback || (
-      <div className="min-h-screen flex flex-col items-center justify-start text-center animate-in fade-in-50 slide-in-from-bottom-4 duration-500 px-4 pt-32">
+      <div className="h-[calc(100vh-4rem)] flex flex-col items-center justify-center text-center animate-in fade-in-50 slide-in-from-bottom-4 duration-500 px-4 -mt-16">
         <div className="max-w-2xl mx-auto">
           {/* Large Icon Container */}
           <div className="mb-8 animate-in fade-in-50 zoom-in-50 duration-700">

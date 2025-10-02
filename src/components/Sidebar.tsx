@@ -120,8 +120,8 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       
       {/* Sidebar */}
             <div className={cn(
-              "h-[calc(100vh-4rem)] w-56 sm:w-60 lg:w-64 bg-background border-r border-gray-100 dark:border-gray-900 transform transition-transform duration-300 ease-in-out flex flex-col overflow-hidden fixed left-0 z-50",
-              isOpen ? "translate-x-0 top-[calc(4rem+1px)]" : "-translate-x-full top-16"
+              "h-[calc(100vh-4rem)] w-64 sm:w-70 lg:w-72 bg-background border-r border-gray-100 dark:border-gray-900 transform transition-transform duration-300 ease-in-out flex flex-col overflow-hidden fixed left-0 z-50",
+              isOpen ? "translate-x-0 top-[calc(4rem+2px)]" : "-translate-x-full top-16"
             )}>
               {/* Top border line */}
               <div className="w-full h-px bg-gray-100 dark:bg-gray-900"></div>

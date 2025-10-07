@@ -2015,7 +2015,7 @@ const EditorPage = () => {
   };
 
   return (
-    <div className={`min-h-screen bg-background ${isPreviewMode ? 'preview-mode' : ''}`}>
+    <div className={`bg-background ${isPreviewMode ? 'preview-mode' : ''}`}>
       {/* Title input and auto-save indicator */}
       <div className="max-w-4xl mx-auto px-8 pt-6 pb-4">
         <div className="flex items-center justify-between mb-6">
@@ -2070,10 +2070,10 @@ const EditorPage = () => {
       </div>
 
       {/* Main editor or preview */}
-      <div className="max-w-4xl mx-auto px-8 pb-64">
+      <div className="max-w-4xl mx-auto px-8 pb-8">
         <div className="tab-content">
           {isLoadingContent ? (
-            <div className="min-h-[400px] flex items-center justify-center">
+            <div className="min-h-[200px] flex items-center justify-center">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
                 <p className="text-gray-600 dark:text-gray-400">Loading content...</p>
@@ -2082,14 +2082,14 @@ const EditorPage = () => {
           ) : isPreviewMode ? (
             <EditorPreview 
               data={previewData}
-              className="min-h-[400px]"
+              className="min-h-[200px]"
             />
           ) : (
             <div 
               ref={holderRef}
-              className="min-h-[400px] focus:outline-none"
+              className="min-h-[200px] focus:outline-none"
               style={{
-                minHeight: '400px'
+                minHeight: '200px'
               }}
             />
           )}

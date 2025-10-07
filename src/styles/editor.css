@@ -855,7 +855,7 @@ textarea[placeholder*="Author"]:focus,
   color: rgb(55, 53, 47) !important;
   line-height: 1.6 !important;
   font-size: 16px !important;
-  padding-bottom: 100px !important;
+  padding-bottom: 20px !important;
   max-width: none !important;
   width: 100% !important;
 }

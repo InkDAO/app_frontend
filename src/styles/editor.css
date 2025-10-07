@@ -69,11 +69,26 @@
   color: #6B7280 !important;
 }
 
+/* Ensure block tools are always visible on touch devices */
+@media (hover: none) and (pointer: coarse) {
+  .ce-block__plus,
+  .ce-block__drag {
+    opacity: 0.8 !important;
+  }
+  
+  .ce-block--focused .ce-block__plus,
+  .ce-block--focused .ce-block__drag,
+  .ce-block--selected .ce-block__plus,
+  .ce-block--selected .ce-block__drag {
+    opacity: 1 !important;
+  }
+}
+
 /* Mobile/Touch device support - always show plus button on mobile */
 @media (hover: none) and (pointer: coarse) {
   .ce-block__plus,
   .ce-block__drag {
-    opacity: 0.6 !important;
+    opacity: 0.8 !important;
   }
   
   .ce-block--focused .ce-block__plus,
@@ -86,16 +101,44 @@
 
 /* Alternative mobile detection - for devices with max-width */
 @media (max-width: 768px) {
+  /* Always show plus and drag handles on mobile for better UX */
   .ce-block__plus,
   .ce-block__drag {
-    opacity: 0.6 !important;
+    opacity: 0.8 !important;
+    transition: opacity 0.2s ease !important;
   }
   
+  /* Show handles when block is focused or selected */
   .ce-block--focused .ce-block__plus,
   .ce-block--focused .ce-block__drag,
   .ce-block--selected .ce-block__plus,
   .ce-block--selected .ce-block__drag {
     opacity: 1 !important;
+  }
+  
+  /* Also show handles on hover for devices that support it */
+  .ce-block:hover .ce-block__plus,
+  .ce-block:hover .ce-block__drag {
+    opacity: 1 !important;
+  }
+  
+  /* Make handles more touch-friendly */
+  .ce-block__plus,
+  .ce-block__drag {
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    min-height: 24px !important;
+    padding: 4px !important;
+    margin: 2px !important;
+  }
+  
+  /* Ensure handles are visible and clickable */
+  .ce-block__plus::before,
+  .ce-block__drag::before {
+    width: 16px !important;
+    height: 16px !important;
+    font-size: 16px !important;
   }
   
   /* Ensure command menu search bar is visible on mobile */
@@ -153,6 +196,41 @@
     max-width: 90vw !important;
     max-height: 60vh !important;
     overflow-y: auto !important;
+    position: fixed !important;
+    z-index: 99999 !important;
+    background: white !important;
+    border: 1px solid #e1e1e1 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  }
+  
+  /* Dark mode for mobile popovers */
+  .dark .ce-popover,
+  .dark .ce-conversion-toolbar {
+    background: rgb(32, 32, 32) !important;
+    border: 1px solid rgb(55, 55, 55) !important;
+  }
+  
+  /* Ensure popover items are touch-friendly */
+  .ce-popover__item,
+  .ce-conversion-toolbar__item {
+    padding: 12px 16px !important;
+    font-size: 14px !important;
+    min-height: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+    cursor: pointer !important;
+  }
+  
+  /* Make popover items more prominent on mobile */
+  .ce-popover__item:hover,
+  .ce-conversion-toolbar__item:hover {
+    background: #f0f0f0 !important;
+  }
+  
+  .dark .ce-popover__item:hover,
+  .dark .ce-conversion-toolbar__item:hover {
+    background: rgb(55, 55, 55) !important;
   }
   
   /* Mobile-specific width constraints */
@@ -206,6 +284,54 @@
   /* Prevent resize handles from causing overflow */
   .resize-handle {
     display: none !important;
+  }
+  
+  /* Ensure block tools are always visible on mobile */
+  .ce-block__tools {
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: flex !important;
+  }
+  
+  /* Make sure plus button is always visible on mobile */
+  .ce-block__plus {
+    opacity: 0.9 !important;
+    visibility: visible !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  
+  /* Style the plus button for mobile */
+  .ce-block__plus::before {
+    content: "+" !important;
+    font-size: 18px !important;
+    font-weight: bold !important;
+    color: #666 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  
+  /* Make plus button more prominent on mobile */
+  .ce-block__plus:hover::before,
+  .ce-block:hover .ce-block__plus::before {
+    color: #333 !important;
+    background-color: #f0f0f0 !important;
+    border-radius: 50% !important;
+    width: 20px !important;
+    height: 20px !important;
+  }
+  
+  /* Dark mode for mobile plus button */
+  .dark .ce-block__plus::before {
+    color: #ccc !important;
+  }
+  
+  .dark .ce-block__plus:hover::before,
+  .dark .ce-block:hover .ce-block__plus::before {
+    color: #fff !important;
+    background-color: #444 !important;
   }
 }
 

@@ -1497,11 +1497,116 @@ const EditorPage = () => {
                   element.addEventListener('keydown', handleDirectInput);
                   element.addEventListener('paste', () => setTimeout(handleDirectInput, 10));
                   
+                  // Mobile-specific event handling for slash commands
+                  element.addEventListener('input', (e: Event) => {
+                    const target = e.target as HTMLElement;
+                    const text = target.textContent || '';
+                    
+                    // Check if the last character typed is a slash
+                    if (text.endsWith('/')) {
+                      // Trigger the slash command menu on mobile
+                      setTimeout(() => {
+                        // Dispatch a custom event or trigger the EditorJS slash command
+                        const inputEvent = new InputEvent('input', {
+                          inputType: 'insertText',
+                          data: '/'
+                        });
+                        target.dispatchEvent(inputEvent);
+                        
+                        // Also try to trigger the popover manually
+                        const editorInstance = editorRef.current;
+                        if (editorInstance) {
+                          // Try to trigger the block tool menu
+                          const block = target.closest('.ce-block');
+                          if (block) {
+                            // Simulate clicking the plus button to open the tool menu
+                            const plusButton = block.querySelector('.ce-block__plus');
+                            if (plusButton) {
+                              (plusButton as HTMLElement).click();
+                            }
+                          }
+                        }
+                      }, 100);
+                    }
+                  });
+                  
+                  // Additional mobile keyboard event handling
+                  element.addEventListener('keypress', (e: KeyboardEvent) => {
+                    if (e.key === '/') {
+                      // Prevent default and handle slash command
+                      e.preventDefault();
+                      setTimeout(() => {
+                        const target = e.target as HTMLElement;
+                        const block = target.closest('.ce-block');
+                        if (block) {
+                          const plusButton = block.querySelector('.ce-block__plus');
+                          if (plusButton) {
+                            (plusButton as HTMLElement).click();
+                          }
+                        }
+                      }, 50);
+                    }
+                  });
+                  
                   // Initial check
                   handleDirectInput({ target: element } as any);
                 });
               }
             }, 200);
+            
+            // Mobile-specific slash command handler
+            setTimeout(() => {
+              const editorContainer = holderRef.current;
+              if (editorContainer) {
+                // Add a global mobile keyboard handler
+                const handleMobileSlashCommand = (e: Event) => {
+                  const target = e.target as HTMLElement;
+                  
+                  // Check if this is a contenteditable element in the editor
+                  if (target.contentEditable === 'true' && editorContainer.contains(target)) {
+                    const text = target.textContent || '';
+                    
+                    // If the text ends with a slash, trigger the command menu
+                    if (text.endsWith('/')) {
+                      setTimeout(() => {
+                        // Find the current block and trigger its plus button
+                        const currentBlock = target.closest('.ce-block');
+                        if (currentBlock) {
+                          const plusButton = currentBlock.querySelector('.ce-block__plus') as HTMLElement;
+                          if (plusButton) {
+                            // Click the plus button to open the tool menu
+                            plusButton.click();
+                          }
+                        }
+                      }, 150);
+                    }
+                  }
+                };
+                
+                // Listen for input events on the entire editor container
+                editorContainer.addEventListener('input', handleMobileSlashCommand, true);
+                editorContainer.addEventListener('keyup', handleMobileSlashCommand, true);
+                
+                // Also listen for composition events (important for mobile keyboards)
+                editorContainer.addEventListener('compositionend', (e: CompositionEvent) => {
+                  const target = e.target as HTMLElement;
+                  if (target.contentEditable === 'true' && editorContainer.contains(target)) {
+                    const text = target.textContent || '';
+                    if (text.endsWith('/')) {
+                      setTimeout(() => {
+                        const currentBlock = target.closest('.ce-block');
+                        if (currentBlock) {
+                          const plusButton = currentBlock.querySelector('.ce-block__plus') as HTMLElement;
+                          if (plusButton) {
+                            plusButton.click();
+                          }
+                        }
+                      }, 150);
+                    }
+                  }
+                }, true);
+              }
+            }, 300);
           }, 100);
         }, 300);
       }

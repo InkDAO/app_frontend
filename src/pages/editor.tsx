@@ -1335,7 +1335,6 @@ const EditorPage = () => {
           class: Paragraph,
           inlineToolbar: true,
           config: {
-            placeholder: "Write '/' for commands..."
           }
         },
         list: {

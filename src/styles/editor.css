@@ -36,6 +36,93 @@
   color: #6B7280 !important;
 }
 
+/* Mobile/Touch device support - always show plus button on mobile */
+@media (hover: none) and (pointer: coarse) {
+  .ce-block__plus,
+  .ce-block__drag {
+    opacity: 0.6 !important;
+  }
+  
+  .ce-block--focused .ce-block__plus,
+  .ce-block--focused .ce-block__drag,
+  .ce-block--selected .ce-block__plus,
+  .ce-block--selected .ce-block__drag {
+    opacity: 1 !important;
+  }
+}
+
+/* Alternative mobile detection - for devices with max-width */
+@media (max-width: 768px) {
+  .ce-block__plus,
+  .ce-block__drag {
+    opacity: 0.6 !important;
+  }
+  
+  .ce-block--focused .ce-block__plus,
+  .ce-block--focused .ce-block__drag,
+  .ce-block--selected .ce-block__plus,
+  .ce-block--selected .ce-block__drag {
+    opacity: 1 !important;
+  }
+  
+  /* Ensure command menu search bar is visible on mobile */
+  .ce-popover__search,
+  .ce-conversion-toolbar__search,
+  .ce-popover__input,
+  .ce-conversion-toolbar__input,
+  .ce-popover input[type="text"],
+  .ce-conversion-toolbar input[type="text"],
+  .ce-popover .ce-popover__search,
+  .ce-popover .ce-popover__input,
+  .ce-conversion-toolbar .ce-conversion-toolbar__search,
+  .ce-conversion-toolbar .ce-conversion-toolbar__input,
+  .ce-popover input,
+  .ce-conversion-toolbar input,
+  .ce-popover__search-input,
+  .ce-conversion-toolbar__search-input {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 100% !important;
+    padding: 8px 12px !important;
+    margin-bottom: 8px !important;
+    border: 1px solid #e1e1e1 !important;
+    border-radius: 6px !important;
+    font-size: 14px !important;
+    background: white !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Dark mode for mobile search */
+  .dark .ce-popover__search,
+  .dark .ce-conversion-toolbar__search,
+  .dark .ce-popover__input,
+  .dark .ce-conversion-toolbar__input,
+  .dark .ce-popover input[type="text"],
+  .dark .ce-conversion-toolbar input[type="text"],
+  .dark .ce-popover .ce-popover__search,
+  .dark .ce-popover .ce-popover__input,
+  .dark .ce-conversion-toolbar .ce-conversion-toolbar__search,
+  .dark .ce-conversion-toolbar .ce-conversion-toolbar__input,
+  .dark .ce-popover input,
+  .dark .ce-conversion-toolbar input,
+  .dark .ce-popover__search-input,
+  .dark .ce-conversion-toolbar__search-input {
+    background: rgb(32, 32, 32) !important;
+    border: 1px solid rgb(55, 55, 55) !important;
+    color: white !important;
+  }
+  
+  /* Ensure popover is properly sized on mobile */
+  .ce-popover,
+  .ce-conversion-toolbar {
+    min-width: 280px !important;
+    max-width: 90vw !important;
+    max-height: 60vh !important;
+    overflow-y: auto !important;
+  }
+}
+
 .ce-toolbar__content,
 .ce-block__content {
   max-width: 100% !important;
@@ -319,6 +406,18 @@
 .ce-header[data-placeholder]:empty::before {
   color: #a8a8a8 !important;
   font-weight: normal !important;
+}
+
+/* Fix placeholder behavior for slash commands */
+.ce-paragraph[data-placeholder]:not(:empty)::before,
+.ce-header[data-placeholder]:not(:empty)::before {
+  display: none !important;
+}
+
+/* Ensure placeholder disappears when typing */
+.ce-paragraph:focus[data-placeholder]::before,
+.ce-header:focus[data-placeholder]::before {
+  display: none !important;
 }
 
 /* Link styling */

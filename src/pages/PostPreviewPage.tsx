@@ -175,113 +175,116 @@ export const PostPreviewPage = () => {
     const totalPrice = pricePerAsset * parseInt(purchaseAmount);
 
     return (
-      <div className="px-4 sm:px-6 py-6 lg:px-8 max-w-7xl mx-auto w-full">
-        <div className="max-w-2xl mx-auto">
+      <div className="flex items-center justify-center px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full min-h-[calc(100vh-8rem)]">
+        <div className="max-w-4xl mx-auto w-full">
 
-            {/* Premium Content Card */}
-            <Card className="relative overflow-hidden border-0 shadow-2xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
+            {/* Premium Content Card - Compact Design */}
+            <Card className="relative overflow-hidden border-0 shadow-xl bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm">
               {/* Gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-600/5 via-purple-600/5 to-indigo-600/5 dark:from-blue-400/5 dark:via-purple-400/5 dark:to-indigo-400/5"></div>
-              <CardHeader className="relative text-center pb-8 pt-12">
-                
-                {/* Lock icon with glow effect */}
-                <div className="mx-auto mb-6 p-6 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 shadow-lg">
-                  <div className="relative">
-                    <Lock className="h-16 w-16 text-slate-600 dark:text-slate-300" />
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-400/20 to-purple-400/20 animate-pulse"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-600/3 via-purple-600/3 to-indigo-600/3 dark:from-blue-400/3 dark:via-purple-400/3 dark:to-indigo-400/3"></div>
+              
+              <CardHeader className="relative pb-4 pt-6 px-4 sm:px-6">
+                <div className="flex items-start gap-4">
+                  {/* Lock icon - smaller and inline */}
+                  <div className="flex-shrink-0 p-3 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800 shadow-md">
+                    <Lock className="h-8 w-8 sm:h-10 sm:w-10 text-slate-600 dark:text-slate-300" />
+                  </div>
+                  
+                  {/* Title and description */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-200 mb-2">
+                          {assetData?.assetTitle || 'Untitled'}
+                        </h3>
+                        {assetData?.description && (
+                          <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                            {assetData.description}
+                          </p>
+                        )}
+                      </div>
+                      
+                      {/* Action Button - moved to header */}
+                      <div className="flex-shrink-0">
+                        {isOwned ? (
+                          <Button 
+                            onClick={() => window.location.reload()}
+                            size="sm"
+                            className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-4 py-2 text-sm font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            Read Now
+                          </Button>
+                        ) : (
+                          <Button 
+                            onClick={() => setIsPurchaseDialogOpen(true)}
+                            size="sm"
+                            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2 text-sm font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+                          >
+                            <ShoppingCart className="h-4 w-4 mr-2" />
+                            Purchase
+                          </Button>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
-
               </CardHeader>
               
-              <CardContent className="relative space-y-8 px-12 pb-12">
-                {/* Asset Information */}
-                <div className="text-center space-y-4">
-                  <h3 className="text-2xl font-bold text-slate-800 dark:text-slate-200">
-                    {assetData?.assetTitle || 'Untitled'}
-                  </h3>
-                  {assetData?.description && (
-                    <p className="text-slate-600 dark:text-slate-400 line-clamp-3 leading-relaxed">
-                      {assetData.description}
-                    </p>
-                  )}
-                </div>
+              <CardContent className="relative px-4 sm:px-6 pb-6">
 
-                {/* Price Information */}
-                <div className="relative">
-                  <div className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-2xl p-8 text-center border border-blue-200/50 dark:border-blue-700/50">
-                    <div className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">
-                      {pricePerAsset.toFixed(4)} ETH
-                    </div>
-                    <p className="text-slate-600 dark:text-slate-400 font-medium">per asset</p>
-                    
-                    {/* Value proposition */}
-                    <div className="mt-4 inline-flex items-center px-4 py-2 rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 text-sm font-medium">
-                      <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                      One-time purchase • Lifetime access
+                {/* Asset Details - Including Price */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+                  <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-600 dark:text-slate-400 font-medium text-xs">Price</span>
+                      <span className="font-mono text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 px-2 py-1 rounded font-semibold">
+                        {pricePerAsset.toFixed(4)} ETH
+                      </span>
                     </div>
                   </div>
-                </div>
-
-                {/* Purchase/Read Button */}
-                <div className="text-center">
-                  {isOwned ? (
-                    <Button 
-                      onClick={() => window.location.reload()} // Refresh to show content
-                      size="lg"
-                      className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-8 py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                    >
-                      <Eye className="h-5 w-5 mr-3" />
-                      Read Now
-                    </Button>
-                  ) : (
-                    <Button 
-                      onClick={() => setIsPurchaseDialogOpen(true)}
-                      size="lg"
-                      className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                    >
-                      <ShoppingCart className="h-5 w-5 mr-3" />
-                      Purchase to Unlock
-                    </Button>
-                  )}
-                </div>
-
-                {/* Asset Details */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-                  <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-4">
+                  <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-slate-600 dark:text-slate-400 font-medium">Asset Address</span>
+                      <span className="text-slate-600 dark:text-slate-400 font-medium text-xs">Asset</span>
                       <span className="font-mono text-xs bg-slate-200 dark:bg-slate-600 px-2 py-1 rounded">
                         {assetAddress?.slice(0, 6)}...{assetAddress?.slice(-4)}
                       </span>
                     </div>
                   </div>
-                  <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-4">
+                  <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-slate-600 dark:text-slate-400 font-medium">Author</span>
+                      <span className="text-slate-600 dark:text-slate-400 font-medium text-xs">Author</span>
                       <span className="font-mono text-xs bg-slate-200 dark:bg-slate-600 px-2 py-1 rounded">
                         {assetData?.author?.slice(0, 6)}...{assetData?.author?.slice(-4)}
                       </span>
                     </div>
                   </div>
                 </div>
+                
+                {/* Value proposition - compact */}
+                <div className="mt-3 text-center">
+                  <div className="inline-flex items-center px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 text-xs font-medium">
+                    <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></span>
+                    One-time purchase • Lifetime access
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
-            {/* Purchase Dialog */}
+            {/* Purchase Dialog - Responsive */}
             <Dialog open={isPurchaseDialogOpen} onOpenChange={setIsPurchaseDialogOpen}>
-              <DialogContent className="max-w-md">
+              <DialogContent className="max-w-md mx-4 sm:mx-auto">
                 <DialogHeader className="text-center pb-4">
-                  <div className="mx-auto mb-4 p-3 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 w-fit">
-                    <ShoppingCart className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                  <div className="mx-auto mb-3 p-2 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 w-fit">
+                    <ShoppingCart className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <DialogTitle className="text-2xl font-bold">Complete Purchase</DialogTitle>
-                  <DialogDescription className="text-slate-600 dark:text-slate-400">
+                  <DialogTitle className="text-xl sm:text-2xl font-bold">Complete Purchase</DialogTitle>
+                  <DialogDescription className="text-slate-600 dark:text-slate-400 text-sm">
                     Enter the quantity you want to purchase
                   </DialogDescription>
                 </DialogHeader>
                 
-                <div className="space-y-6">
+                <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="amount" className="text-sm font-medium">Quantity</Label>
                     <Input
@@ -290,19 +293,19 @@ export const PostPreviewPage = () => {
                       min="1"
                       value={purchaseAmount}
                       onChange={(e) => setPurchaseAmount(e.target.value)}
-                      className="text-center text-lg font-semibold border-2 focus:border-blue-500"
+                      className="text-center text-base font-semibold border-2 focus:border-blue-500"
                     />
                   </div>
                   
-                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-6 space-y-4 border border-blue-200/50 dark:border-blue-700/50">
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-4 space-y-3 border border-blue-200/50 dark:border-blue-700/50">
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-slate-600 dark:text-slate-400">Price per asset:</span>
                       <span className="font-semibold text-slate-800 dark:text-slate-200">{pricePerAsset.toFixed(4)} ETH</span>
                     </div>
-                    <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
+                    <div className="border-t border-slate-200 dark:border-slate-700 pt-3">
                       <div className="flex justify-between items-center">
-                        <span className="font-semibold text-lg text-slate-800 dark:text-slate-200">Total:</span>
-                        <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{totalPrice.toFixed(4)} ETH</span>
+                        <span className="font-semibold text-base text-slate-800 dark:text-slate-200">Total:</span>
+                        <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{totalPrice.toFixed(4)} ETH</span>
                       </div>
                     </div>
                   </div>
@@ -324,7 +327,7 @@ export const PostPreviewPage = () => {
                     {isBuying ? (
                       <>
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Processing Transaction...
+                        Processing...
                       </>
                     ) : (
                       <>

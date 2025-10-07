@@ -1463,6 +1463,45 @@ const EditorPage = () => {
             
             // Update empty state after editor is ready
             updateEmptyState();
+            
+            // Handle placeholder behavior
+            handlePlaceholderBehavior();
+            
+            // Additional direct approach - intercept EditorJS placeholder behavior
+            setTimeout(() => {
+              const editorContainer = holderRef.current;
+              if (editorContainer) {
+                // Find all contenteditable elements and add direct event listeners
+                const contentEditables = editorContainer.querySelectorAll('[contenteditable="true"]');
+                contentEditables.forEach(element => {
+                  const handleDirectInput = (e: Event) => {
+                    const target = e.target as HTMLElement;
+                    const text = target.textContent || '';
+                    
+                    // If there's any content, force hide placeholder
+                    if (text.length > 0) {
+                      target.classList.add('has-content');
+                      target.classList.remove('is-empty');
+                      target.style.setProperty('--placeholder-display', 'none', 'important');
+                      target.style.setProperty('--placeholder-opacity', '0', 'important');
+                    } else {
+                      target.classList.remove('has-content');
+                      target.classList.add('is-empty');
+                      target.style.setProperty('--placeholder-display', 'block', 'important');
+                      target.style.setProperty('--placeholder-opacity', '1', 'important');
+                    }
+                  };
+                  
+                  element.addEventListener('input', handleDirectInput);
+                  element.addEventListener('keyup', handleDirectInput);
+                  element.addEventListener('keydown', handleDirectInput);
+                  element.addEventListener('paste', () => setTimeout(handleDirectInput, 10));
+                  
+                  // Initial check
+                  handleDirectInput({ target: element } as any);
+                });
+              }
+            }, 200);
           }, 100);
         }, 300);
       }
@@ -1766,6 +1805,11 @@ const EditorPage = () => {
           setTimeout(() => autoResizeCodeBlocks(), 50);
         }
         
+        // Handle placeholder behavior for new elements
+        if (hasImageChanges || hasQuoteChanges || hasCodeChanges) {
+          setTimeout(() => handlePlaceholderBehavior(), 100);
+        }
+        
         mutationTimeout = null;
       }, 50); // Reduced throttle to 50ms for better responsiveness
     };
@@ -1952,6 +1996,90 @@ const EditorPage = () => {
     });
   };
 
+  // Function to handle placeholder behavior for EditorJS blocks
+  const handlePlaceholderBehavior = () => {
+    if (!holderRef.current) return;
+    
+    // Find all elements with placeholders - more comprehensive selectors
+    const elementsWithPlaceholders = holderRef.current.querySelectorAll(
+      '[data-placeholder]:not([data-placeholder=""]), ' +
+      '.ce-paragraph[data-placeholder], ' +
+      '.ce-header[data-placeholder], ' +
+      '[contenteditable="true"][data-placeholder], ' +
+      '.cdx-input[data-placeholder]'
+    );
+    
+    elementsWithPlaceholders.forEach(element => {
+      const htmlElement = element as HTMLElement;
+      
+      // Check if element has content (including whitespace and special characters)
+      const hasContent = () => {
+        const text = htmlElement.textContent || htmlElement.innerText || '';
+        // Check for any visible content, including single characters like '/'
+        return text.length > 0;
+      };
+      
+      // Function to update placeholder visibility
+      const updatePlaceholder = () => {
+        const hasText = hasContent();
+        
+        if (hasText) {
+          // Hide placeholder completely
+          htmlElement.style.setProperty('--placeholder-display', 'none', 'important');
+          htmlElement.style.setProperty('--placeholder-opacity', '0', 'important');
+          htmlElement.classList.add('has-content');
+          htmlElement.classList.remove('is-empty');
+        } else {
+          // Show placeholder
+          htmlElement.style.setProperty('--placeholder-display', 'block', 'important');
+          htmlElement.style.setProperty('--placeholder-opacity', '1', 'important');
+          htmlElement.classList.remove('has-content');
+          htmlElement.classList.add('is-empty');
+        }
+      };
+      
+      // Initial check
+      updatePlaceholder();
+      
+      // Add event listeners for content changes
+      const handleInput = () => {
+        updatePlaceholder();
+      };
+      
+      htmlElement.addEventListener('input', handleInput);
+      htmlElement.addEventListener('keyup', handleInput);
+      htmlElement.addEventListener('keydown', handleInput);
+      htmlElement.addEventListener('paste', () => setTimeout(handleInput, 10));
+      htmlElement.addEventListener('focus', handleInput);
+      htmlElement.addEventListener('blur', handleInput);
+      htmlElement.addEventListener('DOMCharacterDataModified', handleInput);
+      
+      // Use MutationObserver for more reliable detection
+      const observer = new MutationObserver(() => {
+        updatePlaceholder();
+      });
+      observer.observe(htmlElement, {
+        childList: true,
+        subtree: true,
+        characterData: true,
+        attributes: true,
+        attributeFilter: ['data-placeholder']
+      });
+      
+      // Also observe the parent element for EditorJS block changes
+      const parentObserver = new MutationObserver(() => {
+        updatePlaceholder();
+      });
+      if (htmlElement.parentElement) {
+        parentObserver.observe(htmlElement.parentElement, {
+          childList: true,
+          subtree: true,
+          characterData: true
+        });
+      }
+    });
+  };
+
   const autoResizeCodeBlocks = () => {
     if (!holderRef.current) return;
 
@@ -2017,7 +2145,7 @@ const EditorPage = () => {
   return (
     <div className={`bg-background ${isPreviewMode ? 'preview-mode' : ''}`}>
       {/* Title input and auto-save indicator */}
-      <div className="max-w-4xl mx-auto px-8 pt-6 pb-4">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 pt-6 pb-4">
         <div className="flex items-center justify-between mb-6">
           <input
             type="text"
@@ -2027,7 +2155,7 @@ const EditorPage = () => {
               // Update empty state when title changes
               await updateEmptyState();
             }}
-            className="text-5xl font-bold bg-transparent border-none outline-none flex-1 text-gray-900 dark:text-gray-100 placeholder-gray-400"
+            className="text-3xl sm:text-4xl md:text-5xl font-bold bg-transparent border-none outline-none flex-1 text-gray-900 dark:text-gray-100 placeholder-gray-400"
             placeholder="Untitled"
             disabled={isPreviewMode}
           />
@@ -2043,24 +2171,24 @@ const EditorPage = () => {
                     setIsPreviewMode(false);
                   }
                 }}
-                className={`flex items-center space-x-2 px-4 py-2.5 text-sm font-medium rounded-md transition-all duration-200 ${
+                className={`flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 ${
                   !isPreviewMode
                     ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm border border-gray-200 dark:border-gray-600'
                     : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-700/50'
                 }`}
               >
-                <Edit3 className="w-4 h-4" />
+                <Edit3 className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span>Edit</span>
               </button>
               <button
                 onClick={togglePreview}
-                className={`flex items-center space-x-2 px-4 py-2.5 text-sm font-medium rounded-md transition-all duration-200 ${
+                className={`flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 ${
                   isPreviewMode
                     ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm border border-gray-200 dark:border-gray-600'
                     : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-700/50'
                 }`}
               >
-                <Eye className="w-4 h-4" />
+                <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span>Preview</span>
               </button>
             </div>
@@ -2070,7 +2198,7 @@ const EditorPage = () => {
       </div>
 
       {/* Main editor or preview */}
-      <div className="max-w-4xl mx-auto px-8 pb-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 pb-8">
         <div className="tab-content">
           {isLoadingContent ? (
             <div className="min-h-[200px] flex items-center justify-center">
@@ -2168,8 +2296,8 @@ const EditorPage = () => {
 
       {/* Unsaved Changes Dialog */}
       {showUnsavedDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
-          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] px-4">
+          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-md w-full p-4 sm:p-6">
             <div className="flex items-center mb-4">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-yellow-100 dark:bg-yellow-900 rounded-full flex items-center justify-center">
@@ -2185,8 +2313,8 @@ const EditorPage = () => {
               </div>
             </div>
             
-            <div className="mb-6">
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+            <div className="mb-4 sm:mb-6">
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
                 {dialogType === 'write' 
                   ? 'You are opening a new editor. Make sure to save your current changes to IPFS before proceeding. Your current work will be lost if you continue without saving.'
                   : 'You are about to leave the editor. Make sure to save your changes to IPFS before navigating away. Your work will be lost if you continue without saving.'
@@ -2194,17 +2322,17 @@ const EditorPage = () => {
               </p>
             </div>
             
-            <div className="flex justify-end space-x-3">
+            <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">
               <button
                 onClick={handleDiscard}
-                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md transition-colors"
+                className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md transition-colors"
               >
                 {dialogType === 'write' ? 'Open Without Saving' : 'Leave Without Saving'}
               </button>
               <button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed rounded-md transition-colors"
+                className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed rounded-md transition-colors"
               >
                 {isSaving ? 'Saving...' : (dialogType === 'write' ? 'Save & Open New' : 'Save & Leave')}
               </button>

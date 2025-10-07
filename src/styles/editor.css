@@ -1,4 +1,37 @@
 /* EditorJS Notion-like styles */
+
+/* Mobile viewport fix - prevent horizontal scroll */
+@media (max-width: 768px) {
+  body, html {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+  }
+  
+  /* Ensure all major containers fit within viewport */
+  .bg-background,
+  [class*="max-w-"] {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+  
+  /* Prevent any element from causing horizontal scroll */
+  * {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Allow specific elements to have their own max-width */
+  img, 
+  .resize-handle,
+  svg,
+  button,
+  input[type="text"],
+  input[type="email"],
+  input[type="password"] {
+    max-width: 100% !important;
+  }
+}
+
 /* Show block tools but hide unwanted toolbars */
 .ce-toolbar__content::before,
 .ce-toolbar__content::after {
@@ -120,6 +153,59 @@
     max-width: 90vw !important;
     max-height: 60vh !important;
     overflow-y: auto !important;
+  }
+  
+  /* Mobile-specific width constraints */
+  .ce-toolbar__content,
+  .ce-block__content,
+  .codex-editor,
+  .ce-block {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+  
+  /* Prevent code blocks from overflowing on mobile */
+  .ce-code {
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    word-wrap: break-word !important;
+  }
+  
+  .ce-code__textarea {
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    word-wrap: break-word !important;
+    white-space: pre-wrap !important;
+  }
+  
+  /* Prevent tables from overflowing on mobile */
+  .ce-table {
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    display: block !important;
+  }
+  
+  /* Ensure images don't overflow on mobile */
+  .ce-image,
+  .ce-image__image,
+  .image-resize-wrapper,
+  .image-resize-wrapper img,
+  img {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+  
+  /* Ensure paragraphs and text don't overflow */
+  .ce-paragraph,
+  .ce-header {
+    max-width: 100% !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+  }
+  
+  /* Prevent resize handles from causing overflow */
+  .resize-handle {
+    display: none !important;
   }
 }
 
@@ -401,23 +487,145 @@
   background: transparent !important;
 }
 
-/* Placeholder styling */
+/* Placeholder styling - base styles */
 .ce-paragraph[data-placeholder]:empty::before,
-.ce-header[data-placeholder]:empty::before {
+.ce-header[data-placeholder]:empty::before,
+[contenteditable="true"][data-placeholder]:empty::before,
+.cdx-input[data-placeholder]:empty::before {
   color: #a8a8a8 !important;
   font-weight: normal !important;
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
-/* Fix placeholder behavior for slash commands */
+/* Hide placeholders when element has content (using class-based approach) */
+.has-content[data-placeholder]::before,
+.has-content::before {
+  content: none !important;
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* Hide placeholders when element is not empty */
 .ce-paragraph[data-placeholder]:not(:empty)::before,
-.ce-header[data-placeholder]:not(:empty)::before {
+.ce-header[data-placeholder]:not(:empty)::before,
+[contenteditable="true"][data-placeholder]:not(:empty)::before,
+.cdx-input[data-placeholder]:not(:empty)::before {
+  content: none !important;
   display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
 }
 
-/* Ensure placeholder disappears when typing */
-.ce-paragraph:focus[data-placeholder]::before,
-.ce-header:focus[data-placeholder]::before {
+/* Hide placeholders when focused (even if empty) */
+.ce-paragraph[data-placeholder]:focus::before,
+.ce-header[data-placeholder]:focus::before,
+[contenteditable="true"][data-placeholder]:focus::before,
+.cdx-input[data-placeholder]:focus::before {
+  content: none !important;
   display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* Use CSS custom properties for JavaScript control */
+.ce-paragraph[data-placeholder]::before,
+.ce-header[data-placeholder]::before,
+[contenteditable="true"][data-placeholder]::before,
+.cdx-input[data-placeholder]::before {
+  display: var(--placeholder-display, block) !important;
+  opacity: var(--placeholder-opacity, 1) !important;
+  visibility: var(--placeholder-visibility, visible) !important;
+}
+
+/* Force hide for elements with has-content class */
+.has-content[data-placeholder]::before,
+.has-content::before,
+.has-content .ce-paragraph[data-placeholder]::before,
+.has-content .ce-header[data-placeholder]::before,
+.has-content [contenteditable="true"][data-placeholder]::before,
+.has-content .cdx-input[data-placeholder]::before {
+  content: none !important;
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* Additional aggressive hiding for all possible placeholder scenarios */
+*[data-placeholder]:not(.is-empty)::before {
+  content: none !important;
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* Override EditorJS default placeholder behavior */
+.codex-editor [data-placeholder]::before {
+  content: attr(data-placeholder) !important;
+}
+
+.codex-editor [data-placeholder]:not(.is-empty)::before,
+.codex-editor .has-content[data-placeholder]::before,
+.codex-editor [data-placeholder]:not(:empty)::before,
+.codex-editor [data-placeholder]:focus::before {
+  content: none !important;
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* Most aggressive approach - target all possible EditorJS placeholder scenarios */
+.codex-editor__redactor [data-placeholder]::before,
+.codex-editor__redactor .ce-block [data-placeholder]::before,
+.codex-editor__redactor .ce-block__content [data-placeholder]::before,
+.codex-editor__redactor .ce-paragraph [data-placeholder]::before,
+.codex-editor__redactor .ce-header [data-placeholder]::before {
+  content: attr(data-placeholder) !important;
+  color: #a8a8a8 !important;
+  font-weight: normal !important;
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Hide when element has content or is focused */
+.codex-editor__redactor [data-placeholder]:not(.is-empty)::before,
+.codex-editor__redactor .has-content[data-placeholder]::before,
+.codex-editor__redactor [data-placeholder]:not(:empty)::before,
+.codex-editor__redactor [data-placeholder]:focus::before,
+.codex-editor__redactor .ce-block [data-placeholder]:not(.is-empty)::before,
+.codex-editor__redactor .ce-block .has-content[data-placeholder]::before,
+.codex-editor__redactor .ce-block [data-placeholder]:not(:empty)::before,
+.codex-editor__redactor .ce-block [data-placeholder]:focus::before,
+.codex-editor__redactor .ce-block__content [data-placeholder]:not(.is-empty)::before,
+.codex-editor__redactor .ce-block__content .has-content[data-placeholder]::before,
+.codex-editor__redactor .ce-block__content [data-placeholder]:not(:empty)::before,
+.codex-editor__redactor .ce-block__content [data-placeholder]:focus::before,
+.codex-editor__redactor .ce-paragraph [data-placeholder]:not(.is-empty)::before,
+.codex-editor__redactor .ce-paragraph .has-content[data-placeholder]::before,
+.codex-editor__redactor .ce-paragraph [data-placeholder]:not(:empty)::before,
+.codex-editor__redactor .ce-paragraph [data-placeholder]:focus::before,
+.codex-editor__redactor .ce-header [data-placeholder]:not(.is-empty)::before,
+.codex-editor__redactor .ce-header .has-content[data-placeholder]::before,
+.codex-editor__redactor .ce-header [data-placeholder]:not(:empty)::before,
+.codex-editor__redactor .ce-header [data-placeholder]:focus::before {
+  content: none !important;
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* Use CSS custom properties for dynamic control */
+.codex-editor__redactor [data-placeholder]::before,
+.codex-editor__redactor .ce-block [data-placeholder]::before,
+.codex-editor__redactor .ce-block__content [data-placeholder]::before,
+.codex-editor__redactor .ce-paragraph [data-placeholder]::before,
+.codex-editor__redactor .ce-header [data-placeholder]::before {
+  display: var(--placeholder-display, block) !important;
+  opacity: var(--placeholder-opacity, 1) !important;
+  visibility: var(--placeholder-visibility, visible) !important;
 }
 
 /* Link styling */
@@ -858,6 +1066,38 @@ textarea[placeholder*="Author"]:focus,
   padding-bottom: 20px !important;
   max-width: none !important;
   width: 100% !important;
+  overflow-x: hidden !important;
+}
+
+/* Mobile-specific preview styles */
+@media (max-width: 768px) {
+  .preview-container {
+    font-size: 14px !important;
+    padding-bottom: 16px !important;
+  }
+  
+  .preview-header-1 {
+    font-size: 1.75em !important;
+  }
+  
+  .preview-header-2 {
+    font-size: 1.5em !important;
+  }
+  
+  .preview-header-3 {
+    font-size: 1.25em !important;
+  }
+  
+  .preview-code {
+    overflow-x: auto !important;
+    font-size: 12px !important;
+  }
+  
+  .preview-table {
+    display: block !important;
+    overflow-x: auto !important;
+    font-size: 12px !important;
+  }
 }
 
 .preview-container > * {

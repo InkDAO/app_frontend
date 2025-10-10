@@ -1,0 +1,185 @@
+.EditorPage1 {
+	font-family: sans-serif;
+	text-align: center;
+}
+
+html {
+	font-style: 16px;
+}
+
+body {
+	margin: 0;
+}
+
+/* styling button */
+#toggle-edit-btn {
+	background-color: #4267b2;
+	border: 1px solid #4267b2;
+	border-radius: 0.3rem;
+	color: #fff;
+	padding: 1rem 2rem;
+	font-size: 1.2rem;
+	margin: 2rem auto;
+}
+
+#toggle-edit-btn:focus,
+#toggle-edit-btn:hover {
+	cursor: pointer;
+}
+
+/* styling app content container */
+.editor-page-1-content {
+	margin: 1rem auto;
+	width: 80%;
+	padding: 5%;
+	background-color: #f4f5f9;
+	border-radius: 12px;
+}
+
+/* styling alert text when edit mode is enabled */
+.edit-mode-alert {
+	text-decoration: underline;
+	color: #c80000;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+	.editor-page-1-content {
+		width: 95%;
+		padding: 1%;
+		margin: 0.5rem auto;
+	}
+	
+	/* Reduce list padding on mobile */
+	.text-container ul,
+	.text-container ol {
+		padding-left: 1.5rem;
+	}
+	
+	/* Reduce heading margins on mobile */
+	.text-container h1,
+	.text-container h2,
+	.text-container h3,
+	.text-container h4,
+	.text-container h5,
+	.text-container h6 {
+		margin: 0.75rem 0;
+	}
+	
+	/* Reduce paragraph margins on mobile */
+	.text-container p {
+		margin: 0.25rem 0;
+	}
+	
+	/* Reduce blockquote margins on mobile */
+	.text-container blockquote {
+		margin: 0.75rem 0;
+		padding-left: 0.75rem;
+	}
+	
+	/* Reduce pre padding on mobile */
+	.text-container pre {
+		padding: 0.75rem;
+	}
+}
+
+/* styling text parsed */
+.text-container > *,
+.editor-container > * {
+	text-align: left;
+}
+
+/* Editor.js output styling */
+.text-container h1,
+.text-container h2,
+.text-container h3,
+.text-container h4,
+.text-container h5,
+.text-container h6 {
+	font-weight: bold;
+	margin: 1rem 0;
+}
+
+.text-container h1 {
+	font-size: 2rem;
+}
+
+.text-container h2 {
+	font-size: 1.5rem;
+}
+
+.text-container h3 {
+	font-size: 1.25rem;
+}
+
+.text-container p {
+	margin: 0.5rem 0;
+	line-height: 1.6;
+}
+
+.text-container ul {
+	margin: 1rem 0;
+	padding-left: 2rem;
+	list-style-type: disc;
+}
+
+.text-container ol {
+	margin: 1rem 0;
+	padding-left: 2rem;
+	list-style-type: decimal;
+}
+
+.text-container li {
+	margin: 0.25rem 0;
+	display: list-item;
+}
+
+.text-container blockquote {
+	border-left: 4px solid #ddd;
+	margin: 1rem 0;
+	padding-left: 1rem;
+	font-style: italic;
+}
+
+.text-container strong,
+.text-container b {
+	font-weight: bold;
+}
+
+.text-container em,
+.text-container i {
+	font-style: italic;
+}
+
+.text-container u {
+	text-decoration: underline;
+}
+
+.text-container mark {
+	background-color: #ffeb3b;
+	padding: 0.1em 0.2em;
+}
+
+.text-container code {
+	background-color: #f5f5f5;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-family: 'Courier New', monospace;
+}
+
+.text-container pre {
+	background-color: #f5f5f5;
+	padding: 1rem;
+	border-radius: 5px;
+	overflow-x: auto;
+	font-family: 'Courier New', monospace;
+}
+
+.text-container a {
+	color: #007bff;
+	text-decoration: underline;
+}
+
+.text-container a:hover {
+	color: #0056b3;
+}

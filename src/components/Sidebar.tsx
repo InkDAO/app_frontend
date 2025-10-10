@@ -68,6 +68,12 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       current: location.pathname === "/app/editor" || location.pathname.startsWith("/app/editor/")
     },
     {
+      name: "Editor (New)",
+      href: "/app/editorpage1",
+      icon: BookOpen,
+      current: location.pathname === "/app/editorpage1"
+    },
+    {
       name: "Announcements",
       href: "/app/announcements",
       icon: Megaphone,

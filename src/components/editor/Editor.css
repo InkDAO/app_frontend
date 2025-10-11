@@ -48,6 +48,8 @@ body {
 		width: 95%;
 		padding: 1%;
 		margin: 0.5rem auto;
+		background-color: transparent;
+		border-radius: 0;
 	}
 	
 	/* Reduce list padding on mobile */

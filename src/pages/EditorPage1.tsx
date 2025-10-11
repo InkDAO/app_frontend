@@ -16,24 +16,25 @@ const EditorPage1 = () => {
 
 	return (
 		<div className="EditorPage1">
-			{/* Title input */}
-			<div className="pt-6 pb-4">
-				<div className="flex items-center justify-between mb-6">
-					<input
-						type="text"
-						value={documentTitle}
-						onChange={(e) => setDocumentTitle(e.target.value)}
-						className="text-3xl sm:text-4xl md:text-5xl font-bold bg-transparent border-none outline-none flex-1 text-gray-900 dark:text-gray-100 placeholder-gray-400"
-						placeholder="Untitled"
-						disabled={isPreviewMode}
-					/>
+			<div className="editor-page-1-content">
+				{/* Title input */}
+				<div className="pt-6 pb-4">
+					<div className="flex items-center justify-between mb-6">
+						<input
+							type="text"
+							value={documentTitle}
+							onChange={(e) => setDocumentTitle(e.target.value)}
+							className="text-3xl sm:text-4xl md:text-5xl font-bold bg-transparent border-none outline-none flex-1 text-gray-900 dark:text-gray-100 placeholder-gray-400"
+							placeholder="Untitled"
+							disabled={isPreviewMode}
+						/>
+					</div>
 				</div>
-			</div>
 
-			{/* Tab Navigation */}
-			<div className="mb-2">
-				<nav className="flex justify-between items-center" aria-label="Tabs">
-					<div className="flex items-center bg-gray-100 dark:bg-gray-900 rounded-lg p-1 shadow-sm">
+				{/* Tab Navigation */}
+				<div className="mb-2">
+					<nav className="flex justify-end items-center" aria-label="Tabs">
+						<div className="flex items-center bg-gray-100 dark:bg-gray-900 rounded-lg p-1 shadow-sm">
 						<button
 							onClick={() => {
 								if (isPreviewMode) {
@@ -64,7 +65,6 @@ const EditorPage1 = () => {
 				</nav>
 			</div>
 
-			<div className="editor-page-1-content">
 				<div className="tab-content">
 					{isPreviewMode ? (
 						<EditorTextParser data={data} />

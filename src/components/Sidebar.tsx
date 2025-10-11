@@ -68,18 +68,6 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       current: location.pathname === "/app/editor" || location.pathname.startsWith("/app/editor/")
     },
     {
-      name: "Editor (New)",
-      href: "/app/editorpage1",
-      icon: BookOpen,
-      current: location.pathname === "/app/editorpage1"
-    },
-    {
-      name: "Editor (New 2)",
-      href: "/app/editorpage2",
-      icon: Edit3,
-      current: location.pathname === "/app/editorpage2"
-    },
-    {
       name: "Announcements",
       href: "/app/announcements",
       icon: Megaphone,
@@ -204,13 +192,6 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 
         {/* Footer Section */}
         <div className="p-4 border-t border-gray-100 dark:border-gray-900 flex-shrink-0">
-          {/* Copyright */}
-          {/* <div 
-            className="text-xs mb-4"
-            style={{ color: theme === "light" ? "#6B7280" : "#9CA3AF" }}
-          >
-            Copyright © 2025 dX. All rights reserved.
-          </div> */}
           
           {/* Social Links */}
           <div className="flex items-center justify-between w-full">

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { MyPostCard } from "@/components/MyPostCard";
-import { MyPostCardSkeleton } from "@/components/MyPostCardSkeleton";
+import { HomeCard } from "@/components/HomeCard";
+import { HomeCardSkeleton } from "@/components/HomeCardSkeleton";
 import { AuthGuard } from "@/components/AuthGuard";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, ArrowRight, RefreshCw, ChevronLeft, ChevronRight, Edit3 } from "lucide-react";
@@ -51,7 +51,7 @@ export const MyPostsPage = () => {
         {isAllAssetLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center">
             {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-              <MyPostCardSkeleton key={i} />
+              <HomeCardSkeleton key={i} />
             ))}
           </div>
           ) : filteredAssets.length > 0 ? (
@@ -59,7 +59,7 @@ export const MyPostsPage = () => {
               {/* Posts Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center">
                 {filteredAssets.map((asset, index) => (
-                  <MyPostCard 
+                  <HomeCard 
                     key={asset.assetCid || index} 
                     asset={asset}
                   />

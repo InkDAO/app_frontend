@@ -2,14 +2,14 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Calendar, User, Copy, FileImage, Lock, ShoppingCart, Eye } from "lucide-react";
-import EditorPreview from "@/components/EditorPreview";
+import EditorTextParser from "@/components/editor/EditorTextParser";
 import { fetchFileContentByAssetAddress, useAssetCidByAddress, useAssetData, useBuyAsset } from "@/services/dXService";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import '../styles/editor.css';
+import "@/components/editor/Editor.css";
 import { useAccount } from "wagmi";
 import { useAssetOwnership } from "@/hooks/useAssetOwnership";
 
@@ -394,26 +394,21 @@ export const PostPreviewPage = () => {
 
         {/* Content */}
         <div className="max-w-4xl mx-auto">
-          <div className="tab-content">
-            {isLoading ? (
-              <div className="min-h-[400px] flex items-center justify-center">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                  <p className="text-gray-600 dark:text-gray-400">Loading content...</p>
-                </div>
+          {isLoading ? (
+            <div className="min-h-[400px] flex items-center justify-center">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-600 dark:text-gray-400">Loading content...</p>
               </div>
-            ) : previewData ? (
-              <EditorPreview 
-                data={previewData}
-                className="min-h-[400px]"
-              />
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <FileImage className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                <p>No content available</p>
-              </div>
-            )}
-          </div>
+            </div>
+          ) : previewData ? (
+            <EditorTextParser data={previewData} />
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              <FileImage className="h-16 w-16 mx-auto mb-4 opacity-50" />
+              <p>No content available</p>
+            </div>
+          )}
         </div>
     </div>
   );

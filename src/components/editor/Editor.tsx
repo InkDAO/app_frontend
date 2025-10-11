@@ -5,10 +5,15 @@ import { EDITOR_JS_TOOLS } from "./tools";
 
 // create editor instance
 import { createReactEditorJS } from "react-editor-js";
-import { EditorData } from "./ExampleData";
+
+type EditorData = {
+  time?: number;
+  blocks?: any[];
+  version?: string;
+};
 
 interface EditorProps {
-  data: EditorData;
+  data?: EditorData;
   setData: (data: EditorData) => void;
 }
 
@@ -35,12 +40,11 @@ export default function Editor({ data, setData }: EditorProps) {
 
   return (
     <div className="editor-container">
-      <h4 className="edit-mode-alert">! Edit Mode Enabled</h4>
       <ReactEditorJS
         onInitialize={handleInitialize}
         tools={EDITOR_JS_TOOLS}
         onChange={handleSave}
-        defaultValue={data}
+        defaultValue={data || { blocks: [] }}
       />
     </div>
   );

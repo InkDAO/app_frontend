@@ -1,9 +1,8 @@
 import "../components/editor/Editor.css";
 import { useState, useCallback, useEffect } from "react";
 import { Edit3, Eye } from 'lucide-react';
-import Editor from "../components/editor/editor";
+import Editor from "../components/editor/Editor";
 import EditorTextParser from "../components/editor/EditorTextParser";
-import exampleData from "../components/editor/ExampleData";
 import { useAccount, useSignMessage } from 'wagmi';
 import { createGroupPost, updateFileById } from '@/services/dXService';
 import { useToast } from '@/hooks/use-toast';
@@ -11,10 +10,16 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useEditor } from '@/context/EditorContext';
 
+type EditorData = {
+	time?: number;
+	blocks?: any[];
+	version?: string;
+};
+
 const EditorPage = () => {
 	const [isPreviewMode, setIsPreviewMode] = useState(false);
-	const [data, setData] = useState(exampleData);
-	const [documentTitle, setDocumentTitle] = useState('Editor.js Demo');
+	const [data, setData] = useState<EditorData>({ blocks: [] });
+	const [documentTitle, setDocumentTitle] = useState('');
 	const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 	const [isSaving, setIsSaving] = useState(false);
 	const [isPublishing, setIsPublishing] = useState(false);
@@ -155,7 +160,7 @@ const EditorPage = () => {
 	}, [isSaving, isPublishing, isAuthenticated, hasUnsavedChanges, isEmpty, saveToAPI, publishToAPI, setEditorProps]);
 
 	return (
-		<div className="min-h-screen bg-white dark:bg-gray-950 py-0 sm:py-8 px-0 sm:px-6 lg:px-8">
+		<div className="bg-white dark:bg-gray-950 py-0 sm:py-8 px-0 sm:px-6 lg:px-8">
 			<div className="max-w-5xl mx-auto w-full">
 				{/* Card Container */}
 				<div className="sm:bg-gray-50 sm:dark:bg-gray-800 sm:rounded-xl sm:shadow-lg overflow-hidden sm:border sm:border-gray-200 sm:dark:border-gray-700">
@@ -167,7 +172,7 @@ const EditorPage = () => {
 							value={documentTitle}
 							onChange={(e) => setDocumentTitle(e.target.value)}
 							className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-transparent border-none outline-none w-full text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:ring-0"
-							placeholder="Untitled"
+							placeholder="Give your post a title..."
 							disabled={isPreviewMode}
 						/>
 					</div>

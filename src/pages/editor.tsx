@@ -2261,7 +2261,7 @@ const EditorPage = () => {
               await updateEmptyState();
             }}
             className="text-3xl sm:text-4xl md:text-5xl font-bold bg-transparent border-none outline-none flex-1 text-gray-900 dark:text-gray-100 placeholder-gray-400"
-            placeholder="Untitled"
+            placeholder="Give your post a title..."
             disabled={isPreviewMode}
           />
         </div>

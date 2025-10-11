@@ -74,6 +74,12 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       current: location.pathname === "/app/editorpage1"
     },
     {
+      name: "Editor (New 2)",
+      href: "/app/editorpage2",
+      icon: Edit3,
+      current: location.pathname === "/app/editorpage2"
+    },
+    {
       name: "Announcements",
       href: "/app/announcements",
       icon: Megaphone,

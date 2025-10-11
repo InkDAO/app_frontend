@@ -13,6 +13,7 @@ import { DraftsPage } from "@/pages/DraftsPage";
 import NotFound from "@/pages/NotFound";
 import EditorPage from "@/pages/editor";
 import EditorPage1 from "@/pages/EditorPage1";
+import EditorPage2 from "@/pages/EditorPage2";
 import { ThemeProvider } from "@/context/ThemeContext";
 
 import '@rainbow-me/rainbowkit/styles.css';
@@ -87,6 +88,11 @@ const App = () => (
                 <Route path="/app/editorpage1" element={
                   <AppLayout>
                     <EditorPage1 />
+                  </AppLayout>
+                } />
+                <Route path="/app/editorpage2" element={
+                  <AppLayout>
+                    <EditorPage2 />
                   </AppLayout>
                 } />
                 <Route path="*" element={<NotFound />} />

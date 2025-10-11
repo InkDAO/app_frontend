@@ -12,7 +12,7 @@ import Image from '@editorjs/image';
 import CustomImageTool from '@/components/CustomImageTool';
 import Link from '@editorjs/link';
 import Marker from '@editorjs/marker';
-import Underline from '@editorjs/underline';
+// import Underline from '@editorjs/underline';
 import Delimiter from '@editorjs/delimiter';
 import { Edit3, Eye } from 'lucide-react';
 import { useAccount, useSignMessage } from 'wagmi';
@@ -1411,10 +1411,10 @@ const EditorPage = () => {
           class: Marker,
           shortcut: 'CMD+SHIFT+M'
         },
-        underline: {
-          class: Underline,
-          shortcut: 'CMD+U'
-        },
+        // underline: {
+        //   class: Underline,
+        //   shortcut: 'CMD+U'
+        // },
         delimiter: {
           class: Delimiter
         }

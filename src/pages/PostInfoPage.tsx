@@ -4,8 +4,6 @@ import { Post, Comment } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDistanceToNow } from "date-fns";
 import { Loader2, Calendar, User, Copy } from "lucide-react";
-import { CommentCard } from "@/components/CommentCard";
-import { RichTextRenderer } from "@/components/RichTextRenderer";
 import { fetchFromIPFS, handleGetFileMetadataByCid } from "@/services/pinataService";
 import { useReadContract } from "wagmi"
 import { toast } from "@/components/ui/sonner";
@@ -151,29 +149,12 @@ export const PostInfoPage = () => {
       );
     }
     
-    try {
-      // Try to parse as JSON (rich text format)
-      const parsed = JSON.parse(content);
-      
-      // Verify it's an array (Slate.js format)
-      if (Array.isArray(parsed)) {
-        return <RichTextRenderer content={content} />;
-      } else {
-        // If it's JSON but not an array, treat as plain text
-        return (
-          <div className="text-sm md:text-lg whitespace-pre-wrap break-words">
-            {content}
-          </div>
-        );
-      }
-    } catch (error) {
-      // If not JSON, treat as plain text
-      return (
-        <div className="text-sm md:text-lg whitespace-pre-wrap break-words">
-          {content || 'No content'}
-        </div>
-      );
-    }
+    // Simply render as plain text
+    return (
+      <div className="text-sm md:text-lg whitespace-pre-wrap break-words">
+        {content || 'No content'}
+      </div>
+    );
   };
 
   return (
@@ -275,15 +256,11 @@ export const PostInfoPage = () => {
               Comments
             </h2>
 
-            {comments.length > 0 ? (
-              comments.map((comment) => (
-                <CommentCard key={comment.postId} comment={comment} postTitle=""/>
-              ))
-            ) : (
-              <div className="text-center py-10 bg-muted/20 rounded-lg">
-                <p className="text-muted-foreground">No comments yet. Be the first to comment!</p>
-              </div>
-            )}
+            <div className="text-center py-10 bg-muted/20 rounded-lg">
+              <p className="text-muted-foreground">
+                {comments.length > 0 ? `${comments.length} comment${comments.length !== 1 ? 's' : ''}` : 'No comments yet'}
+              </p>
+            </div>
           </div>
         ) : (
           <div className="text-center py-10">

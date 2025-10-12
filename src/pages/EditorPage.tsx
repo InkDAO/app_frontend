@@ -6,10 +6,20 @@ import EditorTextParser from "../components/editor/EditorTextParser";
 import { useAccount, useSignMessage } from 'wagmi';
 import { createGroupPost, updateFileById, useAddAsset, publishFile } from '@/services/dXService';
 import { useToast } from '@/hooks/use-toast';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useEditor } from '@/context/EditorContext';
 import { PublishData } from '@/components/PublishOverlay';
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type EditorData = {
 	time?: number;
@@ -26,14 +36,18 @@ const EditorPage = () => {
 	const [isPublishing, setIsPublishing] = useState(false);
 	const [isLoadingContent, setIsLoadingContent] = useState(false);
 	const [showPublishOverlay, setShowPublishOverlay] = useState(false);
+	const [showNavigationDialog, setShowNavigationDialog] = useState(false);
 	const editorInstanceRef = useRef<any>(null);
 	const justSavedOrLoaded = useRef(false);
+	const pendingNavigationRef = useRef<string | null>(null);
+	const allowNavigationRef = useRef(false);
 	
 	const { address } = useAccount();
 	const { signMessageAsync } = useSignMessage();
 	const { toast } = useToast();
 	const { cid } = useParams();
 	const navigate = useNavigate();
+	const location = useLocation();
 	const { ensureAuthenticated, isAuthenticated } = useAuth();
 	const { setEditorProps } = useEditor();
 	const { addAsset, isPending: isContractPending, isConfirming: isContractConfirming, isConfirmed: isContractConfirmed, isError: isContractError, hash: txHash } = useAddAsset();
@@ -185,6 +199,89 @@ const EditorPage = () => {
 			setHasUnsavedChanges(true);
 		}
 	}, [data, documentTitle, isLoadingContent]);
+
+	// Prevent browser unload when there are unsaved changes
+	useEffect(() => {
+		const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+			if (hasUnsavedChanges && !allowNavigationRef.current) {
+				e.preventDefault();
+				e.returnValue = '';
+				return '';
+			}
+		};
+
+		window.addEventListener('beforeunload', handleBeforeUnload);
+		return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+	}, [hasUnsavedChanges]);
+
+	// Intercept navigation by clicking links
+	useEffect(() => {
+		const handleClick = (e: MouseEvent) => {
+			if (!hasUnsavedChanges || allowNavigationRef.current) return;
+
+			// Check if click is on a link or inside a link
+			let target = e.target as HTMLElement;
+			let link: HTMLAnchorElement | null = null;
+
+			// Traverse up to find an anchor tag
+			while (target && target !== document.body) {
+				if (target.tagName === 'A') {
+					link = target as HTMLAnchorElement;
+					break;
+				}
+				target = target.parentElement as HTMLElement;
+			}
+
+			if (link && link.href) {
+				const linkUrl = new URL(link.href);
+				const currentUrl = new URL(window.location.href);
+
+				// Only intercept same-origin navigations that change the path
+				if (linkUrl.origin === currentUrl.origin && linkUrl.pathname !== currentUrl.pathname) {
+					e.preventDefault();
+					e.stopPropagation();
+					pendingNavigationRef.current = linkUrl.pathname;
+					setShowNavigationDialog(true);
+				}
+			}
+		};
+
+		document.addEventListener('click', handleClick, true);
+		return () => document.removeEventListener('click', handleClick, true);
+	}, [hasUnsavedChanges]);
+
+	// Handle navigation dialog actions
+	const handleSaveAndLeave = async () => {
+		const saved = await saveToAPI();
+		if (saved && pendingNavigationRef.current) {
+			allowNavigationRef.current = true;
+			setHasUnsavedChanges(false);
+			navigate(pendingNavigationRef.current);
+			setTimeout(() => {
+				allowNavigationRef.current = false;
+			}, 100);
+			pendingNavigationRef.current = null;
+		}
+		setShowNavigationDialog(false);
+	};
+
+	const handleDiscardAndLeave = () => {
+		if (pendingNavigationRef.current) {
+			allowNavigationRef.current = true;
+			setHasUnsavedChanges(false);
+			navigate(pendingNavigationRef.current);
+			setTimeout(() => {
+				allowNavigationRef.current = false;
+			}, 100);
+			pendingNavigationRef.current = null;
+		}
+		setShowNavigationDialog(false);
+	};
+
+	const handleCancelNavigation = () => {
+		pendingNavigationRef.current = null;
+		setShowNavigationDialog(false);
+	};
 
 	// Check if editor is empty
 	const isEmpty = !documentTitle.trim() && (!data?.blocks || data.blocks.length === 0);
@@ -449,6 +546,36 @@ const EditorPage = () => {
 					</div>
 				</div>
 			</div>
+
+			{/* Unsaved Changes Warning Dialog */}
+			<AlertDialog open={showNavigationDialog} onOpenChange={setShowNavigationDialog}>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
+						<AlertDialogDescription>
+							You have unsaved changes. What would you like to do?
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter className="flex-col sm:flex-row gap-2">
+						<AlertDialogCancel onClick={handleCancelNavigation} className="sm:order-1">
+							Stay on Page
+						</AlertDialogCancel>
+						<AlertDialogAction
+							onClick={handleDiscardAndLeave}
+							className="bg-red-600 hover:bg-red-700 sm:order-2"
+						>
+							Discard Changes
+						</AlertDialogAction>
+						<AlertDialogAction
+							onClick={handleSaveAndLeave}
+							disabled={isSaving}
+							className="bg-blue-600 hover:bg-blue-700 sm:order-3"
+						>
+							{isSaving ? 'Saving...' : 'Save & Leave'}
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</div>
 	);
 };

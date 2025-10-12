@@ -1,11 +1,21 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Trash2, Loader2, Edit, FileImage } from "lucide-react";
+import { Trash2, Loader2, Edit, FileImage, AlertTriangle } from "lucide-react";
 import { useState } from "react";
 import { useAccount, useSignMessage } from "wagmi";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { deleteFileById } from "@/services/dXService";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface SavedPostCardProps {
   savedPost: {
@@ -24,6 +34,7 @@ interface SavedPostCardProps {
 export const SavedPostCard = ({ savedPost, onDelete }: SavedPostCardProps) => {
   const { name, cid, content, contentError } = savedPost;
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { address } = useAccount();
   const { signMessageAsync } = useSignMessage();
   const { toast } = useToast();
@@ -145,7 +156,7 @@ export const SavedPostCard = ({ savedPost, onDelete }: SavedPostCardProps) => {
     }
   }
 
-  const handleDelete = async () => {
+  const handleDeleteClick = () => {
     if (!cid || !address) {
       toast({
         title: "Error",
@@ -154,14 +165,13 @@ export const SavedPostCard = ({ savedPost, onDelete }: SavedPostCardProps) => {
       });
       return;
     }
+    setShowDeleteDialog(true);
+  };
 
-    // Confirm deletion
-    const confirmDelete = window.confirm(
-      `Are you sure you want to delete "${postTitle}"? This action cannot be undone.`
-    );
-
-    if (!confirmDelete) return;
-
+  const handleConfirmDelete = async () => {
+    if (!cid || !address) return;
+    
+    setShowDeleteDialog(false);
     setIsDeleting(true);
 
     try {
@@ -267,7 +277,7 @@ export const SavedPostCard = ({ savedPost, onDelete }: SavedPostCardProps) => {
           <Button
             variant="secondary"
             size="sm"
-            onClick={handleDelete}
+            onClick={handleDeleteClick}
             disabled={isDeleting || !cid}
             className="h-8 w-8 p-0 bg-white/90 hover:bg-red-50 dark:bg-gray-900/90 dark:hover:bg-red-950/50 shadow-lg backdrop-blur-sm border-0 hover:text-red-600 dark:hover:text-red-400"
             title={isDeleting ? "Deleting..." : "Delete post"}
@@ -305,6 +315,44 @@ export const SavedPostCard = ({ savedPost, onDelete }: SavedPostCardProps) => {
           </div>
         )}
       </CardContent>
+
+      {/* Custom Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="h-12 w-12 rounded-full bg-red-100 dark:bg-red-950/30 flex items-center justify-center">
+                <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-500" />
+              </div>
+              <div>
+                <AlertDialogTitle className="text-xl">Delete Post?</AlertDialogTitle>
+              </div>
+            </div>
+            <AlertDialogDescription className="text-base pt-2">
+              Are you sure you want to delete <span className="font-semibold text-foreground">"{postTitle}"</span>? 
+              <br />
+              <span className="text-red-600 dark:text-red-400 font-medium mt-2 inline-block">
+                This action cannot be undone.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 sm:gap-2">
+            <AlertDialogCancel 
+              onClick={() => setShowDeleteDialog(false)}
+              className="sm:flex-1"
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600 sm:flex-1"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 };

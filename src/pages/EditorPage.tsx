@@ -96,7 +96,16 @@ const EditorPage = () => {
 		loadExistingPost();
 	}, [cid, toast]);
 
-	function togglePreview() {
+	async function togglePreview() {
+		// If switching to preview mode, save the current editor state first
+		if (!isPreviewMode && editorInstanceRef.current) {
+			try {
+				const currentData = await editorInstanceRef.current.save();
+				setData(currentData);
+			} catch (error) {
+				console.error('Error getting data from editor:', error);
+			}
+		}
 		setIsPreviewMode(!isPreviewMode);
 	}
 

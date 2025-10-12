@@ -140,13 +140,53 @@ export const PostPreviewPage = () => {
 
   if (isLoading || isCidLoading || isAssetDataLoading || isOwnershipLoading) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-8">
-          <div className="max-w-4xl mx-auto">
-            <div className="flex items-center justify-center py-16">
-              <div className="text-center">
-                <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-                <p className="text-muted-foreground">Loading content...</p>
+      <div className="bg-transparent py-8 px-4 sm:px-6 lg:px-8 min-h-screen flex items-center justify-center">
+        <div className="w-full max-w-7xl">
+          {/* Scroll Container with Loading State */}
+          <div className="scroll-container">
+            {/* Top Wooden Handle */}
+            <div className="wooden-handle wooden-handle-top">
+              <div className="handle-rod">
+                <div className="handle-knob handle-knob-left"></div>
+                <div className="handle-knob handle-knob-right"></div>
+              </div>
+            </div>
+            
+            {/* Top Paper Roll */}
+            <div className="paper-roll paper-roll-top"></div>
+            
+            {/* Parchment Paper Content with Loading State */}
+            <div className="parchment-paper">
+              <div className="parchment-content">
+                {/* Loading Title Skeleton */}
+                <div className="mb-6">
+                  <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-lg w-3/4 animate-pulse"></div>
+                </div>
+
+                {/* Loading Metadata Skeleton */}
+                <div className="mb-8 flex flex-wrap items-center justify-end gap-4 pb-6 border-b border-gray-200 dark:border-gray-700">
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32 animate-pulse"></div>
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24 animate-pulse"></div>
+                </div>
+
+                {/* Loading Content Area */}
+                <div className="min-h-[500px] w-full flex items-center justify-center">
+                  <div className="text-center">
+                    <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-400" />
+                    <p className="text-gray-600 dark:text-gray-400">Loading content...</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Bottom Paper Roll */}
+            <div className="paper-roll paper-roll-bottom"></div>
+            
+            {/* Bottom Wooden Handle */}
+            <div className="wooden-handle wooden-handle-bottom">
+              <div className="handle-rod">
+                <div className="handle-knob handle-knob-left"></div>
+                <div className="handle-knob handle-knob-right"></div>
               </div>
             </div>
           </div>
@@ -329,8 +369,8 @@ export const PostPreviewPage = () => {
   return (
     <div className="bg-transparent py-8 px-4 sm:px-6 lg:px-8 min-h-screen flex items-center justify-center">
       <div className="w-full max-w-7xl">
-        {/* Scroll Container with Animation */}
-        <div className="scroll-container animated">
+        {/* Scroll Container */}
+        <div className="scroll-container">
           {/* Top Wooden Handle */}
           <div className="wooden-handle wooden-handle-top">
             <div className="handle-rod">
@@ -368,14 +408,7 @@ export const PostPreviewPage = () => {
 
               {/* Content */}
               <div className="min-h-[500px] w-full">
-                {isLoading ? (
-                  <div className="flex items-center justify-center py-12">
-                    <div className="text-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                      <p className="text-gray-600 dark:text-gray-400">Loading content...</p>
-                    </div>
-                  </div>
-                ) : previewData ? (
+                {previewData ? (
                   <EditorTextParser data={previewData} />
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">

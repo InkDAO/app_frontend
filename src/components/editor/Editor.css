@@ -297,10 +297,6 @@ body {
 	overflow: hidden;
 }
 
-.scroll-container.animated .parchment-content {
-	animation: fadeInContent 2.5s ease-in forwards;
-}
-
 /* Initial state for animation */
 .scroll-container.animated .wooden-handle-bottom,
 .scroll-container.animated .paper-roll-bottom {
@@ -310,10 +306,6 @@ body {
 .scroll-container.animated .parchment-paper {
 	max-height: 0;
 	overflow: hidden;
-}
-
-.scroll-container.animated .parchment-content {
-	opacity: 0;
 }
 
 /* Mobile responsiveness */

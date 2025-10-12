@@ -1,5 +1,3 @@
-// tools.ts
-import Embed from "@editorjs/embed";
 import Table from "@editorjs/table";
 import List from "@editorjs/list";
 import Warning from "@editorjs/warning";
@@ -11,18 +9,11 @@ import Header from "@editorjs/header";
 import Quote from "@editorjs/quote";
 import Marker from "@editorjs/marker";
 import Delimiter from "@editorjs/delimiter";
-import InlineCode from "@editorjs/inline-code";
-import SimpleImage from "@editorjs/simple-image";
 
 export const EDITOR_JS_TOOLS = {
   // NOTE: Paragraph is default tool. Declare only when you want to change paragraph option.
   // paragraph: Paragraph,
-  embed: Embed,
-  table: Table,
-  list: List,
-  warning: Warning,
-  code: Code,
-  linkTool: LinkTool,
+  header: Header,
   image: {
     class: CustomImageTool,
     config: {
@@ -51,12 +42,13 @@ export const EDITOR_JS_TOOLS = {
       captionPlaceholder: 'Image caption'
     }
   },
+  code: Code,
+  list: List,
+  table: Table,
+  warning: Warning,
+  link: LinkTool,
   raw: Raw,
-  header: Header,
   quote: Quote,
   marker: Marker,
   delimiter: Delimiter,
-  inlineCode: InlineCode,
-  simpleImage: SimpleImage
 };
-

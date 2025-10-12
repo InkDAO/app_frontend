@@ -13,16 +13,43 @@ interface EditorTextParserProps {
 export default function EditorTextParser({ data }: EditorTextParserProps) {
   if (!data || !data.blocks) return null;
 
+  // Function to convert plain text URLs to anchor tags
+  const linkifyText = (text: string): string => {
+    if (!text) return text;
+    
+    // Regular expression to match URLs starting with https://, http://, or www.
+    // This regex avoids matching URLs that are already inside href attributes
+    const urlRegex = /(?<!href=["'])(?<!href=)\b((?:https?:\/\/|www\.)[^\s<>"]+)/gi;
+    
+    return text.replace(urlRegex, (url) => {
+      // Don't linkify if already inside an anchor tag
+      const beforeUrl = text.substring(0, text.indexOf(url));
+      const openTags = (beforeUrl.match(/<a\b[^>]*>/gi) || []).length;
+      const closeTags = (beforeUrl.match(/<\/a>/gi) || []).length;
+      
+      // If we're inside an anchor tag, don't linkify
+      if (openTags > closeTags) {
+        return url;
+      }
+      
+      // Add protocol if missing (for www. links)
+      const href = url.startsWith('www.') ? `https://${url}` : url;
+      return `<a href="${href}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+    });
+  };
+
   const renderBlock = (block: any, index: number) => {
     const key = block.id || index;
 
     switch (block.type) {
       case 'header':
         const HeaderTag = `h${block.data.level}` as keyof JSX.IntrinsicElements;
-        return <HeaderTag key={key} dangerouslySetInnerHTML={{ __html: block.data.text }} />;
+        const linkedHeaderText = linkifyText(block.data.text);
+        return <HeaderTag key={key} dangerouslySetInnerHTML={{ __html: linkedHeaderText }} />;
 
       case 'paragraph':
-        return <p key={key} dangerouslySetInnerHTML={{ __html: block.data.text }} />;
+        const linkedText = linkifyText(block.data.text);
+        return <p key={key} dangerouslySetInnerHTML={{ __html: linkedText }} />;
 
       case 'list':
         const ListTag = block.data.style === 'ordered' ? 'ol' : 'ul';
@@ -30,7 +57,8 @@ export default function EditorTextParser({ data }: EditorTextParserProps) {
           <ListTag key={key}>
             {block.data.items.map((item: any, i: number) => {
               const content = typeof item === 'string' ? item : (item.content || item.text || '');
-              return <li key={i} dangerouslySetInnerHTML={{ __html: content }} />;
+              const linkedContent = linkifyText(content);
+              return <li key={i} dangerouslySetInnerHTML={{ __html: linkedContent }} />;
             })}
           </ListTag>
         );
@@ -38,26 +66,31 @@ export default function EditorTextParser({ data }: EditorTextParserProps) {
       case 'checklist':
         return (
           <div key={key} className="cdx-checklist">
-            {block.data.items.map((item: any, i: number) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', margin: '0.5em 0' }}>
-                <input
-                  type="checkbox"
-                  checked={item.checked}
-                  readOnly
-                  style={{ marginRight: '0.5em', marginTop: '0.3em' }}
-                />
-                <span dangerouslySetInnerHTML={{ __html: item.text }} />
-              </div>
-            ))}
+            {block.data.items.map((item: any, i: number) => {
+              const linkedChecklistText = linkifyText(item.text);
+              return (
+                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', margin: '0.5em 0' }}>
+                  <input
+                    type="checkbox"
+                    checked={item.checked}
+                    readOnly
+                    style={{ marginRight: '0.5em', marginTop: '0.3em' }}
+                  />
+                  <span dangerouslySetInnerHTML={{ __html: linkedChecklistText }} />
+                </div>
+              );
+            })}
           </div>
         );
 
       case 'quote':
+        const linkedQuoteText = linkifyText(block.data.text);
+        const linkedQuoteCaption = block.data.caption ? linkifyText(block.data.caption) : '';
         return (
           <blockquote key={key}>
-            <p dangerouslySetInnerHTML={{ __html: block.data.text }} />
+            <p dangerouslySetInnerHTML={{ __html: linkedQuoteText }} />
             {block.data.caption && (
-              <cite dangerouslySetInnerHTML={{ __html: block.data.caption }} />
+              <cite dangerouslySetInnerHTML={{ __html: linkedQuoteCaption }} />
             )}
           </blockquote>
         );
@@ -81,9 +114,10 @@ export default function EditorTextParser({ data }: EditorTextParserProps) {
             <tbody>
               {block.data.content?.map((row: string[], rowIndex: number) => (
                 <tr key={rowIndex}>
-                  {row.map((cell: string, cellIndex: number) => (
-                    <td key={cellIndex} dangerouslySetInnerHTML={{ __html: cell }} />
-                  ))}
+                  {row.map((cell: string, cellIndex: number) => {
+                    const linkedCell = linkifyText(cell);
+                    return <td key={cellIndex} dangerouslySetInnerHTML={{ __html: linkedCell }} />;
+                  })}
                 </tr>
               ))}
             </tbody>
@@ -91,10 +125,12 @@ export default function EditorTextParser({ data }: EditorTextParserProps) {
         );
 
       case 'warning':
+        const linkedWarningTitle = linkifyText(block.data.title);
+        const linkedWarningMessage = linkifyText(block.data.message);
         return (
           <div key={key} className="cdx-warning">
-            <div dangerouslySetInnerHTML={{ __html: block.data.title }} style={{ fontWeight: 'bold' }} />
-            <div dangerouslySetInnerHTML={{ __html: block.data.message }} />
+            <div dangerouslySetInnerHTML={{ __html: linkedWarningTitle }} style={{ fontWeight: 'bold' }} />
+            <div dangerouslySetInnerHTML={{ __html: linkedWarningMessage }} />
           </div>
         );
 

@@ -1,14 +1,12 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Loader2, Calendar, User, Copy, FileImage, Lock, ShoppingCart, Eye } from "lucide-react";
+import { Loader2, Calendar, User, FileImage, Lock, ShoppingCart, Eye } from "lucide-react";
 import EditorTextParser from "@/components/editor/EditorTextParser";
 import { fetchFileContentByAssetAddress, useAssetCidByAddress, useAssetData, useBuyAsset } from "@/services/dXService";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import "@/components/editor/Editor.css";
 import { useAccount } from "wagmi";
 import { useAssetOwnership } from "@/hooks/useAssetOwnership";
@@ -26,7 +24,6 @@ export const PostPreviewPage = () => {
   const [postTitle, setPostTitle] = useState<string>("");
   const [postImage, setPostImage] = useState<string | null>(null);
   const [isPurchaseDialogOpen, setIsPurchaseDialogOpen] = useState(false);
-  const [purchaseAmount, setPurchaseAmount] = useState("1");
   const [isAccessDenied, setIsAccessDenied] = useState(false);
 
   // Update post title when asset data is loaded
@@ -121,17 +118,6 @@ export const PostPreviewPage = () => {
     fetchContent();
   }, [assetCid, isCidError, isOwned, isOwnershipLoading]);
 
-  const handleCopyCid = async () => {
-    if (assetCid) {
-      try {
-        await navigator.clipboard.writeText(assetCid);
-        toast.success("CID copied to clipboard!");
-      } catch (error) {
-        toast.error("Failed to copy CID");
-      }
-    }
-  };
-
   const handlePurchase = async () => {
     if (!assetAddress || !assetData) return;
 
@@ -139,7 +125,7 @@ export const PostPreviewPage = () => {
       const costInWei = assetData.costInNativeInWei ? assetData.costInNativeInWei.toString() : "0";
       await buyAsset({
         assetAddress,
-        amount: purchaseAmount,
+        amount: "1",
         costInNativeInWei: costInWei
       });
       
@@ -171,7 +157,6 @@ export const PostPreviewPage = () => {
 
   if (isAccessDenied) {
     const pricePerAsset = assetData?.costInNativeInWei ? parseFloat(assetData.costInNativeInWei.toString()) / 1e18 : 0;
-    const totalPrice = pricePerAsset * parseInt(purchaseAmount);
 
     return (
       <div className="flex items-center justify-center px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full min-h-[calc(100vh-8rem)]">
@@ -197,7 +182,7 @@ export const PostPreviewPage = () => {
                           {assetData?.assetTitle || 'Untitled'}
                         </h3>
                         {assetData?.description && (
-                          <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                          <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 leading-relaxed">
                             {assetData.description}
                           </p>
                         )}
@@ -272,56 +257,38 @@ export const PostPreviewPage = () => {
 
             {/* Purchase Dialog - Responsive */}
             <Dialog open={isPurchaseDialogOpen} onOpenChange={setIsPurchaseDialogOpen}>
-              <DialogContent className="max-w-md mx-4 sm:mx-auto">
-                <DialogHeader className="text-center pb-4">
-                  <div className="mx-auto mb-3 p-2 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 w-fit">
-                    <ShoppingCart className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader className="text-center pb-3 sm:pb-4 space-y-2">
+                  <div className="mx-auto mb-2 sm:mb-3 p-2 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 w-fit">
+                    <ShoppingCart className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <DialogTitle className="text-xl sm:text-2xl font-bold">Complete Purchase</DialogTitle>
-                  <DialogDescription className="text-slate-600 dark:text-slate-400 text-sm">
-                    Enter the quantity you want to purchase
+                  <DialogTitle className="text-lg sm:text-xl md:text-2xl font-bold">Complete Purchase</DialogTitle>
+                  <DialogDescription className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm">
+                    Confirm your purchase to unlock this content
                   </DialogDescription>
                 </DialogHeader>
                 
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="amount" className="text-sm font-medium">Quantity</Label>
-                    <Input
-                      id="amount"
-                      type="number"
-                      min="1"
-                      value={purchaseAmount}
-                      onChange={(e) => setPurchaseAmount(e.target.value)}
-                      className="text-center text-base font-semibold border-2 focus:border-blue-500"
-                    />
-                  </div>
-                  
-                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-4 space-y-3 border border-blue-200/50 dark:border-blue-700/50">
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-slate-600 dark:text-slate-400">Price per asset:</span>
-                      <span className="font-semibold text-slate-800 dark:text-slate-200">{pricePerAsset.toFixed(4)} ETH</span>
-                    </div>
-                    <div className="border-t border-slate-200 dark:border-slate-700 pt-3">
-                      <div className="flex justify-between items-center">
-                        <span className="font-semibold text-base text-slate-800 dark:text-slate-200">Total:</span>
-                        <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{totalPrice.toFixed(4)} ETH</span>
-                      </div>
+                <div className="py-4">
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-4 sm:p-6 border border-blue-200/50 dark:border-blue-700/50">
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold text-base sm:text-lg text-slate-800 dark:text-slate-200">Price:</span>
+                      <span className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{pricePerAsset.toFixed(4)} ETH</span>
                     </div>
                   </div>
                 </div>
 
-                <DialogFooter className="flex-col sm:flex-row gap-3 pt-4">
+                <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-3 pt-2">
                   <Button 
                     variant="outline" 
                     onClick={() => setIsPurchaseDialogOpen(false)}
-                    className="w-full sm:w-auto border-2"
+                    className="w-full sm:w-auto border-2 h-11 sm:h-10 text-sm sm:text-base"
                   >
                     Cancel
                   </Button>
                   <Button 
                     onClick={handlePurchase}
-                    disabled={isBuying || !purchaseAmount || parseInt(purchaseAmount) < 1}
-                    className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold"
+                    disabled={isBuying}
+                    className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold h-11 sm:h-10 text-sm sm:text-base"
                   >
                     {isBuying ? (
                       <>
@@ -374,19 +341,10 @@ export const PostPreviewPage = () => {
             </div>
 
             {/* Metadata */}
-            <div className="mb-8 flex flex-wrap items-center gap-4 text-sm text-muted-foreground pb-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="mb-8 flex flex-wrap items-center justify-end gap-4 text-sm text-muted-foreground pb-6 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center gap-1">
                 <Calendar className="h-4 w-4" />
                 <span>Published recently</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Copy className="h-4 w-4" />
-                <button 
-                  onClick={handleCopyCid}
-                  className="hover:text-foreground transition-colors"
-                >
-                  Copy CID
-                </button>
               </div>
               <div className="flex items-center gap-1">
                 <User className="h-4 w-4" />

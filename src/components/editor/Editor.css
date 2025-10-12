@@ -199,20 +199,21 @@ body {
 
 /* Links */
 .text-container a {
-	color: #2e7d32;
-	text-decoration: none;
-}
-
-.text-container a:hover {
+	color: #0066cc;
 	text-decoration: underline;
 }
 
+.text-container a:hover {
+	color: #0052a3;
+}
+
 .dark .text-container a {
-	color: #4ade80;
+	color: #60a5fa;
+	text-decoration: underline;
 }
 
 .dark .text-container a:hover {
-	color: #86efac;
+	color: #93c5fd;
 }
 
 /* Code blocks */
@@ -465,8 +466,17 @@ body {
 	border-color: #e5e7eb !important;
 }
 
+.ce-popover__container {
+	background-color: #ffffff !important;
+}
+
+.ce-popover__items {
+	background-color: #ffffff !important;
+}
+
 .ce-popover__item {
 	color: #000000 !important;
+	background-color: transparent !important;
 }
 
 .ce-popover__item:hover,
@@ -476,6 +486,48 @@ body {
 }
 
 .ce-popover__item-icon {
+	color: #000000 !important;
+}
+
+.ce-popover__item-title,
+.ce-popover__item-name {
+	color: #000000 !important;
+}
+
+.ce-popover__item-secondary-title {
+	color: #6b7280 !important;
+}
+
+.ce-popover--opened {
+	background-color: #ffffff !important;
+}
+
+.ce-popover__no-found {
+	color: #6b7280 !important;
+}
+
+/* Popover search input - Light mode */
+.ce-popover__search,
+.ce-popover__search input {
+	background-color: #f3f4f6 !important;
+	color: #000000 !important;
+	border-color: #e5e7eb !important;
+}
+
+.ce-popover__search input::placeholder {
+	color: #6b7280 !important;
+}
+
+.ce-popover__search-icon {
+	color: #6b7280 !important;
+}
+
+.ce-popover__nothing-found-message {
+	color: #6b7280 !important;
+}
+
+.ce-popover__custom-content {
+	background-color: #ffffff !important;
 	color: #000000 !important;
 }
 
@@ -547,20 +599,190 @@ body {
 	background-color: #1f2937 !important;
 	border-color: #374151 !important;
 	box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3) !important;
+	color: #ffffff !important;
+}
+
+.dark .ce-popover:hover {
+	background-color: #1f2937 !important;
+}
+
+.dark .ce-popover * {
+	color: #ffffff !important;
+}
+
+.dark .ce-popover__container {
+	background-color: #1f2937 !important;
+	color: #ffffff !important;
+}
+
+.dark .ce-popover__container:hover {
+	background-color: #1f2937 !important;
+}
+
+.dark .ce-popover__items {
+	background-color: #1f2937 !important;
+	color: #ffffff !important;
+}
+
+.dark .ce-popover__items:hover {
+	background-color: #1f2937 !important;
 }
 
 .dark .ce-popover__item {
 	color: #ffffff !important;
+	background-color: transparent !important;
 }
 
-.dark .ce-popover__item:hover,
-.dark .ce-popover__item--focused {
-	background-color: rgba(59, 130, 246, 0.3) !important;
+.dark .ce-popover__item:not(:hover) {
+	background-color: transparent !important;
+}
+
+.dark .ce-popover__item *,
+.dark .ce-popover__item span,
+.dark .ce-popover__item div {
 	color: #ffffff !important;
 }
 
-.dark .ce-popover__item-icon {
+.dark .ce-popover__item:hover,
+.dark .ce-popover__item--focused,
+.dark .ce-popover__item:hover[style],
+.dark .ce-popover__item--focused[style],
+.dark .ce-popover .ce-popover__item:hover,
+.dark .ce-popover .ce-popover__item--focused,
+html.dark .ce-popover__item:hover,
+html.dark .ce-popover__item--focused,
+body.dark .ce-popover__item:hover,
+body.dark .ce-popover__item--focused {
+	background-color: #374151 !important;
+	background: #374151 !important;
+	background-image: none !important;
+	color: #ffffff !important;
+}
+
+.dark .ce-popover__item:hover *,
+.dark .ce-popover__item--focused *,
+.dark .ce-popover__item:hover span,
+.dark .ce-popover__item--focused span,
+.dark .ce-popover__item:hover div,
+.dark .ce-popover__item--focused div {
+	color: #ffffff !important;
 	background-color: transparent !important;
+	background: transparent !important;
+}
+
+/* Override any inline styles on hover in dark mode - Maximum specificity */
+.dark .ce-popover__item[style]:hover,
+.dark .ce-popover__item--focused[style],
+.dark .ce-popover__item[class]:hover,
+.dark .ce-popover__item--focused[class],
+.dark div.ce-popover__item:hover,
+.dark div.ce-popover__item--focused,
+.dark .ce-popover div.ce-popover__item:hover,
+.dark .ce-popover div.ce-popover__item--focused {
+	background-color: #374151 !important;
+	background: #374151 !important;
+	background-image: none !important;
+}
+
+/* Nuclear option - force dark hover on anything inside popover that gets hovered */
+.dark .ce-popover [class*="item"]:hover:not(:has(.ce-popover__item)) {
+	background-color: transparent !important;
+}
+
+.dark .ce-popover > * > [class*="item"]:hover {
+	background-color: #374151 !important;
+	background: #374151 !important;
+}
+
+.dark .ce-popover__item-icon,
+.dark .ce-popover__item-icon * {
+	background-color: transparent !important;
+	color: #ffffff !important;
+}
+
+.dark .ce-popover__item-title,
+.dark .ce-popover__item-name,
+.dark .ce-popover__item-label {
+	color: #ffffff !important;
+}
+
+.dark .ce-popover__item-secondary-title {
+	color: #ffffff !important;
+}
+
+.dark .ce-popover__item-description {
+	color: #ffffff !important;
+}
+
+.dark .ce-popover__item svg,
+.dark .ce-popover__item svg * {
+	fill: #ffffff !important;
+	stroke: #ffffff !important;
+	color: #ffffff !important;
+}
+
+.dark .ce-popover__item__text {
+	color: #ffffff !important;
+}
+
+.dark .ce-popover-item__text {
+	color: #ffffff !important;
+}
+
+/* Additional text selectors for all possible text containers */
+.dark .ce-popover .ce-popover-item,
+.dark .ce-popover [class*="title"],
+.dark .ce-popover [class*="text"],
+.dark .ce-popover [class*="label"] {
+	color: #ffffff !important;
+}
+
+.dark .ce-popover--opened {
+	background-color: #1f2937 !important;
+}
+
+.dark .ce-popover__no-found {
+	color: #ffffff !important;
+}
+
+/* Popover search input - Dark mode */
+.dark .ce-popover__search,
+.dark .ce-popover__search input {
+	background-color: #374151 !important;
+	color: #ffffff !important;
+	border-color: #4b5563 !important;
+}
+
+.dark .ce-popover__search * {
+	color: #ffffff !important;
+}
+
+.dark .ce-popover__search input::placeholder {
+	color: #9ca3af !important;
+	opacity: 1 !important;
+}
+
+.dark .ce-popover__search-icon {
+	color: #ffffff !important;
+}
+
+.dark .ce-popover__nothing-found-message {
+	color: #ffffff !important;
+}
+
+.dark .ce-popover__custom-content {
+	background-color: #1f2937 !important;
+	color: #ffffff !important;
+}
+
+/* FINAL OVERRIDE - Force dark hover effect with maximum specificity */
+.dark .ce-popover__item.ce-popover__item:hover,
+.dark .ce-popover__item.ce-popover__item--focused,
+.dark .ce-popover .ce-popover__item.ce-popover__item:hover,
+.dark .ce-popover .ce-popover__item.ce-popover__item--focused {
+	background-color: #374151 !important;
+	background: #374151 !important;
+	background-image: none !important;
 	color: #ffffff !important;
 }
 
@@ -604,3 +826,4 @@ body {
 	margin-right: 0.5em;
 	margin-top: 0.3em;
 }
+

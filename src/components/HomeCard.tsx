@@ -2,7 +2,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { FileImage, ShoppingCart, Loader2, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useBuyAsset, getAssetCost, fetchFileContentByAssetAddress } from "@/services/dXService";
@@ -29,7 +28,6 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
   const { buyAsset, isPending, isConfirmed, isError } = useBuyAsset();
   const { isOwned, isLoading: isOwnershipLoading } = useAssetOwnership(asset.assetAddress, asset);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [amount, setAmount] = useState(1);
   const [isBuying, setIsBuying] = useState(false);
   const [thumbnailImage, setThumbnailImage] = useState<string>("");
   const [isLoadingThumbnail, setIsLoadingThumbnail] = useState(false);
@@ -133,12 +131,6 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
     setIsDialogOpen(true);
   };
 
-  const handleAmountChange = (value: number) => {
-    if (value >= 1) {
-      setAmount(value);
-    }
-  };
-
   const handleConfirmBuy = async () => {
     if (!asset.assetCid) {
       toast.error("No asset CID available");
@@ -149,7 +141,7 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
     try {
       await buyAsset({
         assetAddress: asset.assetAddress,
-        amount: amount.toString(),
+        amount: "1",
         costInNativeInWei: costInWei.toString()
       });
       
@@ -162,8 +154,8 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
     }
   };
 
-  // Calculate total price using actual asset cost
-  const totalPrice = amount * pricePerAsset;
+  // Use price per asset as the total price (quantity is always 1)
+  const totalPrice = pricePerAsset;
 
   return (
     <Card 
@@ -241,68 +233,57 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
                 </Badge>
               </DialogTrigger>
               <DialogContent 
-                className="sm:max-w-sm max-h-[90vh] overflow-y-auto"
+                className="sm:max-w-sm"
                 onClick={(e) => e.stopPropagation()}
               >
-                <DialogHeader>
-                  <DialogTitle>Purchase Asset</DialogTitle>
+                <DialogHeader className="text-center pb-3 space-y-2">
+                  <div className="mx-auto mb-2 p-2 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 w-fit">
+                    <ShoppingCart className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <DialogTitle className="text-lg sm:text-xl font-bold">Complete Purchase</DialogTitle>
                 </DialogHeader>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Price per asset: {pricePerAsset.toFixed(4)} ETH</label>
-                    
-                    <div className="flex items-center space-x-2">
-                      <label className="text-sm font-medium">Amount to purchase:</label>
-                      <Input
-                        type="number"
-                        min="1"
-                        value={amount}
-                        onChange={(e) => handleAmountChange(parseInt(e.target.value) || 1)}
-                        className="text-center w-20"
-                      />
-                    </div>
-                    
-                    <div className="p-3 bg-muted rounded-lg">
-                      <div className="flex justify-between items-center">
-                        <span className="font-medium">Total Price:</span>
-                        <span className="text-lg font-bold">{totalPrice.toFixed(4)} ETH</span>
-                      </div>
+                
+                <div className="py-4">
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-4 sm:p-6 border border-blue-200/50 dark:border-blue-700/50">
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold text-base sm:text-lg text-slate-800 dark:text-slate-200">Price:</span>
+                      <span className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{totalPrice.toFixed(4)} ETH</span>
                     </div>
                   </div>
-                  
-                  <div className="flex space-x-2 pt-4">
-                    <Button
-                      variant="outline"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsDialogOpen(false);
-                      }}
-                      className="flex-1"
-                      disabled={isBuying}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleConfirmBuy();
-                      }}
-                      disabled={isBuying}
-                      className="flex-1 bg-blue-600 hover:bg-blue-700"
-                    >
-                      {isBuying ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Purchasing...
-                        </>
-                      ) : (
-                        <>
-                          <ShoppingCart className="h-4 w-4 mr-2" />
-                          Confirm Purchase
-                        </>
-                      )}
-                    </Button>
-                  </div>
+                </div>
+                
+                <div className="flex space-x-2 pt-2">
+                  <Button
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsDialogOpen(false);
+                    }}
+                    className="flex-1 h-11 sm:h-10"
+                    disabled={isBuying}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleConfirmBuy();
+                    }}
+                    disabled={isBuying}
+                    className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 h-11 sm:h-10"
+                  >
+                    {isBuying ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingCart className="h-4 w-4 mr-2" />
+                        Confirm Purchase
+                      </>
+                    )}
+                  </Button>
                 </div>
               </DialogContent>
             </Dialog>

@@ -192,13 +192,6 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 
         {/* Footer Section */}
         <div className="p-4 border-t border-gray-100 dark:border-gray-900 flex-shrink-0">
-          {/* Copyright */}
-          {/* <div 
-            className="text-xs mb-4"
-            style={{ color: theme === "light" ? "#6B7280" : "#9CA3AF" }}
-          >
-            Copyright © 2025 dX. All rights reserved.
-          </div> */}
           
           {/* Social Links */}
           <div className="flex items-center justify-between w-full">

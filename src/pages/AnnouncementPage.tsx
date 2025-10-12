@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AssetCard } from "@/components/AssetCard";
+import { HomeCard } from "@/components/HomeCard";
 import { HomeCardSkeleton } from "@/components/HomeCardSkeleton";
 import { TagSearch } from "@/components/TagSearch";
 import { Button } from "@/components/ui/button";
@@ -188,7 +188,7 @@ export const AnnouncementPage = () => {
               </div>
             ) : taggedPosts.length > 0 ? (
               taggedPosts.map((asset) => (
-                <AssetCard key={asset.assetCid} asset={asset} />
+                <HomeCard key={asset.assetCid} asset={asset} />
               ))
             ) : (searchTerm || searchMode === 'tags') ? (
               <div className="text-center py-10">

@@ -6,9 +6,14 @@ export const authenticatedFetch = async (url: string, options: RequestInit = {})
   
   // Prepare headers
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
     ...(options.headers as Record<string, string> || {}),
   };
+
+  // Only set Content-Type to JSON if body is not FormData
+  // FormData needs the browser to set Content-Type automatically with the boundary
+  if (!(options.body instanceof FormData)) {
+    headers['Content-Type'] = 'application/json';
+  }
 
   // Add JWT token if available
   if (token) {

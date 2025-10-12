@@ -248,7 +248,7 @@ export const DraftsPage = () => {
                 <h2 className="text-2xl font-semibold">No Drafts</h2>
               </div>
               <p className="text-muted-foreground mb-6 max-w-md animate-in fade-in-50 slide-in-from-bottom-2 duration-1000">
-                Your saved posts and drafts will appear here when you have any
+                Your saved posts will appear here when you have any
               </p>
               <div 
                 onClick={() => navigate('/app/editor')}

@@ -4,14 +4,13 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AppLayout from "@/components/AppLayout";
 import Landing from "@/pages/Landing";
 import HomePage from "@/pages/HomePage";
-import { PostInfoPage } from "@/pages/PostInfoPage";
 import { PostPreviewPage } from "@/pages/PostPreviewPage";
 import { MyPostsPage } from "@/pages/MyPostsPage";
 import { AnnouncementPage } from "@/pages/AnnouncementPage";
 import { LibraryPage } from "@/pages/LibraryPage";
 import { DraftsPage } from "@/pages/DraftsPage";
 import NotFound from "@/pages/NotFound";
-import EditorPage from "@/pages/editor";
+import EditorPage from "@/pages/EditorPage";
 import { ThemeProvider } from "@/context/ThemeContext";
 
 import '@rainbow-me/rainbowkit/styles.css';
@@ -51,11 +50,6 @@ const App = () => (
                 <Route path="/app/post/:assetAddress" element={
                   <AppLayout>
                     <PostPreviewPage />
-                  </AppLayout>
-                } />
-                <Route path="/app/post/:id" element={
-                  <AppLayout>
-                    <PostInfoPage />
                   </AppLayout>
                 } />
                 <Route path="/app/my-posts" element={

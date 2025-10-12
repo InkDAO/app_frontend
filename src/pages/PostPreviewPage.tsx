@@ -10,8 +10,17 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import "@/components/editor/Editor.css";
 import { useAccount } from "wagmi";
 import { useAssetOwnership } from "@/hooks/useAssetOwnership";
+import { AuthGuard } from "@/components/AuthGuard";
 
 export const PostPreviewPage = () => {
+  return (
+    <AuthGuard>
+      <PostPreviewPageContent />
+    </AuthGuard>
+  );
+};
+
+const PostPreviewPageContent = () => {
   const { assetAddress } = useParams<{ assetAddress: string }>();
   const { address } = useAccount();
   const { cid: assetCid, isLoading: isCidLoading, isError: isCidError } = useAssetCidByAddress(assetAddress || '');

@@ -471,78 +471,101 @@ const EditorPage = () => {
 	}, [isSaving, isPublishing, isAuthenticated, hasUnsavedChanges, isEmpty, saveToAPI, publishToAPI, publishWithData, showPublishOverlay, setEditorProps]);
 
 	return (
-		<div className="bg-white dark:bg-gray-950 py-0 sm:py-8 px-0 sm:px-6 lg:px-8">
-			<div className="max-w-5xl mx-auto w-full">
-				{/* Card Container */}
-				<div className="sm:bg-gray-50 sm:dark:bg-gray-800 sm:rounded-xl sm:shadow-lg overflow-hidden sm:border sm:border-gray-200 sm:dark:border-gray-700">
-					<div className="px-4 py-4 sm:p-10 md:p-12 lg:p-16">
-					{/* Title input */}
-					<div className="mb-6">
-						<input
-							type="text"
-							value={documentTitle}
-							onChange={(e) => setDocumentTitle(e.target.value)}
-							className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-transparent border-none outline-none w-full text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:ring-0"
-							placeholder="Give your post a title..."
-							disabled={isPreviewMode}
-						/>
+		<div className="bg-white dark:bg-gray-950 py-6 sm:py-8 px-4 sm:px-6 lg:px-8">
+			<div className="max-w-7xl mx-auto w-full">
+				{/* Scroll Container */}
+				<div className="scroll-container">
+					{/* Top Wooden Handle */}
+					<div className="wooden-handle wooden-handle-top">
+						<div className="handle-rod"></div>
+						<div className="handle-knob handle-knob-left"></div>
+						<div className="handle-knob handle-knob-right"></div>
 					</div>
 
-					{/* Tab Navigation */}
-					<div className="mb-6">
-						<nav className="flex justify-end items-center" aria-label="Tabs">
-							{/* Edit/Preview Toggle */}
-							<div className="flex items-center bg-gray-100 dark:bg-gray-900 rounded-lg p-1 shadow-sm">
-								<button
-									onClick={() => {
-										if (isPreviewMode) {
-											setIsPreviewMode(false);
-										}
-									}}
-									className={`flex items-center justify-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 ${
-										!isPreviewMode
-											? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm border border-gray-200 dark:border-gray-600'
-											: 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-700/50'
-									}`}
-								>
-									<Edit3 className="w-4 h-4" />
-									<span className="hidden sm:inline">Edit</span>
-								</button>
-								<button
-									onClick={togglePreview}
-									className={`flex items-center justify-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 ${
-										isPreviewMode
-											? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm border border-gray-200 dark:border-gray-600'
-											: 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-white/50 dark:hover:bg-gray-700/50'
-									}`}
-								>
-									<Eye className="w-4 h-4" />
-									<span className="hidden sm:inline">Preview</span>
-								</button>
+					{/* Paper Roll - Top */}
+					<div className="paper-roll paper-roll-top"></div>
+
+					{/* Parchment Paper - Content Area */}
+					<div className="parchment-paper">
+						<div className="parchment-content">
+							{/* Title input */}
+							<div className="mb-6">
+								<input
+									type="text"
+									value={documentTitle}
+									onChange={(e) => setDocumentTitle(e.target.value)}
+									className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-transparent border-none outline-none w-full text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:ring-0"
+									placeholder="Give your post a title..."
+									disabled={isPreviewMode}
+								/>
 							</div>
-						</nav>
-					</div>
 
-				{/* Editor Content */}
-				<div className="min-h-[500px] w-full">
-					{isLoadingContent ? (
-						<div className="flex items-center justify-center py-12">
-							<div className="text-center">
-								<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-								<p className="text-gray-600 dark:text-gray-400">Loading content...</p>
+							{/* Tab Navigation */}
+							<div className="mb-6">
+								<nav className="flex justify-end items-center" aria-label="Tabs">
+									{/* Edit/Preview Toggle */}
+									<div className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg p-1 shadow-sm">
+										<button
+											onClick={() => {
+												if (isPreviewMode) {
+													setIsPreviewMode(false);
+												}
+											}}
+											className={`flex items-center justify-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 ${
+												!isPreviewMode
+													? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm border border-gray-200 dark:border-gray-500'
+													: 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-white/50 dark:hover:bg-gray-600/50'
+											}`}
+										>
+											<Edit3 className="w-4 h-4" />
+											<span className="hidden sm:inline">Edit</span>
+										</button>
+										<button
+											onClick={togglePreview}
+											className={`flex items-center justify-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 ${
+												isPreviewMode
+													? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm border border-gray-200 dark:border-gray-500'
+													: 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-white/50 dark:hover:bg-gray-600/50'
+											}`}
+										>
+											<Eye className="w-4 h-4" />
+											<span className="hidden sm:inline">Preview</span>
+										</button>
+									</div>
+								</nav>
+							</div>
+
+							{/* Editor/Preview Content */}
+							<div className="min-h-[300px] sm:min-h-[500px] w-full">
+								{isLoadingContent ? (
+									<div className="flex items-center justify-center py-12">
+										<div className="text-center">
+											<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+											<p className="text-gray-600 dark:text-gray-400">Loading content...</p>
+										</div>
+									</div>
+								) : isPreviewMode ? (
+									<EditorTextParser data={data} />
+								) : (
+									<Editor 
+										key={cid || 'new'} 
+										data={data} 
+										setData={setData}
+										editorInstanceRef={editorInstanceRef}
+									/>
+								)}
 							</div>
 						</div>
-					) : isPreviewMode ? (
-						<EditorTextParser data={data} />
-					) : (
-						<Editor 
-							key={cid || 'new'} 
-							data={data} 
-							setData={setData}
-							editorInstanceRef={editorInstanceRef}
-						/>
-					)}
-				</div>
+					</div>
+
+					{/* Paper Roll - Bottom */}
+					<div className="paper-roll paper-roll-bottom"></div>
+
+					{/* Bottom Wooden Handle */}
+					<div className="wooden-handle wooden-handle-bottom">
+						<div className="handle-rod"></div>
+						<div className="handle-knob handle-knob-left"></div>
+						<div className="handle-knob handle-knob-right"></div>
 					</div>
 				</div>
 			</div>

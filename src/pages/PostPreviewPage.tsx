@@ -327,52 +327,75 @@ export const PostPreviewPage = () => {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-950 py-0 sm:py-8 px-0 sm:px-6 lg:px-8">
-      <div className="max-w-5xl mx-auto w-full">
-        {/* Card Container - matches EditorPage preview styling */}
-        <div className="sm:bg-gray-50 sm:dark:bg-gray-800 sm:rounded-xl sm:shadow-lg overflow-hidden sm:border sm:border-gray-200 sm:dark:border-gray-700">
-          <div className="px-4 py-4 sm:p-10 md:p-12 lg:p-16">
-            
-            {/* Title */}
-            <div className="mb-6">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-gray-100">
-                {postTitle}
-              </h1>
+    <div className="bg-transparent py-8 px-4 sm:px-6 lg:px-8 min-h-screen flex items-center justify-center">
+      <div className="w-full max-w-7xl">
+        {/* Scroll Container with Animation */}
+        <div className="scroll-container animated">
+          {/* Top Wooden Handle */}
+          <div className="wooden-handle wooden-handle-top">
+            <div className="handle-rod">
+              <div className="handle-knob handle-knob-left"></div>
+              <div className="handle-knob handle-knob-right"></div>
             </div>
-
-            {/* Metadata */}
-            <div className="mb-8 flex flex-wrap items-center justify-end gap-4 text-sm text-muted-foreground pb-6 border-b border-gray-200 dark:border-gray-700">
-              <div className="flex items-center gap-1">
-                <Calendar className="h-4 w-4" />
-                <span>Published recently</span>
+          </div>
+          
+          {/* Top Paper Roll */}
+          <div className="paper-roll paper-roll-top"></div>
+          
+          {/* Parchment Paper Content */}
+          <div className="parchment-paper">
+            <div className="parchment-content">
+              {/* Title */}
+              <div className="mb-6">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-gray-100">
+                  {postTitle}
+                </h1>
               </div>
-              <div className="flex items-center gap-1">
-                <User className="h-4 w-4" />
-                <span className="text-xs">
-                  {assetAddress?.slice(0, 6)}...{assetAddress?.slice(-4)}
-                </span>
-              </div>
-            </div>
 
-            {/* Content - matches EditorPage preview */}
-            <div className="min-h-[500px] w-full">
-              {isLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                    <p className="text-gray-600 dark:text-gray-400">Loading content...</p>
+              {/* Metadata */}
+              <div className="mb-8 flex flex-wrap items-center justify-end gap-4 text-sm text-muted-foreground pb-6 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center gap-1">
+                  <Calendar className="h-4 w-4" />
+                  <span>Published recently</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <User className="h-4 w-4" />
+                  <span className="text-xs">
+                    {assetAddress?.slice(0, 6)}...{assetAddress?.slice(-4)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="min-h-[500px] w-full">
+                {isLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                      <p className="text-gray-600 dark:text-gray-400">Loading content...</p>
+                    </div>
                   </div>
-                </div>
-              ) : previewData ? (
-                <EditorTextParser data={previewData} />
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <FileImage className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                  <p>No content available</p>
-                </div>
-              )}
+                ) : previewData ? (
+                  <EditorTextParser data={previewData} />
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <FileImage className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                    <p>No content available</p>
+                  </div>
+                )}
+              </div>
             </div>
-
+          </div>
+          
+          {/* Bottom Paper Roll */}
+          <div className="paper-roll paper-roll-bottom"></div>
+          
+          {/* Bottom Wooden Handle */}
+          <div className="wooden-handle wooden-handle-bottom">
+            <div className="handle-rod">
+              <div className="handle-knob handle-knob-left"></div>
+              <div className="handle-knob handle-knob-right"></div>
+            </div>
           </div>
         </div>
       </div>

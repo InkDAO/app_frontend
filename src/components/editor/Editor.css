@@ -294,13 +294,30 @@ body {
 
 /* Delimiter */
 .text-container hr {
+	position: relative;
 	border: none;
-	border-top: 2px solid #e0e0e0;
-	margin: 2em 0;
+	height: auto;
+	min-height: 2em;
+	background-color: transparent;
+	margin: 3em 0;
+	text-align: center;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 
-.dark .text-container hr {
-	border-top-color: #374151;
+.text-container hr::before {
+	content: '***';
+	display: inline-block;
+	font-size: 1.8em;
+	letter-spacing: 0.6em;
+	color: #b0b0b0;
+	line-height: 1;
+	padding-left: 0.6em;
+}
+
+.dark .text-container hr::before {
+	color: #6b7280;
 }
 
 /* Tables */
@@ -551,8 +568,18 @@ body {
 .text-container .cdx-warning {
 	background-color: #fff3cd;
 	border-left: 4px solid #ffc107;
-	padding: 1em;
+	padding: 1em 1em 1em 3.5em;
 	margin: 1em 0;
+	position: relative;
+}
+
+.text-container .cdx-warning::before {
+	content: '⚠';
+	position: absolute;
+	left: 1em;
+	top: 1em;
+	font-size: 1.5em;
+	line-height: 1;
 }
 
 .dark .text-container .cdx-warning {

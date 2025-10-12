@@ -85,16 +85,20 @@ const EditorPage = () => {
 				console.error('Error loading content from IPFS:', error);
 				toast({
 					title: "Error",
-					description: "Failed to load content from IPFS.",
+					description: "Failed to load content from IPFS. Redirecting to editor...",
 					variant: "destructive"
 				});
+				// Redirect to new editor page after a short delay
+				setTimeout(() => {
+					navigate('/app/editor');
+				}, 1500);
 			} finally {
 				setIsLoadingContent(false);
 			}
 		};
 
 		loadExistingPost();
-	}, [cid, toast]);
+	}, [cid, toast, navigate]);
 
 	async function togglePreview() {
 		// If switching to preview mode, save the current editor state first

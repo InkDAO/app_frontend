@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
+import commonjs from '@rollup/plugin-commonjs';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -21,7 +22,41 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     chunkSizeWarningLimit: 2000,
+    commonjsOptions: {
+      include: [/node_modules/],
+      transformMixedEsModules: true,
+      requireReturnsDefault: 'auto',
+    },
     rollupOptions: {
+      plugins: [
+        commonjs({
+          include: /node_modules/,
+          requireReturnsDefault: 'auto',
+          transformMixedEsModules: true,
+        }),
+      ],
+      output: {
+        manualChunks: {
+          'editorjs': [
+            '@editorjs/editorjs',
+            '@editorjs/header',
+            '@editorjs/list',
+            '@editorjs/paragraph',
+            '@editorjs/code',
+            '@editorjs/quote',
+            '@editorjs/delimiter',
+            '@editorjs/inline-code',
+            '@editorjs/marker',
+            '@editorjs/table',
+            '@editorjs/warning',
+            '@editorjs/embed',
+            '@editorjs/link',
+            '@editorjs/raw',
+            '@editorjs/simple-image',
+            '@editorjs/checklist',
+          ],
+        },
+      },
       onwarn(warning, warn) {
         // Suppress PURE comment warnings
         if (warning.code === 'ANNOTATION_POSITION' || 
@@ -33,6 +68,24 @@ export default defineConfig(({ mode }) => ({
     },
   },
   optimizeDeps: {
+    include: [
+      '@editorjs/editorjs',
+      '@editorjs/header',
+      '@editorjs/list',
+      '@editorjs/paragraph',
+      '@editorjs/code',
+      '@editorjs/quote',
+      '@editorjs/delimiter',
+      '@editorjs/inline-code',
+      '@editorjs/marker',
+      '@editorjs/table',
+      '@editorjs/warning',
+      '@editorjs/embed',
+      '@editorjs/link',
+      '@editorjs/raw',
+      '@editorjs/simple-image',
+      '@editorjs/checklist',
+    ],
     esbuildOptions: {
       legalComments: 'none',
     },

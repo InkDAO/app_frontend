@@ -15,9 +15,10 @@ type EditorData = {
 interface EditorProps {
   data?: EditorData;
   setData: (data: EditorData) => void;
+  editorInstanceRef?: React.MutableRefObject<any>;
 }
 
-export default function Editor({ data, setData }: EditorProps) {
+export default function Editor({ data, setData, editorInstanceRef }: EditorProps) {
   const editorCore = useRef<any>(null);
   const ReactEditorJS = createReactEditorJS();
 
@@ -27,11 +28,16 @@ export default function Editor({ data, setData }: EditorProps) {
       .then(() => {
         // set reference to editor
         editorCore.current = instance;
+        // Expose editor instance to parent if ref provided
+        if (editorInstanceRef) {
+          editorInstanceRef.current = instance;
+        }
       })
       .catch((err: Error) => console.log("An error occured", err));
-  }, []);
+  }, [editorInstanceRef]);
 
   const handleSave = useCallback(async () => {
+    if (!editorCore.current) return;
     // retrieve data inserted
     const savedData = await editorCore.current.save();
     // save data

@@ -4,7 +4,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AppLayout from "@/components/AppLayout";
 import Landing from "@/pages/Landing";
 import HomePage from "@/pages/HomePage";
-import { PostInfoPage } from "@/pages/PostInfoPage";
 import { PostPreviewPage } from "@/pages/PostPreviewPage";
 import { MyPostsPage } from "@/pages/MyPostsPage";
 import { AnnouncementPage } from "@/pages/AnnouncementPage";
@@ -51,11 +50,6 @@ const App = () => (
                 <Route path="/app/post/:assetAddress" element={
                   <AppLayout>
                     <PostPreviewPage />
-                  </AppLayout>
-                } />
-                <Route path="/app/post/:id" element={
-                  <AppLayout>
-                    <PostInfoPage />
                   </AppLayout>
                 } />
                 <Route path="/app/my-posts" element={

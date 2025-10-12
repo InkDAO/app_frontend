@@ -109,6 +109,11 @@ body {
 	color: #333;
 }
 
+/* Dark mode for text container */
+.dark .text-container {
+	color: #e5e7eb;
+}
+
 .text-container > * {
 	max-width: 100%;
 	word-wrap: break-word;
@@ -157,6 +162,16 @@ body {
 	margin: 0.5em 0;
 }
 
+/* Dark mode headings */
+.dark .text-container h1,
+.dark .text-container h2,
+.dark .text-container h3,
+.dark .text-container h4,
+.dark .text-container h5,
+.dark .text-container h6 {
+	color: #f3f4f6;
+}
+
 /* Paragraphs */
 .text-container p {
 	margin: 1em 0;
@@ -192,6 +207,14 @@ body {
 	text-decoration: underline;
 }
 
+.dark .text-container a {
+	color: #4ade80;
+}
+
+.dark .text-container a:hover {
+	color: #86efac;
+}
+
 /* Code blocks */
 .text-container pre {
 	background-color: #f5f5f5;
@@ -202,12 +225,23 @@ body {
 	margin: 1em 0;
 }
 
+.dark .text-container pre {
+	background-color: #1f2937;
+	border-color: #374151;
+	color: #e5e7eb;
+}
+
 .text-container code {
 	background-color: #f5f5f5;
 	padding: 0.2em 0.4em;
 	border-radius: 3px;
 	font-family: 'Courier New', Courier, monospace;
 	font-size: 0.9em;
+}
+
+.dark .text-container code {
+	background-color: #1f2937;
+	color: #e5e7eb;
 }
 
 .text-container pre code {
@@ -225,6 +259,12 @@ body {
 	font-family: 'Courier New', Courier, monospace;
 }
 
+.dark .text-container .inline-code,
+.dark .text-container code.inline-code {
+	background-color: #7f1d1d;
+	color: #fca5a5;
+}
+
 /* Blockquotes */
 .text-container blockquote {
 	border-left: 4px solid #ccc;
@@ -234,6 +274,11 @@ body {
 	color: #666;
 }
 
+.dark .text-container blockquote {
+	border-left-color: #6b7280;
+	color: #9ca3af;
+}
+
 /* Marker/Highlight */
 .text-container mark,
 .text-container .cdx-marker {
@@ -241,11 +286,21 @@ body {
 	padding: 0.1em 0.2em;
 }
 
+.dark .text-container mark,
+.dark .text-container .cdx-marker {
+	background-color: #854d0e;
+	color: #fef3c7;
+}
+
 /* Delimiter */
 .text-container hr {
 	border: none;
 	border-top: 2px solid #e0e0e0;
 	margin: 2em 0;
+}
+
+.dark .text-container hr {
+	border-top-color: #374151;
 }
 
 /* Tables */
@@ -256,6 +311,10 @@ body {
 	border: 1px solid #ddd;
 }
 
+.dark .text-container table {
+	border-color: #374151;
+}
+
 .text-container th,
 .text-container td {
 	border: 1px solid #ddd;
@@ -263,17 +322,229 @@ body {
 	text-align: left;
 }
 
+.dark .text-container th,
+.dark .text-container td {
+	border-color: #374151;
+}
+
 .text-container th {
 	background-color: #f5f5f5;
 	font-weight: 600;
 }
 
+.dark .text-container th {
+	background-color: #1f2937;
+	color: #e5e7eb;
+}
+
 /* Images */
 .text-container img {
 	max-width: 100%;
-	height: auto;
+	height: auto !important; /* Force auto height to maintain aspect ratio */
 	display: block;
 	margin: 1em 0;
+}
+
+/* Image with border */
+.text-container .image-tool--withBorder img,
+.text-container img[data-border="true"],
+.text-container .withBorder img {
+	border: 1px solid #e0e0e0;
+	padding: 1em;
+}
+
+.dark .text-container .image-tool--withBorder img,
+.dark .text-container img[data-border="true"],
+.dark .text-container .withBorder img {
+	border-color: #374151;
+}
+
+/* Image with background */
+.text-container .image-tool--withBackground img,
+.text-container img[data-background="true"],
+.text-container .withBackground img {
+	background-color: #f5f5f5;
+	padding: 1em;
+}
+
+.dark .text-container .image-tool--withBackground img,
+.dark .text-container img[data-background="true"],
+.dark .text-container .withBackground img {
+	background-color: #1f2937;
+}
+
+/* Stretched images */
+.text-container .image-tool--stretched img,
+.text-container img[data-stretched="true"],
+.text-container .stretched img {
+	width: 100% !important;
+	max-width: 100% !important;
+}
+
+/* Image wrapper divs */
+.text-container .stretched,
+.text-container .withBorder,
+.text-container .withBackground {
+	margin: 1em 0;
+}
+
+/* Center images in their containers */
+.text-container .stretched img,
+.text-container .withBorder img,
+.text-container .withBackground img {
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+/* Image captions - centered */
+.cdx-input.image-tool__caption,
+.ce-block--image .cdx-input,
+.image-tool__caption,
+.text-container .image-tool__caption {
+	text-align: center !important;
+	font-size: 14px;
+	font-style: italic;
+	color: #666;
+	margin-top: 8px;
+	display: block;
+}
+
+/* EditorJS toolbar icons - Light mode */
+.ce-toolbar__plus,
+.ce-toolbar__settings-btn {
+	color: #000000 !important;
+	background-color: transparent !important;
+}
+
+.ce-toolbar__plus:hover,
+.ce-toolbar__settings-btn:hover {
+	color: #000000 !important;
+	background-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Plus icon SVG */
+.ce-toolbar__plus svg,
+.ce-toolbar__settings-btn svg {
+	fill: currentColor !important;
+	stroke: currentColor !important;
+}
+
+/* Block settings and tune icons - Light mode */
+.ce-settings__button,
+.ce-tune__button {
+	color: #000000 !important;
+}
+
+.ce-settings__button:hover,
+.ce-tune__button:hover {
+	background-color: rgba(0, 0, 0, 0.1) !important;
+	color: #000000 !important;
+}
+
+/* Popover (tool menu) - Light mode */
+.ce-popover {
+	background-color: #ffffff !important;
+	border-color: #e5e7eb !important;
+}
+
+.ce-popover__item {
+	color: #000000 !important;
+}
+
+.ce-popover__item:hover,
+.ce-popover__item--focused {
+	background-color: rgba(59, 130, 246, 0.15) !important;
+	color: #000000 !important;
+}
+
+.ce-popover__item-icon {
+	color: #000000 !important;
+}
+
+/* Dark mode support for image captions */
+.dark .cdx-input.image-tool__caption,
+.dark .ce-block--image .cdx-input,
+.dark .image-tool__caption,
+.dark .text-container .image-tool__caption {
+	color: #9ca3af !important;
+}
+
+/* EditorJS toolbar icons visibility in dark mode */
+.dark .ce-toolbar__plus,
+.dark .ce-toolbar__settings-btn {
+	color: #ffffff !important;
+	background-color: transparent !important;
+}
+
+.dark .ce-toolbar__plus:hover,
+.dark .ce-toolbar__settings-btn:hover {
+	color: #ffffff !important;
+	background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Plus icon SVG in dark mode */
+.dark .ce-toolbar__plus svg,
+.dark .ce-toolbar__settings-btn svg {
+	fill: currentColor !important;
+	stroke: currentColor !important;
+}
+
+/* Toolbar actions */
+.dark .ce-toolbar__actions {
+	background-color: transparent !important;
+}
+
+/* Block settings and tune icons */
+.dark .ce-settings__button,
+.dark .ce-tune__button {
+	color: #ffffff !important;
+}
+
+.dark .ce-settings__button:hover,
+.dark .ce-tune__button:hover {
+	background-color: rgba(255, 255, 255, 0.15) !important;
+	color: #ffffff !important;
+}
+
+/* Conversion toolbar */
+.dark .ce-conversion-toolbar,
+.dark .ce-inline-toolbar {
+	background-color: #1f2937 !important;
+	border-color: #374151 !important;
+}
+
+.dark .ce-conversion-tool,
+.dark .ce-inline-tool {
+	color: #ffffff !important;
+}
+
+.dark .ce-conversion-tool:hover,
+.dark .ce-inline-tool:hover {
+	background-color: rgba(255, 255, 255, 0.15) !important;
+	color: #ffffff !important;
+}
+
+/* Popover (tool menu) in dark mode */
+.dark .ce-popover {
+	background-color: #1f2937 !important;
+	border-color: #374151 !important;
+	box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3) !important;
+}
+
+.dark .ce-popover__item {
+	color: #ffffff !important;
+}
+
+.dark .ce-popover__item:hover,
+.dark .ce-popover__item--focused {
+	background-color: rgba(59, 130, 246, 0.3) !important;
+	color: #ffffff !important;
+}
+
+.dark .ce-popover__item-icon {
+	background-color: transparent !important;
+	color: #ffffff !important;
 }
 
 /* Warning block */
@@ -282,6 +553,12 @@ body {
 	border-left: 4px solid #ffc107;
 	padding: 1em;
 	margin: 1em 0;
+}
+
+.dark .text-container .cdx-warning {
+	background-color: #78350f;
+	border-left-color: #fbbf24;
+	color: #fef3c7;
 }
 
 /* Checklist */

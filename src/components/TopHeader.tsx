@@ -150,7 +150,7 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
                   {/* Publish Button */}
                   <button
                     onClick={handlePublishClick}
-                    disabled={hasUnsavedChanges || isSaving || isPublishing || !address || isEmpty}
+                    disabled={hasUnsavedChanges || isSaving || !address || isEmpty}
                     className="group relative px-4 py-2 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 disabled:hover:scale-100 mr-3"
                     title={!editorIsAuthenticated ? "Authentication required to publish" : hasUnsavedChanges ? "Save changes before publishing" : isEmpty ? "Add content to publish" : "Publish content to blockchain"}
                   >

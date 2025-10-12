@@ -189,22 +189,9 @@ const EditorPage = () => {
 	// Check if editor is empty
 	const isEmpty = !documentTitle.trim() && (!data?.blocks || data.blocks.length === 0);
 
-	// Debug: Log all transaction states
-	useEffect(() => {
-		console.log('Transaction states:', {
-			isPublishing,
-			isContractPending,
-			isContractConfirming,
-			isContractConfirmed,
-			isContractError,
-			txHash
-		});
-	}, [isPublishing, isContractPending, isContractConfirming, isContractConfirmed, isContractError, txHash]);
-
 	// Monitor transaction hash (transaction submitted to wallet)
 	useEffect(() => {
 		if (txHash && isPublishing) {
-			console.log('Transaction submitted with hash:', txHash);
 			toast({
 				title: "Transaction Submitted",
 				description: "Waiting for blockchain confirmation...",
@@ -215,7 +202,6 @@ const EditorPage = () => {
 	// Monitor contract transaction confirmation
 	useEffect(() => {
 		if (isContractConfirmed && isPublishing) {
-			console.log('Transaction confirmed!');
 			setIsPublishing(false);
 			toast({
 				title: "Success",
@@ -227,7 +213,6 @@ const EditorPage = () => {
 	// Monitor contract transaction errors
 	useEffect(() => {
 		if (isContractError && isPublishing) {
-			console.log('Transaction error detected');
 			setIsPublishing(false);
 			toast({
 				title: "Transaction Failed",

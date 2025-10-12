@@ -2,7 +2,6 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
-import commonjs from '@rollup/plugin-commonjs';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -25,16 +24,8 @@ export default defineConfig(({ mode }) => ({
     commonjsOptions: {
       include: [/node_modules/],
       transformMixedEsModules: true,
-      requireReturnsDefault: 'auto',
     },
     rollupOptions: {
-      plugins: [
-        commonjs({
-          include: /node_modules/,
-          requireReturnsDefault: 'auto',
-          transformMixedEsModules: true,
-        }),
-      ],
       output: {
         manualChunks: {
           'editorjs': [

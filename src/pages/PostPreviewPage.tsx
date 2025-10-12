@@ -10,17 +10,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import "@/components/editor/Editor.css";
 import { useAccount } from "wagmi";
 import { useAssetOwnership } from "@/hooks/useAssetOwnership";
-import { AuthGuard } from "@/components/AuthGuard";
 
 export const PostPreviewPage = () => {
-  return (
-    <AuthGuard>
-      <PostPreviewPageContent />
-    </AuthGuard>
-  );
-};
-
-const PostPreviewPageContent = () => {
   const { assetAddress } = useParams<{ assetAddress: string }>();
   const { address } = useAccount();
   const { cid: assetCid, isLoading: isCidLoading, isError: isCidError } = useAssetCidByAddress(assetAddress || '');
@@ -42,10 +33,20 @@ const PostPreviewPageContent = () => {
     }
   }, [assetData]);
 
-  // Set access denied when user doesn't own the asset
+  // Set access denied when user doesn't own the asset (but not for free posts)
   useEffect(() => {
     if (!isOwnershipLoading && !isOwned && assetData) {
-      setIsAccessDenied(true);
+      // Check if the post is free
+      // Note: costInNativeInWei can be 0n (BigInt 0), which is falsy, so we need to check !== undefined
+      const isFreePost = assetData?.costInNativeInWei !== undefined ? parseFloat(assetData.costInNativeInWei.toString()) === 0 : false;
+      
+      // Only deny access if it's not a free post
+      if (!isFreePost) {
+        setIsAccessDenied(true);
+      } else {
+        // For free posts, explicitly allow access
+        setIsAccessDenied(false);
+      }
     } else if (isOwned) {
       setIsAccessDenied(false);
     }
@@ -62,8 +63,17 @@ const PostPreviewPageContent = () => {
         return;
       }
 
-      // Only fetch content if user owns the asset
-      if (!isOwned || isOwnershipLoading) {
+      // Wait for asset data to load to check if post is free
+      if (!assetData || isAssetDataLoading) {
+        return;
+      }
+
+      // Check if the post is free (cost is 0)
+      // Note: costInNativeInWei can be 0n (BigInt 0), which is falsy, so we need to check !== undefined
+      const isFreePost = assetData?.costInNativeInWei !== undefined ? parseFloat(assetData.costInNativeInWei.toString()) === 0 : false;
+
+      // For paid posts, only fetch content if user owns the asset
+      if (!isFreePost && (!isOwned || isOwnershipLoading)) {
         setIsLoading(false);
         return;
       }
@@ -72,6 +82,7 @@ const PostPreviewPageContent = () => {
         setIsLoading(true);
         setContentError(null);
         
+        // For free posts, we can fetch without user address; for paid posts, we need it
         const contentData = await fetchFileContentByAssetAddress(assetAddress || '', address || '');
         
         if (contentData) {
@@ -125,7 +136,7 @@ const PostPreviewPageContent = () => {
     };
 
     fetchContent();
-  }, [assetCid, isCidError, isOwned, isOwnershipLoading]);
+  }, [assetCid, isCidError, isOwned, isOwnershipLoading, assetData, assetAddress, address, isAssetDataLoading]);
 
   const handlePurchase = async () => {
     if (!assetAddress || !assetData) return;
@@ -205,7 +216,66 @@ const PostPreviewPageContent = () => {
   }
 
   if (isAccessDenied) {
-    const pricePerAsset = assetData?.costInNativeInWei ? parseFloat(assetData.costInNativeInWei.toString()) / 1e18 : 0;
+    const pricePerAsset = assetData?.costInNativeInWei !== undefined ? parseFloat(assetData.costInNativeInWei.toString()) / 1e18 : 0;
+    
+    // Don't show purchase card for free posts
+    if (pricePerAsset === 0) {
+      // For free posts, just show loading or wait for content to load
+      return (
+        <div className="bg-transparent py-8 px-4 sm:px-6 lg:px-8 min-h-screen flex items-center justify-center">
+          <div className="w-full max-w-7xl">
+            {/* Scroll Container with Loading State */}
+            <div className="scroll-container">
+              {/* Top Wooden Handle */}
+              <div className="wooden-handle wooden-handle-top">
+                <div className="handle-rod">
+                  <div className="handle-knob handle-knob-left"></div>
+                  <div className="handle-knob handle-knob-right"></div>
+                </div>
+              </div>
+              
+              {/* Top Paper Roll */}
+              <div className="paper-roll paper-roll-top"></div>
+              
+              {/* Parchment Paper Content with Loading State */}
+              <div className="parchment-paper">
+                <div className="parchment-content">
+                  {/* Loading Title Skeleton */}
+                  <div className="mb-6">
+                    <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-lg w-3/4 animate-pulse"></div>
+                  </div>
+
+                  {/* Loading Metadata Skeleton */}
+                  <div className="mb-8 flex flex-wrap items-center justify-end gap-4 pb-6 border-b border-gray-200 dark:border-gray-700">
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32 animate-pulse"></div>
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24 animate-pulse"></div>
+                  </div>
+
+                  {/* Loading Content Area */}
+                  <div className="min-h-[500px] w-full flex items-center justify-center">
+                    <div className="text-center">
+                      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-400" />
+                      <p className="text-gray-600 dark:text-gray-400">Loading free content...</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Bottom Paper Roll */}
+              <div className="paper-roll paper-roll-bottom"></div>
+              
+              {/* Bottom Wooden Handle */}
+              <div className="wooden-handle wooden-handle-bottom">
+                <div className="handle-rod">
+                  <div className="handle-knob handle-knob-left"></div>
+                  <div className="handle-knob handle-knob-right"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
 
     return (
       <div className="flex items-center justify-center px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full min-h-[calc(100vh-8rem)]">

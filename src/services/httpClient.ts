@@ -59,7 +59,7 @@ export class ApiService {
 
   // Helper method to build full URL
   private buildUrl(endpoint: string): string {
-    return `${import.meta.env.VITE_SERVER_URL}${endpoint}`;
+    return `${import.meta.env.VITE_LOCAL_SERVER_URL}${endpoint}`;
   }
 
   // GET request with authentication

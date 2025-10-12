@@ -21,7 +21,7 @@ export const createGroupPost = async (content: any, title: string, address: stri
       content: contentJson
     };
 
-    const response = await authenticatedFetch(`${import.meta.env.VITE_SERVER_URL}/create/group`, {
+    const response = await authenticatedFetch(`${import.meta.env.VITE_LOCAL_SERVER_URL}/create/group`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -67,7 +67,7 @@ export const publishFile = async (file: File, address: string, signMessage: any,
     formData.append('signature', signature);
     
     // Make authenticated API call to publish file
-    const response = await authenticatedFetch(`${import.meta.env.VITE_SERVER_URL}/publish/file?cid=${cid}`, {
+    const response = await authenticatedFetch(`${import.meta.env.VITE_LOCAL_SERVER_URL}/publish/file?cid=${cid}`, {
       method: 'POST',
       body: formData
     });
@@ -288,9 +288,55 @@ export const fetchFileContentByCid = async (cid: string): Promise<any> => {
   }
 };
 
-// API function to fetch file content by asset address (with JWT authentication)
+// API function to fetch file content by asset address (checks if free first, then uses authentication if needed)
 export const fetchFileContentByAssetAddress = async (assetAddress: string, userAddress: string): Promise<any> => {
   try {
+    // First, try the public free endpoint to check if the post is free
+    try {
+      const baseUrl = import.meta.env.VITE_LOCAL_SERVER_URL;
+      const freeResponse = await fetch(`${baseUrl}/freeFileByAddress?assetAddress=${assetAddress}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      // If the post is free (status 200), return the data
+      if (freeResponse.ok) {
+        const freeData = await freeResponse.json();
+        console.log('✅ Fetched free content for asset:', assetAddress);
+        
+        // Apply same extraction logic as authenticated endpoint
+        if (freeData && typeof freeData === 'object') {
+          if (freeData.files && freeData.files.length > 0) {
+            return freeData.files[0];
+          } else if (freeData.content) {
+            return freeData.content;
+          } else if (freeData.file) {
+            return freeData.file;
+          } else if (freeData.data) {
+            return freeData.data;
+          }
+        }
+        
+        return freeData;
+      }
+      
+      // If status is 400 and error is "File is not free", fall through to authenticated endpoint
+      if (freeResponse.status === 400) {
+        const errorData = await freeResponse.json();
+        if (errorData.error === 'File is not free') {
+          console.log('🔒 Post is not free, using authenticated endpoint');
+          // Fall through to authenticated flow below
+        } else {
+          // Other 400 error, throw it
+          throw new Error(errorData.error || 'Failed to fetch file');
+        }
+      }
+    } catch (freeEndpointError) {
+      // If free endpoint fails for any reason other than "not free", fall through to authenticated endpoint
+      console.log('ℹ️ Free endpoint check failed, trying authenticated endpoint');
+    }
     
     // Make authenticated API call to get file content by asset address
     // The endpoint requires both user and assetAddress parameters
@@ -338,7 +384,7 @@ export const deleteFileById = async (cid: string, address: string, signMessage: 
     };
     
     // Make authenticated API call to delete the file
-    const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/delete/file?cid=${cid}`, {
+    const response = await fetch(`${import.meta.env.VITE_LOCAL_SERVER_URL}/delete/file?cid=${cid}`, {
       method: 'post',
       headers: {
         'Content-Type': 'application/json',
@@ -392,7 +438,7 @@ export const updateFileById = async (cid: string, content: any, title: string, a
     
     
     // Make authenticated API call to update the file
-    const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/update/file?cid=${cid}`, {
+    const response = await fetch(`${import.meta.env.VITE_LOCAL_SERVER_URL}/update/file?cid=${cid}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

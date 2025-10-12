@@ -40,7 +40,7 @@ export const handleCreateGroup = async (group_name: string): Promise<GroupRespon
   }
 
   try {
-    const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/create/${group_name}`, {
+    const response = await fetch(`${import.meta.env.VITE_LOCAL_SERVER_URL}/create/${group_name}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -74,7 +74,7 @@ export const handleUpload = async (file_name: string, group_id: string, file: Fi
 
   try {
     // Get upload URL from server
-    const urlResponse = await fetch(`${import.meta.env.VITE_SERVER_URL}/presigned_url/${group_id}`, {
+    const urlResponse = await fetch(`${import.meta.env.VITE_LOCAL_SERVER_URL}/presigned_url/${group_id}`, {
       method: "GET",
       headers: {
         // Handle your own server authorization here
@@ -134,7 +134,7 @@ export const handleUpload = async (file_name: string, group_id: string, file: Fi
 
 export const handleGetGroupByName = async (group_name: string): Promise<GroupResponse> => {
   try {
-    const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/groupByName/${group_name}`, {
+    const response = await fetch(`${import.meta.env.VITE_LOCAL_SERVER_URL}/groupByName/${group_name}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json"
@@ -188,7 +188,7 @@ export interface FileMetadata {
 
 export const handleGetFileMetadataByCid = async (cid: string): Promise<FileMetadata> => {
   try {
-    const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/fileByCid/${cid}`, {
+    const response = await fetch(`${import.meta.env.VITE_LOCAL_SERVER_URL}/fileByCid/${cid}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json"
@@ -254,7 +254,7 @@ export const handleGetFilesByTags = async (tags: string[]): Promise<FileMetadata
     // Convert all tags to lowercase for consistent searching
     const lowercaseTags = tags.map(tag => tag.trim().toLowerCase());
     const tagsParam = lowercaseTags.join(',');
-    const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/filesByTags?tags=${tagsParam}`, {
+    const response = await fetch(`${import.meta.env.VITE_LOCAL_SERVER_URL}/filesByTags?tags=${tagsParam}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json"

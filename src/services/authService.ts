@@ -67,7 +67,7 @@ export class AuthService {
     try {
       
       // Send authentication request
-      const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/auth/login`, {
+      const response = await fetch(`${import.meta.env.VITE_LOCAL_SERVER_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

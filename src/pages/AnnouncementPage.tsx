@@ -85,11 +85,16 @@ export const AnnouncementPage = () => {
 
   return (
     <div className="px-4 sm:px-6 py-6 lg:px-8 max-w-7xl mx-auto w-full">
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-2">
-            <Megaphone className="h-8 w-8" />
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Announcements</h1>
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-orange-500 to-red-600">
+              <Megaphone className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Announcements</h1>
+            </div>
           </div>
+          <p className="text-muted-foreground ml-14">Official updates and important news</p>
         </div>
         
         {isAllAssetLoading ? (

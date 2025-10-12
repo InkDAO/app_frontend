@@ -3,7 +3,7 @@ import { HomeCard } from "@/components/HomeCard";
 import { HomeCardSkeleton } from "@/components/HomeCardSkeleton";
 import { AuthGuard } from "@/components/AuthGuard";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, ArrowRight, RefreshCw, ChevronLeft, ChevronRight, Edit3 } from "lucide-react";
+import { MessageSquare, ArrowRight, RefreshCw, ChevronLeft, ChevronRight, Edit3, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAssets } from "@/hooks/useAssets";
 import { useAccount } from "wagmi";
@@ -43,9 +43,16 @@ export const MyPostsPage = () => {
   return (
     <AuthGuard>
       <div className="px-4 sm:px-6 py-6 lg:px-8 max-w-7xl mx-auto w-full">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold">My Posts</h1>
-          <p className="text-muted-foreground">Your published posts and assets</p>
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600">
+              <Sparkles className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">My Posts</h1>
+            </div>
+          </div>
+          <p className="text-muted-foreground ml-14">Your published posts and assets</p>
         </div>
         <div className="w-full">
         {isAllAssetLoading ? (

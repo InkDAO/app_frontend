@@ -26,12 +26,16 @@ export const LibraryPage = () => {
   return (
     <AuthGuard>
       <div className="px-4 sm:px-6 py-6 lg:px-8 max-w-7xl mx-auto w-full">
-        <div className="mb-6">
-          <div className="flex items-center gap-3 mb-2">
-            <BookOpen className="h-8 w-8 text-blue-600" />
-            <h1 className="text-2xl font-bold">Library</h1>
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600">
+              <BookOpen className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Library</h1>
+            </div>
           </div>
-          <p className="text-muted-foreground">Your personal collection of assets and posts</p>
+          <p className="text-muted-foreground ml-14">Your personal collection of assets and posts</p>
         </div>
         <div className="w-full">
           {isAllUserAssetLoading ? (

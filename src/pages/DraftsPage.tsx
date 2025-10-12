@@ -3,7 +3,7 @@ import { SavedPostCard } from "@/components/SavedPostCard";
 import { SavedPostCardSkeleton } from "@/components/SavedPostCardSkeleton";
 import { AuthGuard } from "@/components/AuthGuard";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Bookmark, RefreshCw, ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
+import { MessageSquare, Bookmark, RefreshCw, ChevronLeft, ChevronRight, ArrowRight, FileText } from "lucide-react";
 import { fetchSavedPosts, fetchSavedPostsByNextPageToken } from "@/services/dXService";
 import { useAccount } from "wagmi";
 import { useNavigate } from "react-router-dom";
@@ -173,9 +173,16 @@ export const DraftsPage = () => {
   return (
     <AuthGuard>
       <div className="px-4 sm:px-6 py-6 lg:px-8 max-w-7xl mx-auto w-full">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold">Drafts</h1>
-          <p className="text-muted-foreground">Your saved posts and drafts</p>
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600">
+              <FileText className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Drafts</h1>
+            </div>
+          </div>
+          <p className="text-muted-foreground ml-14">Your saved posts and drafts</p>
         </div>
         <div className="w-full">
           {isSavedPostsLoading || isLoggingOut ? (

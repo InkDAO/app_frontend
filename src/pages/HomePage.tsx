@@ -4,7 +4,7 @@ import { HomeCardSkeleton } from "@/components/HomeCardSkeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { useSearch } from "@/context/SearchContext";
 import { useAssets } from "@/hooks/useAssets";
-import { MessageSquare, ArrowRight } from "lucide-react";
+import { MessageSquare, ArrowRight, Globe } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const HomePage = () => {
@@ -25,9 +25,16 @@ const HomePage = () => {
 
   return (
     <div className="px-4 sm:px-6 py-6 lg:px-8 max-w-7xl mx-auto w-full">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">All Posts</h1>
-        <p className="text-muted-foreground">Discover content from the community</p>
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600">
+            <Globe className="h-6 w-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">All Posts</h1>
+          </div>
+        </div>
+        <p className="text-muted-foreground ml-14">Discover content from the community</p>
       </div>
       <div className="w-full">
         {isAllAssetLoading ? (

@@ -160,8 +160,8 @@ export const PostPreviewPage = () => {
 
   if (isLoading || isCidLoading || isAssetDataLoading || isOwnershipLoading) {
     return (
-      <div className="bg-transparent py-8 px-4 sm:px-6 lg:px-8 min-h-screen flex items-center justify-center">
-        <div className="w-full max-w-7xl">
+      <div className="bg-transparent py-8 px-4 sm:px-6 lg:px-8 min-h-screen">
+        <div className="w-full max-w-7xl mx-auto">
           {/* Scroll Container with Loading State */}
           <div className="scroll-container">
             {/* Top Wooden Handle */}
@@ -222,8 +222,8 @@ export const PostPreviewPage = () => {
     if (pricePerAsset === 0) {
       // For free posts, just show loading or wait for content to load
       return (
-        <div className="bg-transparent py-8 px-4 sm:px-6 lg:px-8 min-h-screen flex items-center justify-center">
-          <div className="w-full max-w-7xl">
+        <div className="bg-transparent py-8 px-4 sm:px-6 lg:px-8 min-h-screen">
+          <div className="w-full max-w-7xl mx-auto">
             {/* Scroll Container with Loading State */}
             <div className="scroll-container">
               {/* Top Wooden Handle */}
@@ -446,8 +446,8 @@ export const PostPreviewPage = () => {
   }
 
   return (
-    <div className="bg-transparent py-8 px-4 sm:px-6 lg:px-8 min-h-screen flex items-center justify-center">
-      <div className="w-full max-w-7xl">
+    <div className="bg-transparent py-8 px-4 sm:px-6 lg:px-8 min-h-screen">
+      <div className="w-full max-w-7xl mx-auto">
         {/* Scroll Container */}
         <div className="scroll-container">
           {/* Top Wooden Handle */}

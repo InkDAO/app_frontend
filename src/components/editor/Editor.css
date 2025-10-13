@@ -21,7 +21,8 @@ body {
 	display: flex;
 	flex-direction: column;
 	gap: 0;
-	overflow-x: hidden;
+	overflow-x: clip;
+	overflow-y: visible;
 }
 
 /* Wooden Handle Styles */
@@ -121,19 +122,6 @@ body {
 	box-shadow: 
 		inset 0 2px 4px rgba(0, 0, 0, 0.1);
 	flex-shrink: 0;
-	/* Fade edges to blend with background */
-	-webkit-mask-image: linear-gradient(90deg, 
-		transparent 0%,
-		black 10px,
-		black calc(100% - 10px),
-		transparent 100%
-	);
-	mask-image: linear-gradient(90deg, 
-		transparent 0%,
-		black 10px,
-		black calc(100% - 10px),
-		transparent 100%
-	);
 }
 
 .paper-roll-top {
@@ -175,14 +163,14 @@ body {
 	flex-grow: 1;
 	z-index: 9;
 	width: calc(100% - 100px);
-	overflow-x: hidden;
-	/* Create convex (outward bulging) corners with edge fading */
+	overflow: hidden;
+	/* Create convex (outward bulging) corners without horizontal edge fading */
 	-webkit-mask: 
 		radial-gradient(30px at 30px 30px, transparent 29px, black 30px) top left,
 		radial-gradient(30px at calc(100% - 30px) 30px, transparent 29px, black 30px) top right,
 		radial-gradient(30px at 30px calc(100% - 30px), transparent 29px, black 30px) bottom left,
 		radial-gradient(30px at calc(100% - 30px) calc(100% - 30px), transparent 29px, black 30px) bottom right,
-		linear-gradient(90deg, transparent 0%, black 10px, black calc(100% - 10px), transparent 100%);
+		linear-gradient(to right, black 0%, black 100%);
 	-webkit-mask-size: 30px 30px, 30px 30px, 30px 30px, 30px 30px, 100% 100%;
 	-webkit-mask-repeat: no-repeat;
 	-webkit-mask-position: top left, top right, bottom left, bottom right, 0 0;
@@ -191,7 +179,7 @@ body {
 		radial-gradient(30px at calc(100% - 30px) 30px, transparent 29px, black 30px) top right,
 		radial-gradient(30px at 30px calc(100% - 30px), transparent 29px, black 30px) bottom left,
 		radial-gradient(30px at calc(100% - 30px) calc(100% - 30px), transparent 29px, black 30px) bottom right,
-		linear-gradient(90deg, transparent 0%, black 10px, black calc(100% - 10px), transparent 100%);
+		linear-gradient(to right, black 0%, black 100%);
 	mask-size: 30px 30px, 30px 30px, 30px 30px, 30px 30px, 100% 100%;
 	mask-repeat: no-repeat;
 	mask-position: top left, top right, bottom left, bottom right, 0 0;
@@ -345,12 +333,12 @@ body {
 /* Mobile responsiveness */
 @media (max-width: 640px) {
 	.scroll-container {
-		padding: 0;
+		padding: 0 2px;
 	}
 	
 	.wooden-handle {
-		width: 100%;
-		margin-left: 0;
+		width: calc(100% - 4px);
+		margin-left: 2px;
 		height: 25px;
 	}
 	
@@ -389,11 +377,9 @@ body {
 	}
 	
 	.paper-roll {
-		width: 100%;
-		margin-left: 0;
+		width: calc(100% - 4px);
+		margin-left: 2px;
 		height: 45px;
-		-webkit-mask-image: none;
-		mask-image: none;
 	}
 	
 	.paper-roll-top {
@@ -411,14 +397,12 @@ body {
 	}
 	
 	.parchment-paper {
-		margin-left: 0;
-		margin-right: 0;
+		margin-left: 2px;
+		margin-right: 2px;
 		margin-top: -25px;
 		margin-bottom: -25px;
 		padding: 25px 0;
-		width: 100%;
-		-webkit-mask: none;
-		mask: none;
+		width: calc(100% - 4px);
 	}
 }
 

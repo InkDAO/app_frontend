@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Loader2, Calendar, User, FileImage, Lock, ShoppingCart, Eye } from "lucide-react";
+import { Loader2, User, FileImage, Lock, ShoppingCart, Eye } from "lucide-react";
 import EditorTextParser from "@/components/editor/EditorTextParser";
 import { fetchFileContentByAssetAddress, useAssetCidByAddress, useAssetData, useBuyAsset } from "@/services/dXService";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import "@/components/editor/Editor.css";
 import { useAccount } from "wagmi";
 import { useAssetOwnership } from "@/hooks/useAssetOwnership";
+import { AuthGuard } from "@/components/AuthGuard";
 
 export const PostPreviewPage = () => {
   const { assetAddress } = useParams<{ assetAddress: string }>();
@@ -185,7 +186,6 @@ export const PostPreviewPage = () => {
 
                 {/* Loading Metadata Skeleton */}
                 <div className="mb-8 flex flex-wrap items-center justify-end gap-4 pb-6 border-b border-gray-200 dark:border-gray-700">
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32 animate-pulse"></div>
                   <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24 animate-pulse"></div>
                 </div>
 
@@ -247,7 +247,6 @@ export const PostPreviewPage = () => {
 
                   {/* Loading Metadata Skeleton */}
                   <div className="mb-8 flex flex-wrap items-center justify-end gap-4 pb-6 border-b border-gray-200 dark:border-gray-700">
-                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32 animate-pulse"></div>
                     <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24 animate-pulse"></div>
                   </div>
 
@@ -430,19 +429,7 @@ export const PostPreviewPage = () => {
   }
 
   if (contentError) {
-    return (
-      <div className="px-4 sm:px-6 py-6 lg:px-8 max-w-7xl mx-auto w-full">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-center py-16">
-            <div className="text-center">
-              <FileImage className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-              <h2 className="text-2xl font-semibold mb-2">Content Not Found</h2>
-              <p className="text-muted-foreground mb-6">{contentError}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return <AuthGuard>{null}</AuthGuard>;
   }
 
   return (
@@ -474,13 +461,9 @@ export const PostPreviewPage = () => {
               {/* Metadata */}
               <div className="mb-8 flex flex-wrap items-center justify-end gap-4 text-sm text-muted-foreground pb-6 border-b border-gray-200 dark:border-gray-700">
                 <div className="flex items-center gap-1">
-                  <Calendar className="h-4 w-4" />
-                  <span>Published recently</span>
-                </div>
-                <div className="flex items-center gap-1">
                   <User className="h-4 w-4" />
                   <span className="text-xs">
-                    {assetAddress?.slice(0, 6)}...{assetAddress?.slice(-4)}
+                    {assetData?.author?.slice(0, 6)}...{assetData?.author?.slice(-4)}
                   </span>
                 </div>
               </div>

@@ -501,7 +501,7 @@ body {
 	font-family: Georgia, 'Times New Roman', serif;
 	font-size: 16px;
 	line-height: 1.6;
-	color: #3e2723;
+	color: #000000;
 }
 
 /* Dark mode for text container */
@@ -564,7 +564,7 @@ body {
 .text-container h4,
 .text-container h5,
 .text-container h6 {
-	color: #5d4037;
+	color: #000000;
 }
 
 /* Dark mode headings */
@@ -604,21 +604,21 @@ body {
 
 /* Links */
 .text-container a {
-	color: #8b4513;
+	color: #2563eb;
 	text-decoration: underline;
 }
 
 .text-container a:hover {
-	color: #5d2f0e;
+	color: #1d4ed8;
 }
 
 .dark .text-container a {
-	color: #d4a574;
+	color: #60a5fa;
 	text-decoration: underline;
 }
 
 .dark .text-container a:hover {
-	color: #f4c896;
+	color: #93c5fd;
 }
 
 /* Code blocks */

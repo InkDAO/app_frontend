@@ -507,7 +507,7 @@ const EditorPage = () => {
 									type="text"
 									value={documentTitle}
 									onChange={(e) => setDocumentTitle(e.target.value)}
-									className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-transparent border-none outline-none w-full text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:ring-0"
+									className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-transparent border-none outline-none w-full text-black dark:text-white placeholder-gray-400 focus:ring-0"
 									placeholder="Give your post a title..."
 									disabled={isPreviewMode}
 								/>

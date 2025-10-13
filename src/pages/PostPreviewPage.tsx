@@ -453,7 +453,7 @@ export const PostPreviewPage = () => {
             <div className="parchment-content">
               {/* Title */}
               <div className="mb-6">
-                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-gray-100">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-black dark:text-white">
                   {postTitle}
                 </h1>
               </div>

@@ -21,7 +21,7 @@ export const createGroupPost = async (content: any, title: string, address: stri
       content: contentJson
     };
 
-    const response = await authenticatedFetch(`${import.meta.env.VITE_LOCAL_SERVER_URL}/create/group`, {
+    const response = await authenticatedFetch(`${import.meta.env.VITE_SERVER_URL}/create/group`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -67,7 +67,7 @@ export const publishFile = async (file: File, address: string, signMessage: any,
     formData.append('signature', signature);
     
     // Make authenticated API call to publish file
-    const response = await authenticatedFetch(`${import.meta.env.VITE_LOCAL_SERVER_URL}/publish/file?cid=${cid}`, {
+    const response = await authenticatedFetch(`${import.meta.env.VITE_SERVER_URL}/publish/file?cid=${cid}`, {
       method: 'POST',
       body: formData
     });
@@ -293,7 +293,7 @@ export const fetchFileContentByAssetAddress = async (assetAddress: string, userA
   try {
     // First, try the public free endpoint to check if the post is free
     try {
-      const baseUrl = import.meta.env.VITE_LOCAL_SERVER_URL;
+      const baseUrl = import.meta.env.VITE_SERVER_URL;
       const freeResponse = await fetch(`${baseUrl}/freeFileByAddress?assetAddress=${assetAddress}`, {
         method: 'GET',
         headers: {
@@ -384,7 +384,7 @@ export const deleteFileById = async (cid: string, address: string, signMessage: 
     };
     
     // Make authenticated API call to delete the file
-    const response = await fetch(`${import.meta.env.VITE_LOCAL_SERVER_URL}/delete/file?cid=${cid}`, {
+    const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/delete/file?cid=${cid}`, {
       method: 'post',
       headers: {
         'Content-Type': 'application/json',
@@ -438,7 +438,7 @@ export const updateFileById = async (cid: string, content: any, title: string, a
     
     
     // Make authenticated API call to update the file
-    const response = await fetch(`${import.meta.env.VITE_LOCAL_SERVER_URL}/update/file?cid=${cid}`, {
+    const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/update/file?cid=${cid}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

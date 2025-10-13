@@ -4,21 +4,42 @@ import { HomeCardSkeleton } from "@/components/HomeCardSkeleton";
 import { EmptyState } from "@/components/EmptyState";
 import { useSearch } from "@/context/SearchContext";
 import { useAssets } from "@/hooks/useAssets";
-import { MessageSquare, ArrowRight, Globe } from "lucide-react";
+import { MessageSquare, ArrowRight, Globe, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const HomePage = () => {
   const { searchTerm } = useSearch();
   const { allAssets, isAllAssetLoading } = useAssets();
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<"all" | "free">("all");
 
-  // Get the posts to display based on title search only
+  // Get the posts to display based on title search and active tab
   const getPostsToDisplay = () => {
-    if (!searchTerm.trim()) return allAssets;
+    let posts = allAssets;
     
-    return allAssets.filter(asset => 
-      asset.assetTitle.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // Apply search filter
+    if (searchTerm.trim()) {
+      posts = posts.filter(asset => 
+        asset.assetTitle.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    // Apply tab filter
+    if (activeTab === "free") {
+      posts = posts.filter(asset => {
+        const cost = asset.costInNative || "0";
+        const costInEth = parseFloat(cost) / 1e18;
+        return costInEth === 0;
+      });
+    }
+    
+    return posts;
   };
 
   const filteredPosts = getPostsToDisplay();
@@ -30,12 +51,48 @@ const HomePage = () => {
           <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600">
             <Globe className="h-6 w-6 text-white" />
           </div>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">All Posts</h1>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <div className="flex items-center gap-2 cursor-pointer group">
+                <h1 className="text-3xl font-bold tracking-tight">
+                  {activeTab === "all" ? "All Posts" : "Free Posts"}
+                </h1>
+                <ChevronDown className="h-6 w-6 transition-transform group-data-[state=open]:rotate-180" />
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              <DropdownMenuItem 
+                onClick={() => setActiveTab("all")}
+                className="cursor-pointer"
+              >
+                <div className="flex items-center justify-between w-full">
+                  <span className="font-medium">All Posts</span>
+                  {activeTab === "all" && (
+                    <div className="h-2 w-2 rounded-full bg-gradient-to-r from-blue-500 to-purple-600" />
+                  )}
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => setActiveTab("free")}
+                className="cursor-pointer"
+              >
+                <div className="flex items-center justify-between w-full">
+                  <span className="font-medium">Free Posts</span>
+                  {activeTab === "free" && (
+                    <div className="h-2 w-2 rounded-full bg-gradient-to-r from-green-500 to-emerald-500" />
+                  )}
+                </div>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
-        <p className="text-muted-foreground ml-14">Discover content from the community</p>
+        <p className="text-muted-foreground ml-14">
+          {activeTab === "all" 
+            ? "Discover content from the community" 
+            : "Discover free content from the community"}
+        </p>
       </div>
+
       <div className="w-full">
         {isAllAssetLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center">
@@ -62,9 +119,15 @@ const HomePage = () => {
               <h2 className="text-2xl font-semibold">No Posts Yet</h2>
             </div>
             <p className="text-muted-foreground mb-6 max-w-md animate-in fade-in-50 slide-in-from-bottom-2 duration-1000">
-              {searchTerm ? `No posts found matching "${searchTerm}"` : "No posts have been published yet"}
+              {searchTerm && activeTab === "free" 
+                ? `No free posts found matching "${searchTerm}"` 
+                : searchTerm 
+                ? `No posts found matching "${searchTerm}"` 
+                : activeTab === "free"
+                ? "No free posts available yet"
+                : "No posts have been published yet"}
             </p>
-            {!searchTerm && (
+            {!searchTerm && activeTab === "all" && (
               <div 
                 onClick={() => navigate('/app')}
                 className="flex items-center gap-2 text-muted-foreground mb-6 max-w-md animate-in fade-in-50 slide-in-from-bottom-2 duration-1000 cursor-pointer hover:text-foreground transition-colors"

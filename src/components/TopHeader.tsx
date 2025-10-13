@@ -77,9 +77,9 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
             />
           </Button>
           
-          <div className="flex items-center gap-2">
-            <span className="text-3xl font-bold sm:hidden">dX</span>
-            <span className="text-xl font-bold hidden sm:block">decentralizedX</span>
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
+            <span className="text-3xl font-bold sm:hidden hover:opacity-80 transition-opacity">dX</span>
+            <span className="text-xl font-bold hidden sm:block hover:opacity-80 transition-opacity">decentralizedX</span>
           </div>
 
           {/* Search box (hidden on small screens and editor page) */}

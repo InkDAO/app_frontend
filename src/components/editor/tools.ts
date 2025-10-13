@@ -9,6 +9,8 @@ import Header from "@editorjs/header";
 import Quote from "@editorjs/quote";
 import Marker from "@editorjs/marker";
 import Delimiter from "@editorjs/delimiter";
+import InlineCode from "@editorjs/inline-code";
+import Embed from "@editorjs/embed";
 
 export const EDITOR_JS_TOOLS = {
   // NOTE: Paragraph is default tool. Declare only when you want to change paragraph option.
@@ -46,9 +48,11 @@ export const EDITOR_JS_TOOLS = {
   list: List,
   table: Table,
   warning: Warning,
-  link: LinkTool,
+  linkTool: LinkTool,
   raw: Raw,
   quote: Quote,
   marker: Marker,
   delimiter: Delimiter,
+  embed: Embed,
+  inlineCode: InlineCode,
 };

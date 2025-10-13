@@ -44,11 +44,18 @@ export default function EditorTextParser({ data }: EditorTextParserProps) {
     switch (block.type) {
       case 'header':
         const HeaderTag = `h${block.data.level}` as keyof JSX.IntrinsicElements;
-        const linkedHeaderText = linkifyText(block.data.text);
+        let headerText = block.data.text || '';
+        // Convert newline characters to <br /> tags
+        headerText = headerText.replace(/\n/g, '<br />');
+        const linkedHeaderText = linkifyText(headerText);
         return <HeaderTag key={key} dangerouslySetInnerHTML={{ __html: linkedHeaderText }} />;
 
       case 'paragraph':
-        const linkedText = linkifyText(block.data.text);
+        // Convert newline characters to <br /> tags for proper line break display
+        let paragraphText = block.data.text || '';
+        // Replace \n with <br /> tags
+        paragraphText = paragraphText.replace(/\n/g, '<br />');
+        const linkedText = linkifyText(paragraphText);
         return <p key={key} dangerouslySetInnerHTML={{ __html: linkedText }} />;
 
       case 'list':
@@ -56,7 +63,9 @@ export default function EditorTextParser({ data }: EditorTextParserProps) {
         return (
           <ListTag key={key}>
             {block.data.items.map((item: any, i: number) => {
-              const content = typeof item === 'string' ? item : (item.content || item.text || '');
+              let content = typeof item === 'string' ? item : (item.content || item.text || '');
+              // Convert newline characters to <br /> tags for proper line break display in lists
+              content = content.replace(/\n/g, '<br />');
               const linkedContent = linkifyText(content);
               return <li key={i} dangerouslySetInnerHTML={{ __html: linkedContent }} />;
             })}
@@ -67,7 +76,10 @@ export default function EditorTextParser({ data }: EditorTextParserProps) {
         return (
           <div key={key} className="cdx-checklist">
             {block.data.items.map((item: any, i: number) => {
-              const linkedChecklistText = linkifyText(item.text);
+              let checklistText = item.text || '';
+              // Convert newline characters to <br /> tags
+              checklistText = checklistText.replace(/\n/g, '<br />');
+              const linkedChecklistText = linkifyText(checklistText);
               return (
                 <div key={i} style={{ display: 'flex', alignItems: 'flex-start', margin: '0.5em 0' }}>
                   <input
@@ -84,8 +96,13 @@ export default function EditorTextParser({ data }: EditorTextParserProps) {
         );
 
       case 'quote':
-        const linkedQuoteText = linkifyText(block.data.text);
-        const linkedQuoteCaption = block.data.caption ? linkifyText(block.data.caption) : '';
+        let quoteText = block.data.text || '';
+        let quoteCaption = block.data.caption || '';
+        // Convert newline characters to <br /> tags
+        quoteText = quoteText.replace(/\n/g, '<br />');
+        quoteCaption = quoteCaption.replace(/\n/g, '<br />');
+        const linkedQuoteText = linkifyText(quoteText);
+        const linkedQuoteCaption = quoteCaption ? linkifyText(quoteCaption) : '';
         return (
           <blockquote key={key}>
             <p dangerouslySetInnerHTML={{ __html: linkedQuoteText }} />
@@ -115,7 +132,10 @@ export default function EditorTextParser({ data }: EditorTextParserProps) {
               {block.data.content?.map((row: string[], rowIndex: number) => (
                 <tr key={rowIndex}>
                   {row.map((cell: string, cellIndex: number) => {
-                    const linkedCell = linkifyText(cell);
+                    let cellContent = cell || '';
+                    // Convert newline characters to <br /> tags
+                    cellContent = cellContent.replace(/\n/g, '<br />');
+                    const linkedCell = linkifyText(cellContent);
                     return <td key={cellIndex} dangerouslySetInnerHTML={{ __html: linkedCell }} />;
                   })}
                 </tr>
@@ -125,8 +145,13 @@ export default function EditorTextParser({ data }: EditorTextParserProps) {
         );
 
       case 'warning':
-        const linkedWarningTitle = linkifyText(block.data.title);
-        const linkedWarningMessage = linkifyText(block.data.message);
+        let warningTitle = block.data.title || '';
+        let warningMessage = block.data.message || '';
+        // Convert newline characters to <br /> tags
+        warningTitle = warningTitle.replace(/\n/g, '<br />');
+        warningMessage = warningMessage.replace(/\n/g, '<br />');
+        const linkedWarningTitle = linkifyText(warningTitle);
+        const linkedWarningMessage = linkifyText(warningMessage);
         return (
           <div key={key} className="cdx-warning">
             <div dangerouslySetInnerHTML={{ __html: linkedWarningTitle }} style={{ fontWeight: 'bold' }} />

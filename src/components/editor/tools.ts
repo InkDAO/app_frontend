@@ -11,10 +11,16 @@ import Marker from "@editorjs/marker";
 import Delimiter from "@editorjs/delimiter";
 import InlineCode from "@editorjs/inline-code";
 import Embed from "@editorjs/embed";
+import Paragraph from "@editorjs/paragraph";
 
 export const EDITOR_JS_TOOLS = {
-  // NOTE: Paragraph is default tool. Declare only when you want to change paragraph option.
-  // paragraph: Paragraph,
+  // Configure paragraph tool to preserve line breaks (Shift+Enter)
+  paragraph: {
+    class: Paragraph,
+    config: {
+      preserveBlank: true,
+    },
+  },
   header: Header,
   image: {
     class: CustomImageTool,

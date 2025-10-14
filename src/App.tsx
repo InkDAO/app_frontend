@@ -5,10 +5,8 @@ import AppLayout from "@/components/AppLayout";
 import Landing from "@/pages/Landing";
 import HomePage from "@/pages/HomePage";
 import { PostPreviewPage } from "@/pages/PostPreviewPage";
-import { MyPostsPage } from "@/pages/MyPostsPage";
+import { MePage } from "@/pages/MePage";
 import { AnnouncementPage } from "@/pages/AnnouncementPage";
-import { LibraryPage } from "@/pages/LibraryPage";
-import { DraftsPage } from "@/pages/DraftsPage";
 import NotFound from "@/pages/NotFound";
 import EditorPage from "@/pages/EditorPage";
 import { ThemeProvider } from "@/context/ThemeContext";
@@ -52,24 +50,14 @@ const App = () => (
                     <PostPreviewPage />
                   </AppLayout>
                 } />
-                <Route path="/app/my-posts" element={
+                <Route path="/app/me" element={
                   <AppLayout>
-                    <MyPostsPage />
-                  </AppLayout>
-                } />
-                <Route path="/app/drafts" element={
-                  <AppLayout>
-                    <DraftsPage />
+                    <MePage />
                   </AppLayout>
                 } />
                 <Route path="/app/announcements" element={
                   <AppLayout>
                     <AnnouncementPage />
-                  </AppLayout>
-                } />
-                <Route path="/app/library" element={
-                  <AppLayout>
-                    <LibraryPage />
                   </AppLayout>
                 } />
                 <Route path="/app/editor/:cid?" element={

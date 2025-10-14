@@ -5,10 +5,6 @@ import {
   Home,
   User2,
   Edit3,
-  BookOpen,
-  Library,
-  FileText,
-  Settings,
   Sun,
   Moon,
   Megaphone
@@ -44,22 +40,10 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       current: location.pathname === "/app"
     },
     {
-      name: "Library",
-      href: "/app/library",
-      icon: Library,
-      current: location.pathname === "/app/library"
-    },
-    {
-      name: "My Posts",
-      href: "/app/my-posts",
+      name: "Me",
+      href: "/app/me",
       icon: User2,
-      current: location.pathname === "/app/my-posts"
-    },
-    {
-      name: "Drafts",
-      href: "/app/drafts",
-      icon: FileText,
-      current: location.pathname === "/app/drafts"
+      current: location.pathname === "/app/me"
     },
     {
       name: "Write",

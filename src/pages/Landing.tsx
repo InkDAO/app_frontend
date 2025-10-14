@@ -12,7 +12,8 @@ import {
   Zap,
   Globe,
   Database,
-  Cloud
+  Cloud,
+  Webhook
 } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import { Sun, Moon } from "lucide-react";
@@ -268,6 +269,15 @@ const Landing = () => {
                     <h3 className="font-semibold text-sm md:text-lg">Netlify</h3>
                     <p className="text-xs text-muted-foreground text-center mt-1">Hosting & Deploy</p>
                   </div>
+
+                  {/* Alchemy */}
+                  <div className="group p-4 md:p-6 rounded-2xl bg-card/30 backdrop-blur-sm border border-border/50 hover:border-emerald-500/50 transition-all duration-300 flex flex-col items-center justify-center hover:shadow-lg hover:shadow-emerald-500/10 hover:-translate-y-1 w-32 md:w-48 shrink-0">
+                    <div className="bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 p-3 md:p-4 rounded-xl mb-2 md:mb-3 group-hover:scale-110 transition-transform">
+                      <Webhook className="h-6 w-6 md:h-10 md:w-10 text-emerald-500" />
+                    </div>
+                    <h3 className="font-semibold text-sm md:text-lg">Alchemy</h3>
+                    <p className="text-xs text-muted-foreground text-center mt-1">Webhook</p>
+                  </div>
                 </div>
 
                 {/* Second set - duplicate for seamless loop */}
@@ -310,6 +320,14 @@ const Landing = () => {
                     </div>
                     <h3 className="font-semibold text-sm md:text-lg">Netlify</h3>
                     <p className="text-xs text-muted-foreground text-center mt-1">Hosting & Deploy</p>
+                  </div>
+
+                  <div className="group p-4 md:p-6 rounded-2xl bg-card/30 backdrop-blur-sm border border-border/50 hover:border-emerald-500/50 transition-all duration-300 flex flex-col items-center justify-center hover:shadow-lg hover:shadow-emerald-500/10 hover:-translate-y-1 w-32 md:w-48 shrink-0">
+                    <div className="bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 p-3 md:p-4 rounded-xl mb-2 md:mb-3 group-hover:scale-110 transition-transform">
+                      <Webhook className="h-6 w-6 md:h-10 md:w-10 text-emerald-500" />
+                    </div>
+                    <h3 className="font-semibold text-sm md:text-lg">Alchemy</h3>
+                    <p className="text-xs text-muted-foreground text-center mt-1">Webhook</p>
                   </div>
                 </div>
               </div>

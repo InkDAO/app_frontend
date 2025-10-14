@@ -53,14 +53,14 @@ const HomePage = () => {
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <div className="flex items-center gap-2 cursor-pointer group">
-                <h1 className="text-3xl font-bold tracking-tight">
+              <div className="flex items-center gap-2 cursor-pointer group border-2 border-border rounded-lg px-4 py-2 hover:border-primary/50 transition-colors w-[200px]">
+                <h1 className="text-3xl font-bold tracking-tight flex-1 truncate">
                   {activeTab === "all" ? "All Posts" : "Free Posts"}
                 </h1>
-                <ChevronDown className="h-6 w-6 transition-transform group-data-[state=open]:rotate-180" />
+                <ChevronDown className="h-6 w-6 transition-transform group-data-[state=open]:rotate-180 flex-shrink-0" />
               </div>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-48">
+            <DropdownMenuContent align="start" className="w-[200px]">
               <DropdownMenuItem 
                 onClick={() => setActiveTab("all")}
                 className="cursor-pointer"

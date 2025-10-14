@@ -206,13 +206,15 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
             variant="secondary" 
             className={isOwned 
               ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-600 hover:to-emerald-600"
+              : pricePerAsset === 0
+              ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600"
               : "bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600"
             }
           >
-            {pricePerAsset.toFixed(4)} ETH
+            {pricePerAsset === 0 ? "FREE" : `${pricePerAsset.toFixed(4)} ETH`}
           </Badge>
           
-          {isOwned ? (
+          {isOwned || pricePerAsset === 0 ? (
             <Badge 
               variant="secondary"
               className="bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-600 hover:to-emerald-600 cursor-pointer"
@@ -244,10 +246,18 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
                 </DialogHeader>
                 
                 <div className="py-4">
-                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-4 sm:p-6 border border-blue-200/50 dark:border-blue-700/50">
+                  <div className={`rounded-lg p-4 sm:p-6 border ${totalPrice === 0 
+                    ? "bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border-emerald-200/50 dark:border-emerald-700/50"
+                    : "bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200/50 dark:border-blue-700/50"
+                  }`}>
                     <div className="flex justify-between items-center">
                       <span className="font-semibold text-base sm:text-lg text-slate-800 dark:text-slate-200">Price:</span>
-                      <span className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{totalPrice.toFixed(4)} ETH</span>
+                      <span className={`text-2xl sm:text-3xl font-bold bg-clip-text text-transparent ${totalPrice === 0
+                        ? "bg-gradient-to-r from-emerald-600 to-teal-600"
+                        : "bg-gradient-to-r from-blue-600 to-indigo-600"
+                      }`}>
+                        {totalPrice === 0 ? "FREE" : `${totalPrice.toFixed(4)} ETH`}
+                      </span>
                     </div>
                   </div>
                 </div>

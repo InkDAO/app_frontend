@@ -3,13 +3,14 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { Edit3, Eye } from 'lucide-react';
 import Editor from "../components/editor/Editor";
 import EditorTextParser from "../components/editor/EditorTextParser";
-import { useAccount, useSignMessage } from 'wagmi';
+import { useAccount, useSignMessage, usePublicClient } from 'wagmi';
 import { createGroupPost, updateFileById, useAddAsset, publishFile } from '@/services/dXService';
 import { useToast } from '@/hooks/use-toast';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useEditor } from '@/context/EditorContext';
 import { PublishData } from '@/components/PublishOverlay';
+import PublishProgressModal, { PublishStep } from '@/components/PublishProgressModal';
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -20,6 +21,7 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { dXmasterContract } from "@/contracts/dXmaster";
 
 type EditorData = {
 	time?: number;
@@ -43,8 +45,15 @@ const EditorPage = () => {
 	const pendingNavigationRef = useRef<string | null>(null);
 	const allowNavigationRef = useRef(false);
 	
+	// Publishing progress state
+	const [publishStep, setPublishStep] = useState<PublishStep>('uploading');
+	const [showProgressModal, setShowProgressModal] = useState(false);
+	const [publishError, setPublishError] = useState<string>('');
+	const [publishedAssetAddress, setPublishedAssetAddress] = useState<string>('');
+	
 	const { address } = useAccount();
 	const { signMessageAsync } = useSignMessage();
+	const publicClient = usePublicClient();
 	const { toast } = useToast();
 	const { cid } = useParams();
 	const navigate = useNavigate();
@@ -311,53 +320,70 @@ const EditorPage = () => {
 
 	// Monitor transaction hash (transaction submitted to wallet)
 	useEffect(() => {
-		if (txHash && isPublishing) {
-			toast({
-				title: "Transaction Submitted",
-				description: "Waiting for blockchain confirmation...",
-			});
+		if (txHash && isPublishing && publishStep === 'signing') {
+			setPublishStep('confirming');
 		}
-	}, [txHash, isPublishing, toast]);
+	}, [txHash, isPublishing, publishStep]);
 
-	// Monitor contract transaction confirmation
+	// Monitor contract transaction confirmation and extract asset address
 	useEffect(() => {
-		if (isContractConfirmed && isPublishing) {
-			setIsPublishing(false);
-			toast({
-				title: "Success",
-				description: "Content published to blockchain successfully!",
-			});
-		}
-	}, [isContractConfirmed, isPublishing, toast]);
+		const handleConfirmation = async () => {
+			if (isContractConfirmed && isPublishing && cid) {
+				try {
+					// Use the contract's assetData mapping to get asset address by CID
+					// This is more reliable than trying to decode event logs
+					const assetAddress = await publicClient?.readContract({
+						address: dXmasterContract.address as `0x${string}`,
+						abi: dXmasterContract.abi,
+						functionName: 'assetData',
+						args: [cid],
+					}) as string;
+
+					if (assetAddress && assetAddress !== '0x0000000000000000000000000000000000000000') {
+						setPublishedAssetAddress(assetAddress);
+						setPublishStep('completed');
+						setIsPublishing(false);
+						console.log('✅ Published asset address:', assetAddress);
+					} else {
+						// Fallback: show success without redirect
+						console.warn('Asset address not found in contract');
+						setPublishStep('completed');
+						setIsPublishing(false);
+					}
+				} catch (error) {
+					console.error('Error fetching asset address:', error);
+					// Still show success even if we couldn't get the address
+					setPublishStep('completed');
+					setIsPublishing(false);
+				}
+			}
+		};
+
+		handleConfirmation();
+	}, [isContractConfirmed, isPublishing, cid, publicClient]);
 
 	// Monitor contract transaction errors
 	useEffect(() => {
 		if (isContractError && isPublishing) {
+			setPublishStep('error');
+			setPublishError('The blockchain transaction failed. Please try again.');
 			setIsPublishing(false);
-			toast({
-				title: "Transaction Failed",
-				description: "The blockchain transaction failed. Please try again.",
-				variant: "destructive"
-			});
 		}
-	}, [isContractError, isPublishing, toast]);
+	}, [isContractError, isPublishing]);
 
 	// Safety timeout - reset publishing state after 5 minutes if stuck
 	useEffect(() => {
 		if (isPublishing) {
 			const timeout = setTimeout(() => {
 				console.warn('Publishing timeout - resetting state');
+				setPublishStep('error');
+				setPublishError('Publishing took too long. Please check your transaction and try again if needed.');
 				setIsPublishing(false);
-				toast({
-					title: "Timeout",
-					description: "Publishing took too long. Please check your transaction and try again if needed.",
-					variant: "destructive"
-				});
 			}, 5 * 60 * 1000); // 5 minutes
 
 			return () => clearTimeout(timeout);
 		}
-	}, [isPublishing, toast]);
+	}, [isPublishing]);
 
 	// Publish with data from overlay (with thumbnail upload)
 	const publishWithData = useCallback(async (publishData: PublishData) => {
@@ -390,7 +416,14 @@ const EditorPage = () => {
 			return false;
 		}
 
+		// Reset state and show progress modal
 		setIsPublishing(true);
+		setPublishStep('uploading');
+		setPublishError('');
+		setPublishedAssetAddress('');
+		setShowProgressModal(true);
+		setShowPublishOverlay(false);
+
 		try {
 			const timestamp = Math.floor(Date.now() / 1000);
 			
@@ -401,26 +434,13 @@ const EditorPage = () => {
 			let thumbnailCid = "";
 			if (publishData.thumbnail) {
 				try {
-					toast({
-						title: "Uploading Thumbnail",
-						description: "Please sign the transaction to upload your thumbnail image...",
-					});
-					
 					const result = await publishFile(publishData.thumbnail, address, signMessageAsync, cid);
 					thumbnailCid = result.thumbnailCid;
-					
-					toast({
-						title: "Thumbnail Uploaded",
-						description: "Thumbnail uploaded successfully! Now publishing to blockchain...",
-					});
-					
+					console.log('✅ Thumbnail uploaded successfully:', thumbnailCid);
 				} catch (uploadError) {
 					console.error('❌ Error uploading thumbnail:', uploadError);
-					toast({
-						title: "Upload Error",
-						description: "Failed to upload thumbnail image. Please try again.",
-						variant: "destructive"
-					});
+					setPublishStep('error');
+					setPublishError('Failed to upload thumbnail image. Please try again.');
 					setIsPublishing(false);
 					return false;
 				}
@@ -428,6 +448,8 @@ const EditorPage = () => {
 			
 			// Step 2: Call the smart contract to add the asset to blockchain
 			try {
+				setPublishStep('signing');
+				
 				await addAsset({
 					salt: timestamp.toString(16),
 					assetTitle: documentTitle,
@@ -437,19 +459,17 @@ const EditorPage = () => {
 					costInNative: priceInWei
 				});
 				
-				// Close the overlay
-				setShowPublishOverlay(false);
-				
 				// Transaction submitted - wait for confirmation via useEffect
 				return true;
 				
-			} catch (contractError) {
+			} catch (contractError: any) {
 				console.error('❌ Error calling addAsset contract:', contractError);
-				toast({
-					title: "Error",
-					description: "Failed to publish to blockchain. Please try again.",
-					variant: "destructive"
-				});
+				const errorMsg = contractError.message?.includes('user rejected') 
+					? 'Transaction was rejected by user.'
+					: 'Failed to publish to blockchain. Please try again.';
+				
+				setPublishStep('error');
+				setPublishError(errorMsg);
 				setIsPublishing(false);
 				return false;
 			}
@@ -457,15 +477,12 @@ const EditorPage = () => {
 		} catch (error: any) {
 			console.error('Error publishing:', error);
 			const errorMessage = error.message || "Failed to publish content.";
-			toast({
-				title: "Error",
-				description: errorMessage,
-				variant: "destructive"
-			});
+			setPublishStep('error');
+			setPublishError(errorMessage);
 			setIsPublishing(false);
 			return false;
 		}
-	}, [address, ensureAuthenticated, cid, documentTitle, toast, addAsset, signMessageAsync]);
+	}, [address, ensureAuthenticated, cid, documentTitle, addAsset, signMessageAsync, toast]);
 
 	// Simple publish without overlay (no thumbnail/price/description) - kept for backward compatibility
 	const publishToAPI = useCallback(async () => {
@@ -476,6 +493,13 @@ const EditorPage = () => {
 			price: "0"
 		});
 	}, [publishWithData]);
+
+	// Close progress modal and reset state
+	const handleCloseProgressModal = useCallback(() => {
+		setShowProgressModal(false);
+		setPublishStep('uploading');
+		setPublishError('');
+	}, []);
 
 	// Set editor props in context for TopHeader
 	useEffect(() => {
@@ -622,6 +646,16 @@ const EditorPage = () => {
 					</AlertDialogFooter>
 				</AlertDialogContent>
 			</AlertDialog>
+
+			{/* Publish Progress Modal */}
+			<PublishProgressModal
+				isOpen={showProgressModal}
+				currentStep={publishStep}
+				txHash={txHash}
+				error={publishError}
+				onClose={handleCloseProgressModal}
+				assetAddress={publishedAssetAddress}
+			/>
 		</div>
 	);
 };

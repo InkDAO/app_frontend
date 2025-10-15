@@ -76,7 +76,6 @@ const PublishOverlay: React.FC<PublishOverlayProps> = ({
   };
 
   const handlePublish = () => {
-    
     // Validate required fields
     if (!description.trim()) {
       toast({
@@ -116,6 +115,7 @@ const PublishOverlay: React.FC<PublishOverlayProps> = ({
       return;
     }
 
+    // Call the publish handler with the data
     onPublish({
       description: description.trim(),
       thumbnail,
@@ -148,9 +148,14 @@ const PublishOverlay: React.FC<PublishOverlayProps> = ({
         <div className="space-y-6">
           {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="description" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              Description
+            <Label htmlFor="description" className="flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                Description
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {description.length}/500
+              </span>
             </Label>
             <Textarea
               id="description"
@@ -159,17 +164,18 @@ const PublishOverlay: React.FC<PublishOverlayProps> = ({
               onChange={(e) => setDescription(e.target.value)}
               className="min-h-[100px] resize-none"
               disabled={isPublishing}
+              maxLength={500}
             />
-            <p className="text-sm text-muted-foreground">
+            {/* <p className="text-sm text-muted-foreground">
               This description will be visible to everyone browsing posts.
-            </p>
+            </p> */}
           </div>
 
           {/* Thumbnail */}
           <div className="space-y-2">
             <Label className="flex items-center gap-2">
               <ImageIcon className="h-4 w-4" />
-              Thumbnail Image
+              Thumbnail
             </Label>
             
             {thumbnailPreview ? (
@@ -220,9 +226,9 @@ const PublishOverlay: React.FC<PublishOverlayProps> = ({
               disabled={isPublishing}
             />
             
-            <p className="text-sm text-muted-foreground">
+            {/* <p className="text-sm text-muted-foreground">
               This image will be displayed as the post thumbnail in the library.
-            </p>
+            </p> */}
           </div>
 
           {/* Price */}
@@ -238,7 +244,19 @@ const PublishOverlay: React.FC<PublishOverlayProps> = ({
               min="0"
               placeholder="0.001"
               value={price}
-              onChange={(e) => setPrice(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                // Only allow empty string or positive numbers
+                if (value === '' || parseFloat(value) >= 0) {
+                  setPrice(value);
+                }
+              }}
+              onKeyDown={(e) => {
+                // Prevent minus sign from being entered
+                if (e.key === '-' || e.key === 'e' || e.key === 'E') {
+                  e.preventDefault();
+                }
+              }}
               disabled={isPublishing}
               className="w-full"
             />
@@ -261,14 +279,7 @@ const PublishOverlay: React.FC<PublishOverlayProps> = ({
               disabled={isPublishing || !description.trim() || !thumbnail || !price.trim()}
               className="bg-emerald-600 hover:bg-emerald-700"
             >
-              {isPublishing ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
-                  Publishing...
-                </>
-              ) : (
-                'Publish to Blockchain'
-              )}
+              Publish to Blockchain
             </Button>
           </div>
         </div>

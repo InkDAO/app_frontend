@@ -54,20 +54,30 @@ export const MePage = () => {
   // Get filtered My Posts based on search term
   const getFilteredMyPosts = () => {
     const myAssets = filterMyAssets();
-    if (!searchTerm.trim()) return myAssets;
+    let posts = myAssets;
     
-    return myAssets.filter(asset => 
-      asset.assetTitle.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    if (searchTerm.trim()) {
+      posts = posts.filter(asset => 
+        asset.assetTitle.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    // Reverse to show new posts first
+    return [...posts].reverse();
   };
 
   // Get filtered Library posts based on search term
   const getFilteredLibraryPosts = () => {
-    if (!searchTerm.trim()) return allUserAssets;
+    let posts = allUserAssets;
     
-    return allUserAssets.filter(asset => 
-      asset.assetTitle.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    if (searchTerm.trim()) {
+      posts = posts.filter(asset => 
+        asset.assetTitle.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    // Reverse to show new posts first
+    return [...posts].reverse();
   };
 
   const filteredMyPosts = getFilteredMyPosts();
@@ -371,7 +381,7 @@ export const MePage = () => {
         return (
           <div className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center">
-              {savedPosts.map((savedPost, index) => (
+              {[...savedPosts].reverse().map((savedPost, index) => (
                 <SavedPostCard 
                   key={savedPost.cid || index} 
                   savedPost={savedPost}

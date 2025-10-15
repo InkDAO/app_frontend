@@ -39,7 +39,8 @@ const HomePage = () => {
       });
     }
     
-    return posts;
+    // Reverse to show new posts first
+    return [...posts].reverse();
   };
 
   const filteredPosts = getPostsToDisplay();

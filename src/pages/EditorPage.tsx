@@ -37,6 +37,7 @@ const EditorPage = () => {
 	const [isLoadingContent, setIsLoadingContent] = useState(false);
 	const [showPublishOverlay, setShowPublishOverlay] = useState(false);
 	const [showNavigationDialog, setShowNavigationDialog] = useState(false);
+	const [editorKey, setEditorKey] = useState(0);
 	const editorInstanceRef = useRef<any>(null);
 	const justSavedOrLoaded = useRef(false);
 	const pendingNavigationRef = useRef<string | null>(null);
@@ -52,10 +53,19 @@ const EditorPage = () => {
 	const { setEditorProps } = useEditor();
 	const { addAsset, isPending: isContractPending, isConfirming: isContractConfirming, isConfirmed: isContractConfirmed, isError: isContractError, hash: txHash } = useAddAsset();
 
-	// Load existing post content from IPFS when CID is present
+	// Load existing post content from IPFS when CID is present, or clear editor when no CID
 	useEffect(() => {
 		const loadExistingPost = async () => {
-			if (!cid) return;
+			if (!cid) {
+				// Clear the editor when navigating to new post
+				setData({ blocks: [] });
+				setDocumentTitle('');
+				setHasUnsavedChanges(false);
+				justSavedOrLoaded.current = true;
+				// Force remount of editor component by changing the key
+				setEditorKey(prev => prev + 1);
+				return;
+			}
 			
 			setIsLoadingContent(true);
 			try {
@@ -561,7 +571,7 @@ const EditorPage = () => {
 									<EditorTextParser data={data} />
 								) : (
 									<Editor 
-										key={cid || 'new'} 
+										key={cid || `new-${editorKey}`} 
 										data={data} 
 										setData={setData}
 										editorInstanceRef={editorInstanceRef}

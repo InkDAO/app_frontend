@@ -3,22 +3,54 @@ import { Button } from "@/components/ui/button";
 import { 
   ArrowRight, 
   Shield, 
-  Users, 
-  Lock, 
   Sparkles, 
-  TrendingUp, 
-  DollarSign, 
-  FileText,
   Zap,
   Globe,
   Database,
   Cloud,
-  Webhook
+  Webhook,
+  Server,
+  Edit,
+  Wallet,
+  Coins,
+  Infinity
 } from "lucide-react";
+import { FaXTwitter, FaLinkedinIn, FaGithub, FaTelegram } from 'react-icons/fa6';
+import { SiGitbook } from 'react-icons/si';
 import { useTheme } from "@/context/ThemeContext";
 import { Sun, Moon } from "lucide-react";
 import { usePlatformMetrics } from "@/hooks/usePlatformMetrics";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useEffect, useState, useRef } from "react";
+
+// Counter animation component
+const AnimatedCounter = ({ value, decimals = 0, suffix = "" }: { value: number; decimals?: number; suffix?: string }) => {
+  const [count, setCount] = useState(0);
+  const countRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const duration = 2000; // 2 seconds
+    const steps = 60;
+    const increment = value / steps;
+    let currentStep = 0;
+
+    const timer = setInterval(() => {
+      currentStep++;
+      if (currentStep <= steps) {
+        setCount(Math.min(increment * currentStep, value));
+      } else {
+        setCount(value);
+        clearInterval(timer);
+      }
+    }, duration / steps);
+
+    return () => clearInterval(timer);
+  }, [value]);
+
+  const displayValue = decimals > 0 ? count.toFixed(decimals) : Math.floor(count).toLocaleString();
+
+  return <span>{displayValue}{suffix}</span>;
+};
 
 const Landing = () => {
   const { theme, toggleTheme } = useTheme();
@@ -117,13 +149,13 @@ const Landing = () => {
           </div>
 
           {/* Platform Metrics Section */}
-          <div className="mb-16">
+          <div className="mb-24 md:mb-32">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 px-4">
               {/* Total Posts */}
               <div className="text-center">
                 <p className="text-xs sm:text-sm text-muted-foreground mb-3 uppercase tracking-wide">Total Posts</p>
                 <h3 className="text-4xl sm:text-5xl md:text-6xl font-bold">
-                  {isLoading ? <Skeleton className="h-12 sm:h-16 w-24 sm:w-32 mx-auto" /> : totalPosts.toLocaleString()}
+                  {isLoading ? <Skeleton className="h-12 sm:h-16 w-24 sm:w-32 mx-auto" /> : <AnimatedCounter value={totalPosts} />}
                 </h3>
               </div>
 
@@ -131,7 +163,7 @@ const Landing = () => {
               <div className="text-center">
                 <p className="text-xs sm:text-sm text-muted-foreground mb-3 uppercase tracking-wide">Total Users</p>
                 <h3 className="text-4xl sm:text-5xl md:text-6xl font-bold">
-                  {isLoading ? <Skeleton className="h-12 sm:h-16 w-24 sm:w-32 mx-auto" /> : "0"}
+                  {isLoading ? <Skeleton className="h-12 sm:h-16 w-24 sm:w-32 mx-auto" /> : <AnimatedCounter value={0} />}
                 </h3>
               </div>
 
@@ -140,7 +172,7 @@ const Landing = () => {
                 <p className="text-xs sm:text-sm text-muted-foreground mb-3 uppercase tracking-wide">Total Value Traded</p>
                 <h3 className="text-4xl sm:text-5xl md:text-6xl font-bold">
                   {isLoading ? <Skeleton className="h-12 sm:h-16 w-32 sm:w-40 mx-auto" /> : (
-                    <span>{totalValueTraded} ETH</span>
+                    <span><AnimatedCounter value={parseFloat(totalValueTraded)} decimals={4} /> ETH</span>
                   )}
                 </h3>
               </div>
@@ -150,7 +182,7 @@ const Landing = () => {
                 <p className="text-xs sm:text-sm text-muted-foreground mb-3 uppercase tracking-wide">Total Worth of Assets</p>
                 <h3 className="text-4xl sm:text-5xl md:text-6xl font-bold">
                   {isLoading ? <Skeleton className="h-12 sm:h-16 w-32 sm:w-40 mx-auto" /> : (
-                    <span>{totalWorthOfAssets} ETH</span>
+                    <span><AnimatedCounter value={parseFloat(totalWorthOfAssets)} decimals={4} /> ETH</span>
                   )}
                 </h3>
               </div>
@@ -158,198 +190,191 @@ const Landing = () => {
           </div>
 
           {/* Features Grid */}
-          <div className="mb-16">
-            {/* <div className="text-center mb-12">
+          <div className="mb-24 md:mb-32">
+            <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold mb-3">Why Choose decentralizedX?</h2>
-              <p className="text-muted-foreground text-lg">Built with cutting-edge blockchain technology</p>
-            </div> */}
+            </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-              {/* Pseudonymity Card */}
-              <div className="group relative p-8 rounded-3xl bg-gradient-to-br from-card via-card to-card/80 backdrop-blur-sm border border-border/50 hover:border-primary/30 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5 overflow-hidden">
-                {/* Subtle background gradient on hover */}
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                
-                <div className="relative">
-                  <div className="hidden md:block bg-gradient-to-br from-primary/20 to-primary/5 p-5 rounded-2xl w-fit mb-6 mx-auto group-hover:scale-110 transition-transform duration-300">
-                    <Shield className="h-10 w-10 text-primary" />
-                  </div>
-                  <h3 className="text-2xl font-bold mb-4 text-center">Pseudonymity</h3>
-                  <p className="text-base text-muted-foreground text-center leading-relaxed">Your identity stays protected with wallet-based authentication. No personal data, no tracking.</p>
+              {/* Tokenized Content Card */}
+              <div className="group p-8 md:p-10 rounded-2xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300 hover:border-primary/30">
+                <div className="bg-gradient-to-br from-primary/10 to-primary/5 p-4 rounded-xl w-fit mb-6">
+                  <Coins className="h-8 w-8 text-primary" />
                 </div>
+                <h3 className="text-2xl font-bold mb-4">Tokenized Content</h3>
+                <p className="text-base text-muted-foreground leading-relaxed mb-6">Transform your posts into tradeable digital assets. Each piece of content becomes a token with real market value.</p>
               </div>
 
-              {/* Community Driven Card */}
-              <div className="group relative p-8 rounded-3xl bg-gradient-to-br from-card via-card to-card/80 backdrop-blur-sm border border-border/50 hover:border-purple-500/30 transition-all duration-500 hover:shadow-2xl hover:shadow-purple-500/5 overflow-hidden">
-                {/* Subtle background gradient on hover */}
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                
-                <div className="relative">
-                  <div className="hidden md:block bg-gradient-to-br from-purple-500/20 to-purple-500/5 p-5 rounded-2xl w-fit mb-6 mx-auto group-hover:scale-110 transition-transform duration-300">
-                    <Users className="h-10 w-10 text-purple-500" />
-                  </div>
-                  <h3 className="text-2xl font-bold mb-4 text-center">Community Driven</h3>
-                  <p className="text-base text-muted-foreground text-center leading-relaxed">Join a global network of blockchain enthusiasts sharing knowledge and insights.</p>
+              {/* Perpetual Earnings Card */}
+              <div className="group p-8 md:p-10 rounded-2xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300 hover:border-emerald-500/30">
+                <div className="bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 p-4 rounded-xl w-fit mb-6">
+                  <Infinity className="h-8 w-8 text-emerald-500" />
                 </div>
-            </div>
+                <h3 className="text-2xl font-bold mb-4">Earn Forever</h3>
+                <p className="text-base text-muted-foreground leading-relaxed mb-6">Publish once and earn perpetually. Receive royalties every time your content is traded or accessed.</p>
+              </div>
 
-              {/* On-Chain Security Card */}
-              <div className="group relative p-8 rounded-3xl bg-gradient-to-br from-card via-card to-card/80 backdrop-blur-sm border border-border/50 hover:border-blue-500/30 transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/5 overflow-hidden">
-                {/* Subtle background gradient on hover */}
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                
-                <div className="relative">
-                  <div className="hidden md:block bg-gradient-to-br from-blue-500/20 to-blue-500/5 p-5 rounded-2xl w-fit mb-6 mx-auto group-hover:scale-110 transition-transform duration-300">
-                    <Lock className="h-10 w-10 text-blue-500" />
-                  </div>
-                  <h3 className="text-2xl font-bold mb-4 text-center">On-Chain Security</h3>
-                  <p className="text-base text-muted-foreground text-center leading-relaxed">Every interaction is secured on the blockchain, ensuring transparency and immutability.</p>
+              {/* No Censorship Card */}
+              <div className="group p-8 md:p-10 rounded-2xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300 hover:border-blue-500/30">
+                <div className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 p-4 rounded-xl w-fit mb-6">
+                  <Shield className="h-8 w-8 text-blue-500" />
                 </div>
+                <h3 className="text-2xl font-bold mb-4">True Ownership</h3>
+                <p className="text-base text-muted-foreground leading-relaxed mb-6">Your content, your rules. Immutable on-chain publishing means no one can censor or remove your work.</p>
               </div>
             </div>
           </div>
 
           {/* Technology Stack Section */}
-          <div className="mb-16 overflow-hidden">
-            {/* <div className="text-center mb-8">
-              <h2 className="text-3xl md:text-4xl font-bold mb-3">Powered By</h2>
-              <p className="text-muted-foreground text-lg">Built with industry-leading technologies</p>
-            </div> */}
+          <div className="mb-16">
+            <div className="text-center mb-12">
+              <h2 className="text-2xl md:text-3xl font-bold">
+                Built with industry-leading technologies
+              </h2>
+            </div>
             
-            <div className="relative py-12 px-4 rounded-3xl bg-gradient-to-r from-primary/5 via-purple-500/5 to-secondary/5 border border-border/30 backdrop-blur-sm">
-              {/* Gradient overlays for smooth edges - blend with the subtle background */}
-              <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-primary/5 via-primary/3 to-transparent z-10 pointer-events-none rounded-l-3xl" />
-              <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-secondary/5 via-secondary/3 to-transparent z-10 pointer-events-none rounded-r-3xl" />
-              
-              {/* Sliding container with hardware acceleration */}
-              <div className="inline-flex animate-slide-infinite will-change-transform">
-                {/* First set of items */}
-                <div className="inline-flex gap-6 md:gap-24 shrink-0 pr-6 md:pr-24">
-                  {/* IPFS */}
-                  <div className="group p-4 md:p-6 rounded-2xl bg-card/30 backdrop-blur-sm border border-border/50 hover:border-cyan-500/50 transition-all duration-300 flex flex-col items-center justify-center hover:shadow-lg hover:shadow-cyan-500/10 hover:-translate-y-1 w-32 md:w-48 shrink-0">
-                    <div className="bg-gradient-to-br from-cyan-500/20 to-cyan-600/20 p-3 md:p-4 rounded-xl mb-2 md:mb-3 group-hover:scale-110 transition-transform">
-                      <Database className="h-6 w-6 md:h-10 md:w-10 text-cyan-500" />
-                    </div>
-                    <h3 className="font-semibold text-sm md:text-lg">IPFS</h3>
-                    <p className="text-xs text-muted-foreground text-center mt-1">Decentralized Storage</p>
-                  </div>
-
-                  {/* Pinata */}
-                  <div className="group p-4 md:p-6 rounded-2xl bg-card/30 backdrop-blur-sm border border-border/50 hover:border-purple-500/50 transition-all duration-300 flex flex-col items-center justify-center hover:shadow-lg hover:shadow-purple-500/10 hover:-translate-y-1 w-32 md:w-48 shrink-0">
-                    <div className="bg-gradient-to-br from-purple-500/20 to-purple-600/20 p-3 md:p-4 rounded-xl mb-2 md:mb-3 group-hover:scale-110 transition-transform">
-                      <Cloud className="h-6 w-6 md:h-10 md:w-10 text-purple-500" />
-                    </div>
-                    <h3 className="font-semibold text-sm md:text-lg">Pinata</h3>
-                    <p className="text-xs text-muted-foreground text-center mt-1">IPFS Gateway</p>
-                  </div>
-
-                  {/* Sepolia */}
-                  <div className="group p-4 md:p-6 rounded-2xl bg-card/30 backdrop-blur-sm border border-border/50 hover:border-blue-500/50 transition-all duration-300 flex flex-col items-center justify-center hover:shadow-lg hover:shadow-blue-500/10 hover:-translate-y-1 w-32 md:w-48 shrink-0">
-                    <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/20 p-3 md:p-4 rounded-xl mb-2 md:mb-3 group-hover:scale-110 transition-transform">
-                      <Zap className="h-6 w-6 md:h-10 md:w-10 text-blue-500" />
-                    </div>
-                    <h3 className="font-semibold text-sm md:text-lg">Sepolia</h3>
-                    <p className="text-xs text-muted-foreground text-center mt-1">Ethereum Testnet</p>
-                  </div>
-
-                  {/* Wagmi */}
-                  <div className="group p-4 md:p-6 rounded-2xl bg-card/30 backdrop-blur-sm border border-border/50 hover:border-orange-500/50 transition-all duration-300 flex flex-col items-center justify-center hover:shadow-lg hover:shadow-orange-500/10 hover:-translate-y-1 w-32 md:w-48 shrink-0">
-                    <div className="bg-gradient-to-br from-orange-500/20 to-orange-600/20 p-3 md:p-4 rounded-xl mb-2 md:mb-3 group-hover:scale-110 transition-transform">
-                      <Zap className="h-6 w-6 md:h-10 md:w-10 text-orange-500" />
-                    </div>
-                    <h3 className="font-semibold text-sm md:text-lg">Wagmi</h3>
-                    <p className="text-xs text-muted-foreground text-center mt-1">React Hooks</p>
-                  </div>
-
-                  {/* Netlify */}
-                  <div className="group p-4 md:p-6 rounded-2xl bg-card/30 backdrop-blur-sm border border-border/50 hover:border-teal-500/50 transition-all duration-300 flex flex-col items-center justify-center hover:shadow-lg hover:shadow-teal-500/10 hover:-translate-y-1 w-32 md:w-48 shrink-0">
-                    <div className="bg-gradient-to-br from-teal-500/20 to-teal-600/20 p-3 md:p-4 rounded-xl mb-2 md:mb-3 group-hover:scale-110 transition-transform">
-                      <Globe className="h-6 w-6 md:h-10 md:w-10 text-teal-500" />
-                    </div>
-                    <h3 className="font-semibold text-sm md:text-lg">Netlify</h3>
-                    <p className="text-xs text-muted-foreground text-center mt-1">Hosting & Deploy</p>
-                  </div>
-
-                  {/* Alchemy */}
-                  <div className="group p-4 md:p-6 rounded-2xl bg-card/30 backdrop-blur-sm border border-border/50 hover:border-emerald-500/50 transition-all duration-300 flex flex-col items-center justify-center hover:shadow-lg hover:shadow-emerald-500/10 hover:-translate-y-1 w-32 md:w-48 shrink-0">
-                    <div className="bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 p-3 md:p-4 rounded-xl mb-2 md:mb-3 group-hover:scale-110 transition-transform">
-                      <Webhook className="h-6 w-6 md:h-10 md:w-10 text-emerald-500" />
-                    </div>
-                    <h3 className="font-semibold text-sm md:text-lg">Alchemy</h3>
-                    <p className="text-xs text-muted-foreground text-center mt-1">Webhook</p>
-                  </div>
+            {/* Grid Layout */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 md:gap-8 lg:gap-10 px-4 md:px-0">
+              {/* IPFS */}
+              <div className="flex items-center justify-center p-8 md:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
+                <div className="flex items-center gap-3">
+                  <Database className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground/60" />
+                  <span className="font-medium text-lg md:text-xl text-muted-foreground/80">IPFS</span>
                 </div>
+              </div>
 
-                {/* Second set - duplicate for seamless loop */}
-                <div className="inline-flex gap-6 md:gap-24 shrink-0 pr-6 md:pr-24">
-                  <div className="group p-4 md:p-6 rounded-2xl bg-card/30 backdrop-blur-sm border border-border/50 hover:border-cyan-500/50 transition-all duration-300 flex flex-col items-center justify-center hover:shadow-lg hover:shadow-cyan-500/10 hover:-translate-y-1 w-32 md:w-48 shrink-0">
-                    <div className="bg-gradient-to-br from-cyan-500/20 to-cyan-600/20 p-3 md:p-4 rounded-xl mb-2 md:mb-3 group-hover:scale-110 transition-transform">
-                      <Database className="h-6 w-6 md:h-10 md:w-10 text-cyan-500" />
-                    </div>
-                    <h3 className="font-semibold text-sm md:text-lg">IPFS</h3>
-                    <p className="text-xs text-muted-foreground text-center mt-1">Decentralized Storage</p>
-                  </div>
+              {/* Pinata */}
+              <div className="flex items-center justify-center p-8 md:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
+                <div className="flex items-center gap-3">
+                  <Cloud className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground/60" />
+                  <span className="font-medium text-lg md:text-xl text-muted-foreground/80">Pinata</span>
+                </div>
+              </div>
 
-                  <div className="group p-4 md:p-6 rounded-2xl bg-card/30 backdrop-blur-sm border border-border/50 hover:border-purple-500/50 transition-all duration-300 flex flex-col items-center justify-center hover:shadow-lg hover:shadow-purple-500/10 hover:-translate-y-1 w-32 md:w-48 shrink-0">
-                    <div className="bg-gradient-to-br from-purple-500/20 to-purple-600/20 p-3 md:p-4 rounded-xl mb-2 md:mb-3 group-hover:scale-110 transition-transform">
-                      <Cloud className="h-6 w-6 md:h-10 md:w-10 text-purple-500" />
-                    </div>
-                    <h3 className="font-semibold text-sm md:text-lg">Pinata</h3>
-                    <p className="text-xs text-muted-foreground text-center mt-1">IPFS Gateway</p>
-                  </div>
+              {/* Sepolia */}
+              <div className="flex items-center justify-center p-8 md:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
+                <div className="flex items-center gap-3">
+                  <Zap className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground/60" />
+                  <span className="font-medium text-lg md:text-xl text-muted-foreground/80">Sepolia</span>
+                </div>
+              </div>
 
-                  <div className="group p-4 md:p-6 rounded-2xl bg-card/30 backdrop-blur-sm border border-border/50 hover:border-blue-500/50 transition-all duration-300 flex flex-col items-center justify-center hover:shadow-lg hover:shadow-blue-500/10 hover:-translate-y-1 w-32 md:w-48 shrink-0">
-                    <div className="bg-gradient-to-br from-blue-500/20 to-blue-600/20 p-3 md:p-4 rounded-xl mb-2 md:mb-3 group-hover:scale-110 transition-transform">
-                      <Zap className="h-6 w-6 md:h-10 md:w-10 text-blue-500" />
-                    </div>
-                    <h3 className="font-semibold text-sm md:text-lg">Sepolia</h3>
-                    <p className="text-xs text-muted-foreground text-center mt-1">Ethereum Testnet</p>
-                  </div>
+              {/* Netlify */}
+              <div className="flex items-center justify-center p-8 md:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
+                <div className="flex items-center gap-3">
+                  <Globe className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground/60" />
+                  <span className="font-medium text-lg md:text-xl text-muted-foreground/80">Netlify</span>
+                </div>
+              </div>
 
-                  <div className="group p-4 md:p-6 rounded-2xl bg-card/30 backdrop-blur-sm border border-border/50 hover:border-orange-500/50 transition-all duration-300 flex flex-col items-center justify-center hover:shadow-lg hover:shadow-orange-500/10 hover:-translate-y-1 w-32 md:w-48 shrink-0">
-                    <div className="bg-gradient-to-br from-orange-500/20 to-orange-600/20 p-3 md:p-4 rounded-xl mb-2 md:mb-3 group-hover:scale-110 transition-transform">
-                      <Zap className="h-6 w-6 md:h-10 md:w-10 text-orange-500" />
-                    </div>
-                    <h3 className="font-semibold text-sm md:text-lg">Wagmi</h3>
-                    <p className="text-xs text-muted-foreground text-center mt-1">React Hooks</p>
-                  </div>
+              {/* Alchemy */}
+              <div className="flex items-center justify-center p-8 md:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
+                <div className="flex items-center gap-3">
+                  <Webhook className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground/60" />
+                  <span className="font-medium text-lg md:text-xl text-muted-foreground/80">Alchemy</span>
+                </div>
+              </div>
 
-                  <div className="group p-4 md:p-6 rounded-2xl bg-card/30 backdrop-blur-sm border border-border/50 hover:border-teal-500/50 transition-all duration-300 flex flex-col items-center justify-center hover:shadow-lg hover:shadow-teal-500/10 hover:-translate-y-1 w-32 md:w-48 shrink-0">
-                    <div className="bg-gradient-to-br from-teal-500/20 to-teal-600/20 p-3 md:p-4 rounded-xl mb-2 md:mb-3 group-hover:scale-110 transition-transform">
-                      <Globe className="h-6 w-6 md:h-10 md:w-10 text-teal-500" />
-                    </div>
-                    <h3 className="font-semibold text-sm md:text-lg">Netlify</h3>
-                    <p className="text-xs text-muted-foreground text-center mt-1">Hosting & Deploy</p>
-                  </div>
+              {/* QuickNode */}
+              <div className="flex items-center justify-center p-8 md:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
+                <div className="flex items-center gap-3">
+                  <Webhook className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground/60" />
+                  <span className="font-medium text-lg md:text-xl text-muted-foreground/80">QuickNode</span>
+                </div>
+              </div>
 
-                  <div className="group p-4 md:p-6 rounded-2xl bg-card/30 backdrop-blur-sm border border-border/50 hover:border-emerald-500/50 transition-all duration-300 flex flex-col items-center justify-center hover:shadow-lg hover:shadow-emerald-500/10 hover:-translate-y-1 w-32 md:w-48 shrink-0">
-                    <div className="bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 p-3 md:p-4 rounded-xl mb-2 md:mb-3 group-hover:scale-110 transition-transform">
-                      <Webhook className="h-6 w-6 md:h-10 md:w-10 text-emerald-500" />
-                    </div>
-                    <h3 className="font-semibold text-sm md:text-lg">Alchemy</h3>
-                    <p className="text-xs text-muted-foreground text-center mt-1">Webhook</p>
-                  </div>
+              {/* Chainstack */}
+              <div className="flex items-center justify-center p-8 md:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
+                <div className="flex items-center gap-3">
+                  <Server className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground/60" />
+                  <span className="font-medium text-lg md:text-xl text-muted-foreground/80">Chainstack</span>
+                </div>
+              </div>
+
+              {/* Wagmi */}
+              <div className="flex items-center justify-center p-8 md:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
+                <div className="flex items-center gap-3">
+                  <Zap className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground/60" />
+                  <span className="font-medium text-lg md:text-xl text-muted-foreground/80">Wagmi</span>
+                </div>
+              </div>
+
+              {/* EditorJS */}
+              <div className="flex items-center justify-center p-8 md:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
+                <div className="flex items-center gap-3">
+                  <Edit className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground/60" />
+                  <span className="font-medium text-lg md:text-xl text-muted-foreground/80">EditorJS</span>
+                </div>
+              </div>
+
+              {/* RainbowKit */}
+              <div className="flex items-center justify-center p-8 md:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
+                <div className="flex items-center gap-3">
+                  <Wallet className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground/60" />
+                  <span className="font-medium text-lg md:text-xl text-muted-foreground/80">RainbowKit</span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Call to Action */}
-          {/* <div className="text-center p-8 rounded-3xl bg-gradient-to-r from-primary/10 via-purple-500/10 to-secondary/10 border border-primary/20">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Get Started?</h2>
-            <p className="text-lg text-muted-foreground mb-6 max-w-2xl mx-auto">
-              Join the revolution of decentralized content publishing. Your voice, your rules, forever on-chain.
-            </p>
-            <Link to="/app">
-              <Button
-                size="lg"
-                className="px-8 py-6 text-lg font-semibold bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-700 transition-all transform hover:scale-105 shadow-lg hover:shadow-xl"
-              >
-                Launch App Now
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </Link>
-          </div> */}
+          {/* Footer */}
+          <footer className="mt-24 md:mt-32 pt-12 pb-0 border-t border-border">
+            <div className="flex flex-col items-center gap-6">
+              {/* Social Icons */}
+              <div className="flex gap-6 md:gap-8">
+                <a 
+                  href="https://decentralizedx.gitbook.io/dx" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="p-3 rounded-lg bg-muted/50 text-muted-foreground hover:text-primary hover:bg-muted transition-all"
+                  aria-label="Documentation"
+                >
+                  <SiGitbook className="h-6 w-6" />
+                </a>
+                <a 
+                  href="https://t.me/decentralizedX0" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="p-3 rounded-lg bg-muted/50 text-muted-foreground hover:text-primary hover:bg-muted transition-all"
+                  aria-label="Telegram Community"
+                >
+                  <FaTelegram className="h-6 w-6" />
+                </a>
+                <a 
+                  href="https://github.com/0xAakibAlam" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="p-3 rounded-lg bg-muted/50 text-muted-foreground hover:text-primary hover:bg-muted transition-all"
+                  aria-label="GitHub Repository"
+                >
+                  <FaGithub className="h-6 w-6" />
+                </a>
+                <a 
+                  href="https://x.com/0xAakibAlam" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="p-3 rounded-lg bg-muted/50 text-muted-foreground hover:text-primary hover:bg-muted transition-all"
+                  aria-label="X (Twitter) Profile"
+                >
+                  <FaXTwitter className="h-6 w-6" />
+                </a>
+                <a 
+                  href="https://www.linkedin.com/in/0xaakibalam/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="p-3 rounded-lg bg-muted/50 text-muted-foreground hover:text-primary hover:bg-muted transition-all"
+                  aria-label="LinkedIn Profile"
+                >
+                  <FaLinkedinIn className="h-6 w-6" />
+                </a>
+              </div>
+
+              {/* Copyright */}
+              <p className="text-sm text-muted-foreground">
+                © {new Date().getFullYear()} decentralizedX. All rights reserved.
+              </p>
+            </div>
+          </footer>
         </div>
       </div>
     </div>

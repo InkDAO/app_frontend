@@ -55,6 +55,26 @@ export const useAuth = () => {
     }
   }, [isConnected, authState.isAuthenticated]);
 
+  // Monitor wallet address changes and logout if address changes
+  useEffect(() => {
+    if (isConnected && address && authState.isAuthenticated && authState.address) {
+      // Check if the current wallet address is different from authenticated address
+      if (address.toLowerCase() !== authState.address.toLowerCase()) {
+        // Wallet address changed, force logout
+        authService.logout();
+        setAuthState({
+          isAuthenticated: false,
+          token: null,
+          address: null,
+        });
+        
+        toast.warning("You have been logged out because your wallet address changed.", {
+          description: "Wallet Address Changed"
+        });
+      }
+    }
+  }, [address, isConnected, authState.isAuthenticated, authState.address]);
+
   // Manual authentication function
   const authenticate = async (): Promise<boolean> => {
     if (!isConnected || !address) {

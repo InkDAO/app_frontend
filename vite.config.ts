@@ -21,7 +21,33 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     chunkSizeWarningLimit: 2000,
+    commonjsOptions: {
+      include: [/node_modules/],
+      transformMixedEsModules: true,
+    },
     rollupOptions: {
+      output: {
+        manualChunks: {
+          'editorjs': [
+            '@editorjs/editorjs',
+            '@editorjs/header',
+            '@editorjs/list',
+            '@editorjs/paragraph',
+            '@editorjs/code',
+            '@editorjs/quote',
+            '@editorjs/delimiter',
+            '@editorjs/inline-code',
+            '@editorjs/marker',
+            '@editorjs/table',
+            '@editorjs/warning',
+            '@editorjs/embed',
+            '@editorjs/link',
+            '@editorjs/raw',
+            '@editorjs/simple-image',
+            '@editorjs/checklist',
+          ],
+        },
+      },
       onwarn(warning, warn) {
         // Suppress PURE comment warnings
         if (warning.code === 'ANNOTATION_POSITION' || 
@@ -33,6 +59,24 @@ export default defineConfig(({ mode }) => ({
     },
   },
   optimizeDeps: {
+    include: [
+      '@editorjs/editorjs',
+      '@editorjs/header',
+      '@editorjs/list',
+      '@editorjs/paragraph',
+      '@editorjs/code',
+      '@editorjs/quote',
+      '@editorjs/delimiter',
+      '@editorjs/inline-code',
+      '@editorjs/marker',
+      '@editorjs/table',
+      '@editorjs/warning',
+      '@editorjs/embed',
+      '@editorjs/link',
+      '@editorjs/raw',
+      '@editorjs/simple-image',
+      '@editorjs/checklist',
+    ],
     esbuildOptions: {
       legalComments: 'none',
     },

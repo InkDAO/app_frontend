@@ -4,12 +4,12 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AppLayout from "@/components/AppLayout";
 import Landing from "@/pages/Landing";
 import HomePage from "@/pages/HomePage";
-import { PostInfoPage } from "@/pages/PostInfoPage";
-import { MyPostsPage } from "@/pages/MyPostsPage";
-import { MyCommentsPage } from "@/pages/MyCommentsPage";
+import { PostPreviewPage } from "@/pages/PostPreviewPage";
+import { MePage } from "@/pages/MePage";
 import { AnnouncementPage } from "@/pages/AnnouncementPage";
-import { ArchivePage } from "@/pages/ArchivePage";
 import NotFound from "@/pages/NotFound";
+import EditorPage from "@/pages/EditorPage";
+import { ThemeProvider } from "@/context/ThemeContext";
 
 import '@rainbow-me/rainbowkit/styles.css';
 
@@ -32,29 +32,48 @@ const config = getDefaultConfig({
 const queryClient = new QueryClient();
 
 const App = () => (
-  <WagmiProvider config={config}>
-    <QueryClientProvider client={queryClient}>
-      <RainbowKitProvider>
-        <TooltipProvider>
-          <AppLayout>
-            <Sonner position="top-right" />
+  <ThemeProvider>
+    <WagmiProvider config={config}>
+      <QueryClientProvider client={queryClient}>
+        <RainbowKitProvider>
+          <TooltipProvider>
             <BrowserRouter>
               <Routes>
                 <Route path="/" element={<Landing />} />
-                <Route path="/app" element={<HomePage />} />
-                <Route path="/app/post/:id" element={<PostInfoPage />} />
-                <Route path="/app/my-posts" element={<MyPostsPage />} />
-                <Route path="/app/my-comments" element={<MyCommentsPage />} />
-                <Route path="/app/announcements" element={<AnnouncementPage />} />
-                <Route path="/app/archives" element={<ArchivePage />} />
+                <Route path="/app" element={
+                  <AppLayout>
+                    <HomePage />
+                  </AppLayout>
+                } />
+                <Route path="/app/post/:assetAddress" element={
+                  <AppLayout>
+                    <PostPreviewPage />
+                  </AppLayout>
+                } />
+                <Route path="/app/me" element={
+                  <AppLayout>
+                    <MePage />
+                  </AppLayout>
+                } />
+                <Route path="/app/announcements" element={
+                  <AppLayout>
+                    <AnnouncementPage />
+                  </AppLayout>
+                } />
+                <Route path="/app/editor/:cid?" element={
+                  <AppLayout>
+                    <EditorPage />
+                  </AppLayout>
+                } />
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              <Sonner position="top-right" />
             </BrowserRouter>
-          </AppLayout>
-        </TooltipProvider>
-      </RainbowKitProvider>
-    </QueryClientProvider>
-  </WagmiProvider>
+          </TooltipProvider>
+        </RainbowKitProvider>
+      </QueryClientProvider>
+    </WagmiProvider>
+  </ThemeProvider>
 );
 
 export default App;

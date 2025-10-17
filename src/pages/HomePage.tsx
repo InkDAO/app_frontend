@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { HomeCard } from "@/components/HomeCard";
 import { HomeCardSkeleton } from "@/components/HomeCardSkeleton";
 import { EmptyState } from "@/components/EmptyState";
+import { PaginationControl } from "@/components/PaginationControl";
 import { useSearch } from "@/context/SearchContext";
 import { useAssets } from "@/hooks/useAssets";
 import { MessageSquare, ArrowRight, Globe, ChevronDown } from "lucide-react";
@@ -13,11 +14,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+const POSTS_PER_PAGE = 12;
+
 const HomePage = () => {
   const { searchTerm } = useSearch();
   const { allAssets, isAllAssetLoading } = useAssets();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"all" | "free">("all");
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Get the posts to display based on title search and active tab
   const getPostsToDisplay = () => {
@@ -44,6 +48,23 @@ const HomePage = () => {
   };
 
   const filteredPosts = getPostsToDisplay();
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredPosts.length / POSTS_PER_PAGE);
+  const startIndex = (currentPage - 1) * POSTS_PER_PAGE;
+  const endIndex = startIndex + POSTS_PER_PAGE;
+  const paginatedPosts = filteredPosts.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, activeTab]);
+
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <div className="px-4 sm:px-6 py-6 lg:px-8 max-w-7xl mx-auto w-full">
@@ -104,14 +125,21 @@ const HomePage = () => {
         ) : filteredPosts.length > 0 ? (
           <div className="space-y-6">
             {/* Posts Grid */}
-                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center">
-                     {filteredPosts.map((asset, index) => (
-                       <HomeCard 
-                         key={asset.assetCid || index} 
-                         asset={asset}
-                       />
-                     ))}
-                   </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center">
+              {paginatedPosts.map((asset, index) => (
+                <HomeCard 
+                  key={asset.assetCid || index} 
+                  asset={asset}
+                />
+              ))}
+            </div>
+            
+            {/* Pagination */}
+            <PaginationControl
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-16 text-center animate-in fade-in-50 slide-in-from-bottom-4 duration-500">

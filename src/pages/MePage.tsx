@@ -6,6 +6,7 @@ import { LibraryCardSkeleton } from "@/components/LibraryCardSkeleton";
 import { SavedPostCard } from "@/components/SavedPostCard";
 import { SavedPostCardSkeleton } from "@/components/SavedPostCardSkeleton";
 import { AuthGuard } from "@/components/AuthGuard";
+import { PaginationControl } from "@/components/PaginationControl";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, ArrowRight, RefreshCw, ChevronLeft, ChevronRight, User2, ChevronDown, Sparkles, BookOpen, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -24,6 +25,8 @@ import {
 
 type TabType = "my-posts" | "library" | "drafts";
 
+const POSTS_PER_PAGE = 12;
+
 export const MePage = () => {
   const navigate = useNavigate();
   const { address } = useAccount();
@@ -33,6 +36,10 @@ export const MePage = () => {
   const { allUserAssets, isAllUserAssetLoading } = useUserAssets();
   
   const [activeTab, setActiveTab] = useState<TabType>("my-posts");
+  
+  // Pagination state for my-posts and library tabs
+  const [myPostsCurrentPage, setMyPostsCurrentPage] = useState(1);
+  const [libraryCurrentPage, setLibraryCurrentPage] = useState(1);
   
   // Drafts state
   const [savedPosts, setSavedPosts] = useState<any[]>([]);
@@ -82,6 +89,42 @@ export const MePage = () => {
 
   const filteredMyPosts = getFilteredMyPosts();
   const filteredLibraryPosts = getFilteredLibraryPosts();
+
+  // Calculate pagination for my posts
+  const myPostsTotalPages = Math.ceil(filteredMyPosts.length / POSTS_PER_PAGE);
+  const myPostsStartIndex = (myPostsCurrentPage - 1) * POSTS_PER_PAGE;
+  const myPostsEndIndex = myPostsStartIndex + POSTS_PER_PAGE;
+  const paginatedMyPosts = filteredMyPosts.slice(myPostsStartIndex, myPostsEndIndex);
+
+  // Calculate pagination for library
+  const libraryTotalPages = Math.ceil(filteredLibraryPosts.length / POSTS_PER_PAGE);
+  const libraryStartIndex = (libraryCurrentPage - 1) * POSTS_PER_PAGE;
+  const libraryEndIndex = libraryStartIndex + POSTS_PER_PAGE;
+  const paginatedLibraryPosts = filteredLibraryPosts.slice(libraryStartIndex, libraryEndIndex);
+
+  // Reset to page 1 when search term changes
+  useEffect(() => {
+    setMyPostsCurrentPage(1);
+    setLibraryCurrentPage(1);
+  }, [searchTerm]);
+
+  // Reset to page 1 when tab changes
+  useEffect(() => {
+    setMyPostsCurrentPage(1);
+    setLibraryCurrentPage(1);
+  }, [activeTab]);
+
+  // Handle page change for my posts
+  const handleMyPostsPageChange = (page: number) => {
+    setMyPostsCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Handle page change for library
+  const handleLibraryPageChange = (page: number) => {
+    setLibraryCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   // Fetch saved posts when component mounts or tab changes
   const handleFetchSavedPosts = async () => {
@@ -268,13 +311,20 @@ export const MePage = () => {
         return (
           <div className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center">
-              {filteredMyPosts.map((asset, index) => (
+              {paginatedMyPosts.map((asset, index) => (
                 <HomeCard 
                   key={asset.assetCid || index} 
                   asset={asset}
                 />
               ))}
             </div>
+            
+            {/* Pagination */}
+            <PaginationControl
+              currentPage={myPostsCurrentPage}
+              totalPages={myPostsTotalPages}
+              onPageChange={handleMyPostsPageChange}
+            />
           </div>
         );
       }
@@ -315,13 +365,20 @@ export const MePage = () => {
         return (
           <div className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center">
-              {filteredLibraryPosts.map((asset, index) => (
+              {paginatedLibraryPosts.map((asset, index) => (
                 <LibraryCard 
                   key={asset.assetCid || index} 
                   asset={asset}
                 />
               ))}
             </div>
+            
+            {/* Pagination */}
+            <PaginationControl
+              currentPage={libraryCurrentPage}
+              totalPages={libraryTotalPages}
+              onPageChange={handleLibraryPageChange}
+            />
           </div>
         );
       }

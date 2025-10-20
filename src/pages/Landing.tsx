@@ -13,7 +13,9 @@ import {
   Edit,
   Wallet,
   Coins,
-  Infinity
+  Infinity,
+  Network,
+  MessageSquare
 } from "lucide-react";
 import { FaXTwitter, FaLinkedinIn, FaGithub, FaTelegram } from 'react-icons/fa6';
 import { SiGitbook } from 'react-icons/si';
@@ -236,82 +238,98 @@ const Landing = () => {
             {/* Grid Layout */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 md:gap-8 lg:gap-10 px-4 md:px-0">
               {/* IPFS */}
-              <div className="flex items-center justify-center p-8 md:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
-                <div className="flex items-center gap-3">
-                  <Database className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground/60" />
-                  <span className="font-medium text-lg md:text-xl text-muted-foreground/80">IPFS</span>
+              <div className="flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <Database className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/60" />
+                  <span className="font-medium text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground/80 break-words text-center">IPFS</span>
                 </div>
               </div>
 
               {/* Pinata */}
-              <div className="flex items-center justify-center p-8 md:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
-                <div className="flex items-center gap-3">
-                  <Cloud className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground/60" />
-                  <span className="font-medium text-lg md:text-xl text-muted-foreground/80">Pinata</span>
+              <div className="flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <Cloud className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/60" />
+                  <span className="font-medium text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground/80 break-words text-center">Pinata</span>
                 </div>
               </div>
 
               {/* Sepolia */}
-              <div className="flex items-center justify-center p-8 md:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
-                <div className="flex items-center gap-3">
-                  <Zap className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground/60" />
-                  <span className="font-medium text-lg md:text-xl text-muted-foreground/80">Sepolia</span>
+              <div className="flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <Zap className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/60" />
+                  <span className="font-medium text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground/80 break-words text-center">Sepolia</span>
                 </div>
               </div>
 
               {/* Netlify */}
-              <div className="flex items-center justify-center p-8 md:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
-                <div className="flex items-center gap-3">
-                  <Globe className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground/60" />
-                  <span className="font-medium text-lg md:text-xl text-muted-foreground/80">Netlify</span>
+              <div className="flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <Globe className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/60" />
+                  <span className="font-medium text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground/80 break-words text-center">Netlify</span>
                 </div>
               </div>
 
               {/* Alchemy */}
-              <div className="flex items-center justify-center p-8 md:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
-                <div className="flex items-center gap-3">
-                  <Webhook className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground/60" />
-                  <span className="font-medium text-lg md:text-xl text-muted-foreground/80">Alchemy</span>
+              <div className="flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <Webhook className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/60" />
+                  <span className="font-medium text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground/80 break-words text-center">Alchemy</span>
                 </div>
               </div>
 
               {/* QuickNode */}
-              <div className="flex items-center justify-center p-8 md:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
-                <div className="flex items-center gap-3">
-                  <Webhook className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground/60" />
-                  <span className="font-medium text-lg md:text-xl text-muted-foreground/80">QuickNode</span>
+              <div className="flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <Webhook className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/60" />
+                  <span className="font-medium text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground/80 break-words text-center">QuickNode</span>
                 </div>
               </div>
 
               {/* Chainstack */}
-              <div className="flex items-center justify-center p-8 md:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
-                <div className="flex items-center gap-3">
-                  <Server className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground/60" />
-                  <span className="font-medium text-lg md:text-xl text-muted-foreground/80">Chainstack</span>
+              <div className="flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <Server className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/60" />
+                  <span className="font-medium text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground/80 break-words text-center">Chainstack</span>
+                </div>
+              </div>
+
+              {/* The Graph */}
+              <div className="flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <Network className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/60" />
+                  <span className="font-medium text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground/80 break-words text-center">The Graph</span>
+                </div>
+              </div>
+
+              {/* Chatbase */}
+              <div className="flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <MessageSquare className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/60" />
+                  <span className="font-medium text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground/80 break-words text-center">Chatbase</span>
                 </div>
               </div>
 
               {/* Wagmi */}
-              <div className="flex items-center justify-center p-8 md:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
-                <div className="flex items-center gap-3">
-                  <Zap className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground/60" />
-                  <span className="font-medium text-lg md:text-xl text-muted-foreground/80">Wagmi</span>
+              <div className="flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <Zap className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/60" />
+                  <span className="font-medium text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground/80 break-words text-center">Wagmi</span>
                 </div>
               </div>
 
               {/* EditorJS */}
-              <div className="flex items-center justify-center p-8 md:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
-                <div className="flex items-center gap-3">
-                  <Edit className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground/60" />
-                  <span className="font-medium text-lg md:text-xl text-muted-foreground/80">EditorJS</span>
+              <div className="flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <Edit className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/60" />
+                  <span className="font-medium text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground/80 break-words text-center">EditorJS</span>
                 </div>
               </div>
 
               {/* RainbowKit */}
-              <div className="flex items-center justify-center p-8 md:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
-                <div className="flex items-center gap-3">
-                  <Wallet className="h-10 w-10 md:h-12 md:w-12 text-muted-foreground/60" />
-                  <span className="font-medium text-lg md:text-xl text-muted-foreground/80">RainbowKit</span>
+              <div className="flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <Wallet className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/60" />
+                  <span className="font-medium text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground/80 break-words text-center">RainbowKit</span>
                 </div>
               </div>
             </div>

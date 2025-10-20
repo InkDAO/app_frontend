@@ -9,6 +9,54 @@
     <meta name="description" content="dX" />
     <meta name="author" content="dX" />
     <meta property="og:title" content="dX" />
+    
+    <style>
+      /* Customize Chatbase chatbot size */
+      #chatbase-bubble-button {
+        bottom: 20px !important;
+        right: 20px !important;
+      }
+      
+      #chatbase-bubble-window {
+        max-width: 450px !important;
+        max-height: 600px !important;
+        width: 450px !important;
+        height: 600px !important;
+        bottom: 80px !important;
+        right: 20px !important;
+        border-radius: 16px !important;
+        overflow: hidden !important;
+      }
+      
+      iframe[src*="chatbase"] {
+        max-width: 450px !important;
+        max-height: 600px !important;
+      }
+      
+      /* Mobile responsiveness */
+      @media (max-width: 768px) {
+        #chatbase-bubble-window {
+          width: calc(100vw - 40px) !important;
+          max-width: 90vw !important;
+          left: 50% !important;
+          right: auto !important;
+          transform: translateX(-50%) !important;
+          bottom: 80px !important;
+          height: 70vh !important;
+          max-height: 600px !important;
+        }
+        
+        #chatbase-bubble-button {
+          right: 20px !important;
+          bottom: 20px !important;
+        }
+        
+        iframe[src*="chatbase"] {
+          max-width: 100% !important;
+          width: 100% !important;
+        }
+      }
+    </style>
   </head>
 
   <body>
@@ -16,5 +64,8 @@
     <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      (function(){if(!window.chatbase||window.chatbase("getState")!=="initialized"){window.chatbase=(...arguments)=>{if(!window.chatbase.q){window.chatbase.q=[]}window.chatbase.q.push(arguments)};window.chatbase=new Proxy(window.chatbase,{get(target,prop){if(prop==="q"){return target.q}return(...args)=>target(prop,...args)}})}const onLoad=function(){const script=document.createElement("script");script.src="https://www.chatbase.co/embed.min.js";script.id="g-_7vKYIH863U4e8T83z5";script.domain="www.chatbase.co";document.body.appendChild(script)};if(document.readyState==="complete"){onLoad()}else{window.addEventListener("load",onLoad)}})();
+    </script>
   </body>
 </html>

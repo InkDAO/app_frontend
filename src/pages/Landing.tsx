@@ -54,7 +54,7 @@ const AnimatedCounter = ({ value, decimals = 0, suffix = "" }: { value: number; 
 
 const Landing = () => {
   const { theme, toggleTheme } = useTheme();
-  const { totalPosts, totalValueTraded, totalWorthOfAssets, isLoading } = usePlatformMetrics();
+  const { totalPosts, totalUsers, totalValueTraded, totalWorthOfAssets, isLoading } = usePlatformMetrics();
   
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background/95 to-background/90 relative overflow-hidden">
@@ -163,7 +163,7 @@ const Landing = () => {
               <div className="text-center">
                 <p className="text-xs sm:text-sm text-muted-foreground mb-3 uppercase tracking-wide">Total Users</p>
                 <h3 className="text-4xl sm:text-5xl md:text-6xl font-bold">
-                  {isLoading ? <Skeleton className="h-12 sm:h-16 w-24 sm:w-32 mx-auto" /> : <AnimatedCounter value={0} />}
+                  {isLoading ? <Skeleton className="h-12 sm:h-16 w-24 sm:w-32 mx-auto" /> : <AnimatedCounter value={totalUsers} />}
                 </h3>
               </div>
 

@@ -299,7 +299,7 @@ export const MePage = () => {
     if (activeTab === "my-posts") {
       if (isAllAssetLoading) {
         return (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
             {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
               <HomeCardSkeleton key={i} />
             ))}
@@ -310,7 +310,7 @@ export const MePage = () => {
       if (filteredMyPosts.length > 0) {
         return (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
               {paginatedMyPosts.map((asset, index) => (
                 <HomeCard 
                   key={asset.assetCid || index} 
@@ -353,7 +353,7 @@ export const MePage = () => {
     if (activeTab === "library") {
       if (isAllUserAssetLoading) {
         return (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
             {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
               <LibraryCardSkeleton key={i} />
             ))}
@@ -364,7 +364,7 @@ export const MePage = () => {
       if (filteredLibraryPosts.length > 0) {
         return (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
               {paginatedLibraryPosts.map((asset, index) => (
                 <LibraryCard 
                   key={asset.assetCid || index} 
@@ -409,7 +409,7 @@ export const MePage = () => {
     if (activeTab === "drafts") {
       if (isSavedPostsLoading || isLoggingOut) {
         return (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
             {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
               <SavedPostCardSkeleton key={i} />
             ))}
@@ -437,7 +437,7 @@ export const MePage = () => {
       if (savedPosts.length > 0) {
         return (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
               {[...savedPosts].reverse().map((savedPost, index) => (
                 <SavedPostCard 
                   key={savedPost.cid || index} 
@@ -505,7 +505,7 @@ export const MePage = () => {
 
   return (
     <AuthGuard>
-      <div className="px-4 sm:px-6 py-6 lg:px-8 max-w-7xl mx-auto w-full">
+      <div className="px-4 sm:px-8 py-6 lg:px-12 xl:px-16 max-w-7xl mx-auto w-full">
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-3">
             <div className={`p-2 rounded-lg bg-gradient-to-br ${tabConfig.gradient}`}>

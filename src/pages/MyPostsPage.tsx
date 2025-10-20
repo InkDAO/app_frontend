@@ -42,7 +42,7 @@ export const MyPostsPage = () => {
 
   return (
     <AuthGuard>
-      <div className="px-4 sm:px-6 py-6 lg:px-8 max-w-7xl mx-auto w-full">
+      <div className="px-4 sm:px-8 py-6 lg:px-12 xl:px-16 max-w-7xl mx-auto w-full">
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-3">
             <div className="p-2 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600">
@@ -56,7 +56,7 @@ export const MyPostsPage = () => {
         </div>
         <div className="w-full">
         {isAllAssetLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
             {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
               <HomeCardSkeleton key={i} />
             ))}
@@ -64,7 +64,7 @@ export const MyPostsPage = () => {
           ) : filteredAssets.length > 0 ? (
             <div className="space-y-6">
               {/* Posts Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-items-center">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
                 {filteredAssets.map((asset, index) => (
                   <HomeCard 
                     key={asset.assetCid || index} 

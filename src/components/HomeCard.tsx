@@ -2,13 +2,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { FileImage, ShoppingCart, Loader2, Eye } from "lucide-react";
+import { FileImage, ShoppingCart, Loader2, Eye, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useBuyAsset, getAssetCost, fetchFileContentByAssetAddress } from "@/services/dXService";
-import { useAccount } from "wagmi";
+import { useAccount, useReadContract } from "wagmi";
 import { toast } from "@/components/ui/sonner";
 import { useState, useEffect } from "react";
 import { useAssetOwnership } from "@/hooks/useAssetOwnership";
+import { dXassetContract } from "@/contracts/dXasset";
 
 interface HomeCardProps {
   asset: {
@@ -41,6 +42,13 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
     console.error('HomeCard: asset prop is undefined');
     return null;
   }
+
+  // Fetch total supply for the asset
+  const { data: totalSupply } = useReadContract({
+    address: asset.assetAddress as `0x${string}`,
+    abi: dXassetContract.abi,
+    functionName: "totalSupply",
+  });
 
   // Monitor transaction confirmation
   useEffect(() => {
@@ -159,10 +167,10 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
 
   return (
     <Card 
-      className="w-full max-w-sm hover:shadow-lg transition-all duration-200 group overflow-hidden cursor-pointer"
+      className="w-full max-w-sm hover:shadow-xl transition-all duration-300 group overflow-hidden cursor-pointer border-2"
       onClick={handleCardClick}
     >
-      <div className="relative h-48 bg-muted/30 overflow-hidden flex items-center justify-center">
+      <div className="relative h-48 bg-muted/30 overflow-hidden flex items-center justify-center rounded-t-2xl">
         {isLoadingThumbnail ? (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted/50 to-muted/80">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -175,7 +183,7 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
           <img 
             src={thumbnailImage} 
             alt={postTitle}
-            className="group-hover:scale-105 transition-transform duration-300 w-full h-full object-cover"
+            className="group-hover:scale-105 transition-transform duration-500 w-full h-full object-cover"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted/50 to-muted/80">
@@ -185,40 +193,59 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
         
       </div>
 
-      <CardContent className="p-4">
-        <div className="mb-2">
-          <h3 className="font-semibold text-base leading-tight line-clamp-2 text-foreground group-hover:text-primary transition-colors">
-            {postTitle}
-          </h3>
-        </div>
-
-        {postDescription && (
-          <div className="mb-3">
-            <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
-              {postDescription}
-            </p>
-          </div>
-        )}
-
-        {/* Price and Action Tags */}
-        <div className="flex items-center justify-end mt-3 gap-2">
+      <CardContent className="p-5">
+        {/* Author Info and Price at Top */}
+        <div className="flex items-center mb-3 gap-2">
           <Badge 
             variant="secondary" 
-            className={isOwned 
-              ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-600 hover:to-emerald-600"
-              : pricePerAsset === 0
-              ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600"
-              : "bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600"
-            }
+            className="text-xs px-3 py-1.5 flex-shrink-0 font-medium"
+          >
+            {asset.author?.slice(0, 6)}...{asset.author?.slice(-4)}
+          </Badge>
+          
+          <Badge 
+            variant="secondary" 
+            className="text-xs px-3 py-1 flex-shrink-0 font-medium"
           >
             {pricePerAsset === 0 ? "FREE" : `${pricePerAsset.toFixed(4)} ETH`}
           </Badge>
-          
+        </div>
+
+        {/* Content area */}
+        <div className="flex flex-col">
+          <div className="mb-2">
+            <h3 className="font-semibold text-base leading-tight line-clamp-2 text-foreground group-hover:text-primary transition-colors">
+              {postTitle}
+            </h3>
+          </div>
+
+          <div className="relative min-h-[4.5rem] max-h-[4.5rem] overflow-hidden">
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              {postDescription}
+            </p>
+            {/* Gradient fade overlay - only visible when content overflows */}
+            {postDescription && postDescription.length > 100 && (
+              <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-card to-transparent pointer-events-none" />
+            )}
+          </div>
+        </div>
+
+        {/* Total Supply and Action Section */}
+        <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/50">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Users className="h-4 w-4" />
+            <span className="font-medium">
+              {totalSupply ? Number(totalSupply) : "0"} Collected
+            </span>
+          </div>
           {isOwned || pricePerAsset === 0 ? (
             <Badge 
               variant="secondary"
-              className="bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-600 hover:to-emerald-600 cursor-pointer"
-              onClick={handleCardClick}
+              className="cursor-pointer text-xs px-3 py-1 font-medium"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCardClick();
+              }}
             >
               <Eye className="h-3 w-3 mr-1" />
               Read
@@ -228,10 +255,11 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
               <DialogTrigger asChild>
                 <Badge 
                   variant="secondary"
-                  className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 cursor-pointer"
+                  className="cursor-pointer text-xs px-3 py-1 font-medium"
+                  onClick={(e) => e.stopPropagation()}
                 >
                   <ShoppingCart className="h-3 w-3 mr-1" />
-                  Buy
+                  Mint
                 </Badge>
               </DialogTrigger>
               <DialogContent 

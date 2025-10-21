@@ -6,8 +6,7 @@ import {
   User2,
   Edit3,
   Sun,
-  Moon,
-  Megaphone
+  Moon
 } from "lucide-react";
 import { FaXTwitter, FaLinkedinIn, FaGithub, FaTelegram } from 'react-icons/fa6';
 import { SiGitbook } from 'react-icons/si';
@@ -50,12 +49,6 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       href: "/app/editor",
       icon: Edit3,
       current: location.pathname === "/app/editor" || location.pathname.startsWith("/app/editor/")
-    },
-    {
-      name: "Announcements",
-      href: "/app/announcements",
-      icon: Megaphone,
-      current: location.pathname === "/app/announcements"
     },
   ];
 

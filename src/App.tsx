@@ -6,7 +6,6 @@ import Landing from "@/pages/Landing";
 import HomePage from "@/pages/HomePage";
 import { PostPreviewPage } from "@/pages/PostPreviewPage";
 import { MePage } from "@/pages/MePage";
-import { AnnouncementPage } from "@/pages/AnnouncementPage";
 import NotFound from "@/pages/NotFound";
 import EditorPage from "@/pages/EditorPage";
 import { ThemeProvider } from "@/context/ThemeContext";
@@ -53,11 +52,6 @@ const App = () => (
                 <Route path="/app/me" element={
                   <AppLayout>
                     <MePage />
-                  </AppLayout>
-                } />
-                <Route path="/app/announcements" element={
-                  <AppLayout>
-                    <AnnouncementPage />
                   </AppLayout>
                 } />
                 <Route path="/app/editor/:cid?" element={

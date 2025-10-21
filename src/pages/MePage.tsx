@@ -6,9 +6,8 @@ import { LibraryCardSkeleton } from "@/components/LibraryCardSkeleton";
 import { SavedPostCard } from "@/components/SavedPostCard";
 import { SavedPostCardSkeleton } from "@/components/SavedPostCardSkeleton";
 import { AuthGuard } from "@/components/AuthGuard";
-import { PaginationControl } from "@/components/PaginationControl";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, ArrowRight, RefreshCw, ChevronLeft, ChevronRight, User2, ChevronDown, Sparkles, BookOpen, FileText } from "lucide-react";
+import { MessageSquare, ArrowRight, RefreshCw, ChevronLeft, ChevronRight, User2, Sparkles, BookOpen, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAssets } from "@/hooks/useAssets";
 import { useUserAssets } from "@/hooks/useUserAssets";
@@ -16,16 +15,16 @@ import { useAccount } from "wagmi";
 import { useSearch } from "@/context/SearchContext";
 import { fetchSavedPosts, fetchSavedPostsByNextPageToken } from "@/services/dXService";
 import { useAuth } from "@/hooks/useAuth";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 type TabType = "my-posts" | "library" | "drafts";
 
-const POSTS_PER_PAGE = 12;
+const TAB_OPTIONS: { id: TabType; label: string; icon: React.ElementType }[] = [
+  { id: "my-posts", label: "My Posts", icon: Sparkles },
+  { id: "library", label: "Library", icon: BookOpen },
+  { id: "drafts", label: "Drafts", icon: FileText },
+];
+
+const POSTS_PER_PAGE = 9;
 
 export const MePage = () => {
   const navigate = useNavigate();
@@ -37,9 +36,9 @@ export const MePage = () => {
   
   const [activeTab, setActiveTab] = useState<TabType>("my-posts");
   
-  // Pagination state for my-posts and library tabs
-  const [myPostsCurrentPage, setMyPostsCurrentPage] = useState(1);
-  const [libraryCurrentPage, setLibraryCurrentPage] = useState(1);
+  // View more state for my-posts and library tabs
+  const [myPostsVisibleCount, setMyPostsVisibleCount] = useState(POSTS_PER_PAGE);
+  const [libraryVisibleCount, setLibraryVisibleCount] = useState(POSTS_PER_PAGE);
   
   // Drafts state
   const [savedPosts, setSavedPosts] = useState<any[]>([]);
@@ -90,40 +89,34 @@ export const MePage = () => {
   const filteredMyPosts = getFilteredMyPosts();
   const filteredLibraryPosts = getFilteredLibraryPosts();
 
-  // Calculate pagination for my posts
-  const myPostsTotalPages = Math.ceil(filteredMyPosts.length / POSTS_PER_PAGE);
-  const myPostsStartIndex = (myPostsCurrentPage - 1) * POSTS_PER_PAGE;
-  const myPostsEndIndex = myPostsStartIndex + POSTS_PER_PAGE;
-  const paginatedMyPosts = filteredMyPosts.slice(myPostsStartIndex, myPostsEndIndex);
+  // Get visible posts for my posts
+  const visibleMyPosts = filteredMyPosts.slice(0, myPostsVisibleCount);
+  const myPostsHasMore = myPostsVisibleCount < filteredMyPosts.length;
 
-  // Calculate pagination for library
-  const libraryTotalPages = Math.ceil(filteredLibraryPosts.length / POSTS_PER_PAGE);
-  const libraryStartIndex = (libraryCurrentPage - 1) * POSTS_PER_PAGE;
-  const libraryEndIndex = libraryStartIndex + POSTS_PER_PAGE;
-  const paginatedLibraryPosts = filteredLibraryPosts.slice(libraryStartIndex, libraryEndIndex);
+  // Get visible posts for library
+  const visibleLibraryPosts = filteredLibraryPosts.slice(0, libraryVisibleCount);
+  const libraryHasMore = libraryVisibleCount < filteredLibraryPosts.length;
 
-  // Reset to page 1 when search term changes
+  // Reset visible count when search term changes
   useEffect(() => {
-    setMyPostsCurrentPage(1);
-    setLibraryCurrentPage(1);
+    setMyPostsVisibleCount(POSTS_PER_PAGE);
+    setLibraryVisibleCount(POSTS_PER_PAGE);
   }, [searchTerm]);
 
-  // Reset to page 1 when tab changes
+  // Reset visible count when tab changes
   useEffect(() => {
-    setMyPostsCurrentPage(1);
-    setLibraryCurrentPage(1);
+    setMyPostsVisibleCount(POSTS_PER_PAGE);
+    setLibraryVisibleCount(POSTS_PER_PAGE);
   }, [activeTab]);
 
-  // Handle page change for my posts
-  const handleMyPostsPageChange = (page: number) => {
-    setMyPostsCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Handle view more for my posts
+  const handleMyPostsViewMore = () => {
+    setMyPostsVisibleCount(prev => prev + POSTS_PER_PAGE);
   };
 
-  // Handle page change for library
-  const handleLibraryPageChange = (page: number) => {
-    setLibraryCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Handle view more for library
+  const handleLibraryViewMore = () => {
+    setLibraryVisibleCount(prev => prev + POSTS_PER_PAGE);
   };
 
   // Fetch saved posts when component mounts or tab changes
@@ -311,7 +304,7 @@ export const MePage = () => {
         return (
           <div className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
-              {paginatedMyPosts.map((asset, index) => (
+              {visibleMyPosts.map((asset, index) => (
                 <HomeCard 
                   key={asset.assetCid || index} 
                   asset={asset}
@@ -319,12 +312,19 @@ export const MePage = () => {
               ))}
             </div>
             
-            {/* Pagination */}
-            <PaginationControl
-              currentPage={myPostsCurrentPage}
-              totalPages={myPostsTotalPages}
-              onPageChange={handleMyPostsPageChange}
-            />
+            {/* View More Button */}
+            {myPostsHasMore && (
+              <div className="flex justify-center pt-4">
+                <Button
+                  onClick={handleMyPostsViewMore}
+                  variant="outline"
+                  size="lg"
+                  className="px-8 py-6 text-base font-medium bg-black text-white dark:bg-white dark:text-black hover:bg-gray-800 hover:text-white dark:hover:bg-gray-200"
+                >
+                  View More
+                </Button>
+              </div>
+            )}
           </div>
         );
       }
@@ -365,7 +365,7 @@ export const MePage = () => {
         return (
           <div className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
-              {paginatedLibraryPosts.map((asset, index) => (
+              {visibleLibraryPosts.map((asset, index) => (
                 <LibraryCard 
                   key={asset.assetCid || index} 
                   asset={asset}
@@ -373,12 +373,19 @@ export const MePage = () => {
               ))}
             </div>
             
-            {/* Pagination */}
-            <PaginationControl
-              currentPage={libraryCurrentPage}
-              totalPages={libraryTotalPages}
-              onPageChange={handleLibraryPageChange}
-            />
+            {/* View More Button */}
+            {libraryHasMore && (
+              <div className="flex justify-center pt-4">
+                <Button
+                  onClick={handleLibraryViewMore}
+                  variant="outline"
+                  size="lg"
+                  className="px-8 py-6 text-base font-medium bg-black text-white dark:bg-white dark:text-black hover:bg-gray-800 hover:text-white dark:hover:bg-gray-200"
+                >
+                  View More
+                </Button>
+              </div>
+            )}
           </div>
         );
       }
@@ -507,66 +514,47 @@ export const MePage = () => {
     <AuthGuard>
       <div className="px-4 sm:px-8 py-6 lg:px-12 xl:px-16 max-w-7xl mx-auto w-full">
         <div className="mb-8">
-          <div className="flex items-center gap-3 mb-3">
+          <div className="flex items-center gap-3 mb-4">
             <div className={`p-2 rounded-lg bg-gradient-to-br ${tabConfig.gradient}`}>
               <TabIcon className="h-6 w-6 text-white" />
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <div className="flex items-center gap-2 cursor-pointer group border-2 border-border rounded-lg px-4 py-2 hover:border-primary/50 transition-colors w-[200px]">
-                  <h1 className="text-3xl font-bold tracking-tight flex-1 truncate">
-                    {tabConfig.title}
-                  </h1>
-                  <ChevronDown className="h-6 w-6 transition-transform group-data-[state=open]:rotate-180 flex-shrink-0" />
-                </div>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-[200px]">
-                <DropdownMenuItem 
-                  onClick={() => setActiveTab("my-posts")}
-                  className="cursor-pointer"
-                >
-                  <div className="flex items-center justify-between w-full">
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="h-4 w-4" />
-                      <span className="font-medium">My Posts</span>
-                    </div>
-                    {activeTab === "my-posts" && (
-                      <div className="h-2 w-2 rounded-full bg-gradient-to-r from-violet-500 to-purple-600" />
-                    )}
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => setActiveTab("library")}
-                  className="cursor-pointer"
-                >
-                  <div className="flex items-center justify-between w-full">
-                    <div className="flex items-center gap-2">
-                      <BookOpen className="h-4 w-4" />
-                      <span className="font-medium">Library</span>
-                    </div>
-                    {activeTab === "library" && (
-                      <div className="h-2 w-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600" />
-                    )}
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => setActiveTab("drafts")}
-                  className="cursor-pointer"
-                >
-                  <div className="flex items-center justify-between w-full">
-                    <div className="flex items-center gap-2">
-                      <FileText className="h-4 w-4" />
-                      <span className="font-medium">Drafts</span>
-                    </div>
-                    {activeTab === "drafts" && (
-                      <div className="h-2 w-2 rounded-full bg-gradient-to-r from-amber-500 to-orange-600" />
-                    )}
-                  </div>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <h1 className="text-3xl font-bold tracking-tight">
+              My Content
+            </h1>
           </div>
-          <p className="text-muted-foreground ml-14">{tabConfig.description}</p>
+          
+          {/* Horizontal Scrollable Tab Card */}
+          <div className="-mx-4 sm:mx-0 w-[100vw] sm:w-auto bg-muted/50 border-y sm:border sm:border-border sm:rounded-xl">
+            <div className="overflow-x-auto scrollbar-hide px-4 py-2">
+              <div className="flex gap-3">
+                {TAB_OPTIONS.map((tab) => {
+                  const Icon = tab.icon;
+                  const isActive = activeTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`
+                        flex items-center gap-2 px-4 py-2 font-medium rounded-lg
+                        transition-all duration-200 whitespace-nowrap flex-shrink-0
+                        ${isActive 
+                          ? 'text-foreground bg-background/80' 
+                          : 'text-muted-foreground hover:text-foreground/80 hover:bg-background/40'
+                        }
+                      `}
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span className="text-sm font-bold uppercase tracking-wider">
+                        {tab.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+          
+          <p className="text-muted-foreground mt-4">{tabConfig.description}</p>
         </div>
         
         <div className="w-full">

@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { HomeCard } from "@/components/HomeCard";
 import { HomeCardSkeleton } from "@/components/HomeCardSkeleton";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSearch } from "@/context/SearchContext";
 import { useAssets } from "@/hooks/useAssets";
-import { MessageSquare, ArrowRight, Globe, Clock, Search, Megaphone, Gift, Star, ChevronDown } from "lucide-react";
+import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
+import { MessageSquare, ArrowRight, Globe, Clock, Search, Megaphone, Gift, Star, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { admin } from "@/contracts/dXmaster";
 
@@ -26,6 +26,7 @@ const HomePage = () => {
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState<FilterType>("just-created");
   const [visibleCount, setVisibleCount] = useState(POSTS_PER_PAGE);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // Get the posts to display based on title search and active filter
   const getPostsToDisplay = () => {
@@ -74,8 +75,22 @@ const HomePage = () => {
 
   // Handle view more
   const handleViewMore = () => {
-    setVisibleCount(prev => prev + POSTS_PER_PAGE);
+    if (isLoadingMore) return; // Prevent multiple calls
+    setIsLoadingMore(true);
+    // Simulate loading delay for better UX
+    setTimeout(() => {
+      setVisibleCount(prev => prev + POSTS_PER_PAGE);
+      setIsLoadingMore(false);
+    }, 800);
   };
+
+  // Infinite scroll hook
+  useInfiniteScroll({
+    hasMore,
+    isLoading: isAllAssetLoading || isLoadingMore,
+    onLoadMore: handleViewMore,
+    threshold: 300, // Trigger when 300px from bottom
+  });
 
   return (
     <div className="px-4 sm:px-8 py-6 lg:px-12 xl:px-16 max-w-7xl mx-auto w-full">
@@ -173,18 +188,17 @@ const HomePage = () => {
               ))}
             </div>
             
-            {/* View More Button */}
+            {/* Loading indicator for infinite scroll */}
             {hasMore && (
-              <div className="flex justify-center pt-4">
-                <Button
-                  onClick={handleViewMore}
-                  variant="outline"
-                  size="lg"
-                  className="group px-8 py-6 text-base font-semibold border-2 border-border hover:bg-muted/50 transition-all duration-300 hover:scale-105"
-                >
-                  Load More Posts
-                  <ChevronDown className="ml-2 h-5 w-5 group-hover:translate-y-1 transition-transform duration-300" />
-                </Button>
+              <div className="flex justify-center pt-8 pb-4">
+                {isLoadingMore ? (
+                  <div className="flex flex-col items-center gap-3 py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <span className="text-base font-medium text-muted-foreground">Loading more posts...</span>
+                  </div>
+                ) : (
+                  <div className="h-20" /> // Spacer for scroll trigger
+                )}
               </div>
             )}
           </div>

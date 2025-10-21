@@ -2,10 +2,10 @@ import { useState, useEffect } from "react";
 import { HomeCard } from "@/components/HomeCard";
 import { HomeCardSkeleton } from "@/components/HomeCardSkeleton";
 import { AuthGuard } from "@/components/AuthGuard";
-import { Button } from "@/components/ui/button";
 import { useSearch } from "@/context/SearchContext";
 import { useUserAssets } from "@/hooks/useUserAssets";
-import { ArrowRight, BookOpen, ChevronDown } from "lucide-react";
+import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
+import { ArrowRight, BookOpen, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const POSTS_PER_PAGE = 9;
@@ -15,6 +15,7 @@ export const LibraryPage = () => {
   const { allUserAssets, isAllUserAssetLoading } = useUserAssets();
   const navigate = useNavigate();
   const [visibleCount, setVisibleCount] = useState(POSTS_PER_PAGE);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // Get the posts to display based on title search
   const getPostsToDisplay = () => {
@@ -36,8 +37,21 @@ export const LibraryPage = () => {
 
   // Handle view more
   const handleViewMore = () => {
-    setVisibleCount(prev => prev + POSTS_PER_PAGE);
+    if (isLoadingMore) return; // Prevent multiple calls
+    setIsLoadingMore(true);
+    setTimeout(() => {
+      setVisibleCount(prev => prev + POSTS_PER_PAGE);
+      setIsLoadingMore(false);
+    }, 800);
   };
+
+  // Infinite scroll hook
+  useInfiniteScroll({
+    hasMore,
+    isLoading: isAllUserAssetLoading || isLoadingMore,
+    onLoadMore: handleViewMore,
+    threshold: 300, // Trigger when 300px from bottom
+  });
 
   return (
     <AuthGuard>
@@ -62,31 +76,30 @@ export const LibraryPage = () => {
             </div>
           ) : filteredPosts.length > 0 ? (
             <div className="space-y-6">
-              {/* Posts Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
-                {visiblePosts.map((asset, index) => (
-                  <HomeCard 
-                    key={asset.assetCid || index} 
-                    asset={asset}
-                  />
-                ))}
-              </div>
-              
-              {/* View More Button */}
-              {hasMore && (
-                <div className="flex justify-center pt-4">
-                  <Button
-                    onClick={handleViewMore}
-                    variant="outline"
-                    size="lg"
-                    className="group px-8 py-6 text-base font-semibold border-2 border-border hover:bg-muted/50 transition-all duration-300 hover:scale-105"
-                  >
-                    Load More Posts
-                    <ChevronDown className="ml-2 h-5 w-5 group-hover:translate-y-1 transition-transform duration-300" />
-                  </Button>
-                </div>
-              )}
+            {/* Posts Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
+              {visiblePosts.map((asset, index) => (
+                <HomeCard 
+                  key={asset.assetCid || index} 
+                  asset={asset}
+                />
+              ))}
             </div>
+            
+            {/* Loading indicator for infinite scroll */}
+            {hasMore && (
+              <div className="flex justify-center pt-8 pb-4">
+                {isLoadingMore ? (
+                  <div className="flex flex-col items-center gap-3 py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <span className="text-base font-medium text-muted-foreground">Loading more posts...</span>
+                  </div>
+                ) : (
+                  <div className="h-20" /> // Spacer for scroll trigger
+                )}
+              </div>
+            )}
+          </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-16 text-center animate-in fade-in-50 slide-in-from-bottom-4 duration-500">
               <div className="flex items-center gap-3 mb-2 animate-in fade-in-50 zoom-in-50 duration-700">

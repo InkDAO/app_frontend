@@ -4,16 +4,17 @@ import { HomeCardSkeleton } from "@/components/HomeCardSkeleton";
 import { SavedPostCard } from "@/components/SavedPostCard";
 import { SavedPostCardSkeleton } from "@/components/SavedPostCardSkeleton";
 import { AuthGuard } from "@/components/AuthGuard";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MessageSquare, ArrowRight, Sparkles, BookOpen, FileText, Search, ChevronDown } from "lucide-react";
+import { MessageSquare, ArrowRight, Sparkles, BookOpen, FileText, Search, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAssets } from "@/hooks/useAssets";
 import { useUserAssets } from "@/hooks/useUserAssets";
+import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import { useAccount } from "wagmi";
 import { useSearch } from "@/context/SearchContext";
 import { fetchSavedPosts } from "@/services/dXService";
 import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
 
 type TabType = "my-posts" | "library" | "drafts";
 
@@ -38,6 +39,8 @@ export const MePage = () => {
   // View more state for my-posts and library tabs
   const [myPostsVisibleCount, setMyPostsVisibleCount] = useState(POSTS_PER_PAGE);
   const [libraryVisibleCount, setLibraryVisibleCount] = useState(POSTS_PER_PAGE);
+  const [isLoadingMoreMyPosts, setIsLoadingMoreMyPosts] = useState(false);
+  const [isLoadingMoreLibrary, setIsLoadingMoreLibrary] = useState(false);
   
   // Drafts state
   const [savedPosts, setSavedPosts] = useState<any[]>([]);
@@ -107,13 +110,39 @@ export const MePage = () => {
 
   // Handle view more for my posts
   const handleMyPostsViewMore = () => {
-    setMyPostsVisibleCount(prev => prev + POSTS_PER_PAGE);
+    if (isLoadingMoreMyPosts) return; // Prevent multiple calls
+    setIsLoadingMoreMyPosts(true);
+    setTimeout(() => {
+      setMyPostsVisibleCount(prev => prev + POSTS_PER_PAGE);
+      setIsLoadingMoreMyPosts(false);
+    }, 800);
   };
 
   // Handle view more for library
   const handleLibraryViewMore = () => {
-    setLibraryVisibleCount(prev => prev + POSTS_PER_PAGE);
+    if (isLoadingMoreLibrary) return; // Prevent multiple calls
+    setIsLoadingMoreLibrary(true);
+    setTimeout(() => {
+      setLibraryVisibleCount(prev => prev + POSTS_PER_PAGE);
+      setIsLoadingMoreLibrary(false);
+    }, 800);
   };
+
+  // Infinite scroll for my posts tab
+  useInfiniteScroll({
+    hasMore: myPostsHasMore && activeTab === "my-posts",
+    isLoading: isAllAssetLoading || isLoadingMoreMyPosts,
+    onLoadMore: handleMyPostsViewMore,
+    threshold: 300, // Trigger when 300px from bottom
+  });
+
+  // Infinite scroll for library tab
+  useInfiniteScroll({
+    hasMore: libraryHasMore && activeTab === "library",
+    isLoading: isAllUserAssetLoading || isLoadingMoreLibrary,
+    onLoadMore: handleLibraryViewMore,
+    threshold: 300, // Trigger when 300px from bottom
+  });
 
   // Fetch saved posts when component mounts or tab changes
   const handleFetchSavedPosts = async () => {
@@ -218,18 +247,17 @@ export const MePage = () => {
               ))}
             </div>
             
-            {/* View More Button */}
+            {/* Loading indicator for infinite scroll */}
             {myPostsHasMore && (
-              <div className="flex justify-center pt-4">
-                <Button
-                  onClick={handleMyPostsViewMore}
-                  variant="outline"
-                  size="lg"
-                  className="group px-8 py-6 text-base font-semibold border-2 border-border hover:bg-muted/50 transition-all duration-300 hover:scale-105"
-                >
-                  Load More Posts
-                  <ChevronDown className="ml-2 h-5 w-5 group-hover:translate-y-1 transition-transform duration-300" />
-                </Button>
+              <div className="flex justify-center pt-8 pb-4">
+                {isLoadingMoreMyPosts ? (
+                  <div className="flex flex-col items-center gap-3 py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <span className="text-base font-medium text-muted-foreground">Loading more posts...</span>
+                  </div>
+                ) : (
+                  <div className="h-20" /> // Spacer for scroll trigger
+                )}
               </div>
             )}
           </div>
@@ -280,18 +308,17 @@ export const MePage = () => {
               ))}
             </div>
             
-            {/* View More Button */}
+            {/* Loading indicator for infinite scroll */}
             {libraryHasMore && (
-              <div className="flex justify-center pt-4">
-                <Button
-                  onClick={handleLibraryViewMore}
-                  variant="outline"
-                  size="lg"
-                  className="group px-8 py-6 text-base font-semibold border-2 border-border hover:bg-muted/50 transition-all duration-300 hover:scale-105"
-                >
-                  Load More Posts
-                  <ChevronDown className="ml-2 h-5 w-5 group-hover:translate-y-1 transition-transform duration-300" />
-                </Button>
+              <div className="flex justify-center pt-8 pb-4">
+                {isLoadingMoreLibrary ? (
+                  <div className="flex flex-col items-center gap-3 py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <span className="text-base font-medium text-muted-foreground">Loading more posts...</span>
+                  </div>
+                ) : (
+                  <div className="h-20" /> // Spacer for scroll trigger
+                )}
               </div>
             )}
           </div>

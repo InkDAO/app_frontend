@@ -1,29 +1,30 @@
 import { useState, useEffect } from "react";
 import { HomeCard } from "@/components/HomeCard";
 import { HomeCardSkeleton } from "@/components/HomeCardSkeleton";
-import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useSearch } from "@/context/SearchContext";
 import { useAssets } from "@/hooks/useAssets";
-import { MessageSquare, ArrowRight, Globe, TrendingUp, Star, DollarSign, Rocket, CheckCircle, Clock } from "lucide-react";
+import { MessageSquare, ArrowRight, Globe, Clock, Search, Megaphone, Gift, Star, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { admin } from "@/contracts/dXmaster";
 
 const POSTS_PER_PAGE = 9;
 
-type FilterType = "all" | "just-created" | "top-performer" | "free";
+type FilterType = "just-created" | "top-reads" | "announcements" | "free";
 
 const FILTER_OPTIONS: { id: FilterType; label: string; icon: React.ElementType }[] = [
-  { id: "all", label: "All Posts", icon: Globe },
   { id: "just-created", label: "Just Created", icon: Clock },
-  { id: "top-performer", label: "Top Performer", icon: Star },
-  { id: "free", label: "Free Posts", icon: CheckCircle },
+  { id: "top-reads", label: "Top Reads", icon: Star },
+  { id: "announcements", label: "Announcements", icon: Megaphone },
+  { id: "free", label: "Free Posts", icon: Gift },
 ];
 
 const HomePage = () => {
-  const { searchTerm } = useSearch();
+  const { searchTerm, setSearchTerm } = useSearch();
   const { allAssets, isAllAssetLoading } = useAssets();
   const navigate = useNavigate();
-  const [activeFilter, setActiveFilter] = useState<FilterType>("all");
+  const [activeFilter, setActiveFilter] = useState<FilterType>("just-created");
   const [visibleCount, setVisibleCount] = useState(POSTS_PER_PAGE);
 
   // Get the posts to display based on title search and active filter
@@ -47,9 +48,13 @@ const HomePage = () => {
     } else if (activeFilter === "just-created") {
       // Show newest posts first (already reversed below)
       posts = [...posts];
-    } else if (activeFilter === "top-performer") {
+    } else if (activeFilter === "top-reads") {
       // Could be based on number of purchases or revenue in the future
       posts = [...posts];
+    } else if (activeFilter === "announcements") {
+      posts = posts.filter(asset => {
+        return asset.author.toLowerCase() === admin.toLowerCase();
+      });
     }
     
     // Reverse to show new posts first
@@ -74,58 +79,79 @@ const HomePage = () => {
 
   return (
     <div className="px-4 sm:px-8 py-6 lg:px-12 xl:px-16 max-w-7xl mx-auto w-full">
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600">
-            <Globe className="h-6 w-6 text-white" />
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Discover Posts
-          </h1>
-        </div>
-        
-        {/* Horizontal Scrollable Filter Card */}
-        <div className="-mx-4 sm:mx-0 w-[100vw] sm:w-auto bg-muted/50 border-y sm:border sm:border-border sm:rounded-xl">
-          <div className="overflow-x-auto scrollbar-hide px-4 py-2">
-            <div className="flex gap-3">
-              {FILTER_OPTIONS.map((filter) => {
-                const Icon = filter.icon;
-                const isActive = activeFilter === filter.id;
-                return (
-                  <button
-                    key={filter.id}
-                    onClick={() => setActiveFilter(filter.id)}
-                    className={`
-                      flex items-center gap-2 px-4 py-2 font-medium rounded-lg
-                      transition-all duration-200 whitespace-nowrap flex-shrink-0
-                      ${isActive 
-                        ? 'text-foreground bg-background/80' 
-                        : 'text-muted-foreground hover:text-foreground/80 hover:bg-background/40'
-                      }
-                    `}
-                  >
-                    <Icon className="h-4 w-4" />
-                    <span className="text-sm font-bold uppercase tracking-wider">
-                      {filter.label}
-                    </span>
-                  </button>
-                );
-              })}
+      <div className="mb-10">
+        {/* Hero Section with Punchline */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-blue-950/30 dark:via-purple-950/30 dark:to-pink-950/30 p-8 mb-6 border border-border/50">
+          {/* Background Pattern */}
+          <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))] dark:bg-grid-slate-700/25" />
+          
+          <div className="relative z-10">
+            <div className="flex items-start gap-4 mb-4">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 via-purple-600 to-pink-600 shadow-lg">
+                <Globe className="h-7 w-7 text-white" />
+              </div>
+              <div className="flex-1">
+                <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-2 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 dark:from-blue-400 dark:via-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
+                  Discover Posts
+                </h1>
+                <p className="text-lg sm:text-xl text-muted-foreground font-medium mb-2">
+                  Explore decentralized content, <span className="text-foreground font-semibold">own your knowledge</span>
+                </p>
+                <p className="text-sm sm:text-base text-muted-foreground/80 font-medium">
+                  Pay once. Access forever. <span className="text-foreground/70">No subscriptions.</span>
+                </p>
+              </div>
             </div>
           </div>
         </div>
         
-        <p className="text-muted-foreground mt-4">
-          {activeFilter === "all" 
-            ? "Discover all content from the community" 
-            : activeFilter === "free"
-            ? "Discover free content from the community"
-            : activeFilter === "just-created"
-            ? "Discover the newest posts"
-            : activeFilter === "top-performer"
-            ? "Discover the most popular posts"
-            : "Discover content from the community"}
-        </p>
+        {/* Filter Bar and Search Bar Container */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-3 mb-4">
+          {/* Horizontal Scrollable Filter Card */}
+          <div className="-mx-4 sm:mx-0 w-[100vw] sm:w-fit bg-muted/50 border-y sm:border sm:border-border sm:rounded-xl h-10">
+            <div className="overflow-x-auto scrollbar-hide px-0 h-full flex items-center">
+              <div className="flex gap-3">
+                {FILTER_OPTIONS.map((filter) => {
+                  const Icon = filter.icon;
+                  const isActive = activeFilter === filter.id;
+                  return (
+                    <button
+                      key={filter.id}
+                      onClick={() => setActiveFilter(filter.id)}
+                      className={`
+                        flex items-center gap-2 px-4 py-2 font-medium rounded-lg
+                        transition-all duration-200 whitespace-nowrap flex-shrink-0
+                        ${isActive 
+                          ? 'text-foreground bg-background shadow-md border border-border/50 scale-[1.02]' 
+                          : 'text-muted-foreground hover:text-foreground/80 hover:bg-background/40'
+                        }
+                      `}
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span className="text-sm font-bold uppercase tracking-wider">
+                        {filter.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Search Bar */}
+          <div className="w-full sm:w-auto sm:max-w-md">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search posts by title..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-4 h-10 w-full rounded-xl border-2 border-black dark:border-white focus-visible:ring-0 focus-visible:ring-offset-0 bg-muted/50"
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="w-full">
@@ -154,9 +180,10 @@ const HomePage = () => {
                   onClick={handleViewMore}
                   variant="outline"
                   size="lg"
-                  className="px-8 py-6 text-base font-medium bg-black text-white dark:bg-white dark:text-black hover:bg-gray-800 hover:text-white dark:hover:bg-gray-200"
+                  className="group px-8 py-6 text-base font-semibold border-2 border-border hover:bg-muted/50 transition-all duration-300 hover:scale-105"
                 >
-                  View More
+                  Load More Posts
+                  <ChevronDown className="ml-2 h-5 w-5 group-hover:translate-y-1 transition-transform duration-300" />
                 </Button>
               </div>
             )}
@@ -176,7 +203,7 @@ const HomePage = () => {
                 ? "No free posts available yet"
                 : "No posts have been published yet"}
             </p>
-            {!searchTerm && activeFilter === "all" && (
+            {!searchTerm && activeFilter === "just-created" && (
               <div 
                 onClick={() => navigate('/app')}
                 className="flex items-center gap-2 text-muted-foreground mb-6 max-w-md animate-in fade-in-50 slide-in-from-bottom-2 duration-1000 cursor-pointer hover:text-foreground transition-colors"

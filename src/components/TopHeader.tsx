@@ -1,10 +1,8 @@
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { CustomConnectButton } from './ConnectButton';
 import PublishOverlay from './PublishOverlay';
-import { useSearch } from "@/context/SearchContext";
-import { Search, X, Wallet, User, CheckCircle, Loader2, Save } from "lucide-react";
-import { useState, useMemo } from "react";
+import { User, CheckCircle, Loader2, Save } from "lucide-react";
+import { useMemo } from "react";
 import { useTheme } from "@/context/ThemeContext";
 import { useAccount } from "wagmi";
 import { useAuth } from "@/hooks/useAuth";
@@ -23,8 +21,6 @@ interface TopHeaderProps {
 }
 
 const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
-  const { searchTerm, setSearchTerm } = useSearch();
-  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const { theme } = useTheme();
   const { address, isConnected } = useAccount();
   const { isAuthenticated, authenticate, logout, isAuthenticating } = useAuth();
@@ -81,44 +77,10 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
             <span className="text-3xl font-bold sm:hidden hover:opacity-80 transition-opacity">dX</span>
             <span className="text-xl font-bold hidden sm:block hover:opacity-80 transition-opacity">decentralizedX</span>
           </div>
-
-          {/* Search box (hidden on small screens and editor page) */}
-          {!isEditorPage && (
-            <div className="hidden sm:flex max-w-lg ml-20">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="Search posts by title..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 h-9 w-full rounded-xl border-0 focus-visible:ring-0 bg-gray-100 dark:bg-gray-900"
-                />
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* Right side - Search icon for mobile and Connect wallet */}
+        {/* Right side - Connect wallet */}
         <div className="flex items-center gap-3 sm:gap-2">
-          {/* Search icon for mobile (hidden on editor page) */}
-          {!isEditorPage && (
-            <div className="sm:hidden">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="rounded-xl p-0"
-                onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
-              >
-                <img
-                  src={theme === "light" ? "/search-dark.png" : "/search-light.png"}
-                  alt="Search"
-                  className="h-7 w-7 object-contain"
-                />
-              </Button>
-            </div>
-          )}
-
           {/* Action Buttons */}
           <div className="flex-shrink-0">
             <div className="flex items-center">
@@ -228,23 +190,6 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
           </div>
         </div>
       </div>
-
-      {/* Mobile Search Dropdown (hidden on editor page) */}
-      {!isEditorPage && isMobileSearchOpen && (
-        <div className="sm:hidden absolute top-full left-0 right-0 bg-background border-b border-gray-100 dark:border-gray-900 px-4 py-3 z-50">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search posts by title..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 h-9 w-full rounded-xl border-0 focus-visible:ring-0 bg-gray-100 dark:bg-gray-900"
-              autoFocus
-            />
-          </div>
-        </div>
-      )}
 
       {/* Publish Overlay */}
       <PublishOverlay

@@ -1,19 +1,18 @@
 import { useState, useEffect } from "react";
 import { HomeCard } from "@/components/HomeCard";
 import { HomeCardSkeleton } from "@/components/HomeCardSkeleton";
-import { LibraryCard } from "@/components/LibraryCard";
-import { LibraryCardSkeleton } from "@/components/LibraryCardSkeleton";
 import { SavedPostCard } from "@/components/SavedPostCard";
 import { SavedPostCardSkeleton } from "@/components/SavedPostCardSkeleton";
 import { AuthGuard } from "@/components/AuthGuard";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, ArrowRight, RefreshCw, ChevronLeft, ChevronRight, User2, Sparkles, BookOpen, FileText } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { MessageSquare, ArrowRight, Sparkles, BookOpen, FileText, Search, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAssets } from "@/hooks/useAssets";
 import { useUserAssets } from "@/hooks/useUserAssets";
 import { useAccount } from "wagmi";
 import { useSearch } from "@/context/SearchContext";
-import { fetchSavedPosts, fetchSavedPostsByNextPageToken } from "@/services/dXService";
+import { fetchSavedPosts } from "@/services/dXService";
 import { useAuth } from "@/hooks/useAuth";
 
 type TabType = "my-posts" | "library" | "drafts";
@@ -30,7 +29,7 @@ export const MePage = () => {
   const navigate = useNavigate();
   const { address } = useAccount();
   const { isAuthenticated } = useAuth();
-  const { searchTerm } = useSearch();
+  const { searchTerm, setSearchTerm } = useSearch();
   const { allAssets, isAllAssetLoading } = useAssets();
   const { allUserAssets, isAllUserAssetLoading } = useUserAssets();
   
@@ -44,9 +43,6 @@ export const MePage = () => {
   const [savedPosts, setSavedPosts] = useState<any[]>([]);
   const [isSavedPostsLoading, setIsSavedPostsLoading] = useState(false);
   const [savedPostsError, setSavedPostsError] = useState<string | null>(null);
-  const [nextPageToken, setNextPageToken] = useState<string | null>(null);
-  const [pageHistory, setPageHistory] = useState<{token: string | null, page: number}[]>([]);
-  const [currentPage, setCurrentPage] = useState(0);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // Filter my assets from all assets (for My Posts)
@@ -128,11 +124,7 @@ export const MePage = () => {
     
     try {
       const result = await fetchSavedPosts(address);
-      
       setSavedPosts(result.posts);
-      setNextPageToken(result.nextPageToken || null);
-      setPageHistory([{token: null, page: 0}]);
-      setCurrentPage(0);
     } catch (error) {
       console.error('Failed to fetch saved posts:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to fetch saved posts';
@@ -140,92 +132,6 @@ export const MePage = () => {
       if (errorMessage.includes('Access forbidden')) {
         setIsLoggingOut(true);
         setSavedPosts([]);
-        setNextPageToken(null);
-        setPageHistory([]);
-        setCurrentPage(0);
-        setSavedPostsError(null);
-      } else {
-        setSavedPostsError(errorMessage);
-      }
-    } finally {
-      setIsSavedPostsLoading(false);
-    }
-  };
-
-  // Fetch next page of saved posts
-  const handleFetchNextPage = async () => {
-    if (!address || !nextPageToken) return;
-    
-    setIsSavedPostsLoading(true);
-    setSavedPostsError(null);
-    
-    try {
-      setPageHistory(prev => {
-        const newHistory = [...prev, {token: nextPageToken, page: currentPage + 1}];
-        return newHistory;
-      });
-      
-      const result = await fetchSavedPostsByNextPageToken(address, nextPageToken);
-      
-      setSavedPosts(result.posts);
-      setNextPageToken(result.nextPageToken || null);
-      setCurrentPage(prev => prev + 1);
-    } catch (error) {
-      console.error('Failed to fetch next page of saved posts:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch next page';
-      
-      if (errorMessage.includes('Access forbidden')) {
-        setIsLoggingOut(true);
-        setSavedPosts([]);
-        setNextPageToken(null);
-        setPageHistory([]);
-        setCurrentPage(0);
-        setSavedPostsError(null);
-      } else {
-        setSavedPostsError(errorMessage);
-      }
-    } finally {
-      setIsSavedPostsLoading(false);
-    }
-  };
-
-  // Fetch previous page of saved posts
-  const handleFetchPreviousPage = async () => {
-    if (!address || currentPage === 0) return;
-    
-    setIsSavedPostsLoading(true);
-    setSavedPostsError(null);
-    
-    try {
-      const newPageHistory = [...pageHistory];
-      newPageHistory.pop();
-      setPageHistory(newPageHistory);
-      
-      const previousPageInfo = newPageHistory[newPageHistory.length - 1];
-      
-      if (previousPageInfo) {
-        if (previousPageInfo.token === null) {
-          const result = await fetchSavedPosts(address);
-          setSavedPosts(result.posts);
-          setNextPageToken(result.nextPageToken || null);
-          setCurrentPage(0);
-        } else {
-          const result = await fetchSavedPostsByNextPageToken(address, previousPageInfo.token);
-          setSavedPosts(result.posts);
-          setNextPageToken(result.nextPageToken || null);
-          setCurrentPage(previousPageInfo.page);
-        }
-      }
-    } catch (error) {
-      console.error('Failed to fetch previous page of saved posts:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch previous page';
-      
-      if (errorMessage.includes('Access forbidden')) {
-        setIsLoggingOut(true);
-        setSavedPosts([]);
-        setNextPageToken(null);
-        setPageHistory([]);
-        setCurrentPage(0);
         setSavedPostsError(null);
       } else {
         setSavedPostsError(errorMessage);
@@ -319,9 +225,10 @@ export const MePage = () => {
                   onClick={handleMyPostsViewMore}
                   variant="outline"
                   size="lg"
-                  className="px-8 py-6 text-base font-medium bg-black text-white dark:bg-white dark:text-black hover:bg-gray-800 hover:text-white dark:hover:bg-gray-200"
+                  className="group px-8 py-6 text-base font-semibold border-2 border-border hover:bg-muted/50 transition-all duration-300 hover:scale-105"
                 >
-                  View More
+                  Load More Posts
+                  <ChevronDown className="ml-2 h-5 w-5 group-hover:translate-y-1 transition-transform duration-300" />
                 </Button>
               </div>
             )}
@@ -355,7 +262,7 @@ export const MePage = () => {
         return (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
             {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-              <LibraryCardSkeleton key={i} />
+              <HomeCardSkeleton key={i} />
             ))}
           </div>
         );
@@ -366,7 +273,7 @@ export const MePage = () => {
           <div className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
               {visibleLibraryPosts.map((asset, index) => (
-                <LibraryCard 
+                <HomeCard 
                   key={asset.assetCid || index} 
                   asset={asset}
                 />
@@ -380,9 +287,10 @@ export const MePage = () => {
                   onClick={handleLibraryViewMore}
                   variant="outline"
                   size="lg"
-                  className="px-8 py-6 text-base font-medium bg-black text-white dark:bg-white dark:text-black hover:bg-gray-800 hover:text-white dark:hover:bg-gray-200"
+                  className="group px-8 py-6 text-base font-semibold border-2 border-border hover:bg-muted/50 transition-all duration-300 hover:scale-105"
                 >
-                  View More
+                  Load More Posts
+                  <ChevronDown className="ml-2 h-5 w-5 group-hover:translate-y-1 transition-transform duration-300" />
                 </Button>
               </div>
             )}
@@ -443,48 +351,14 @@ export const MePage = () => {
 
       if (savedPosts.length > 0) {
         return (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
-              {[...savedPosts].reverse().map((savedPost, index) => (
-                <SavedPostCard 
-                  key={savedPost.cid || index} 
-                  savedPost={savedPost}
-                  onDelete={handleDeleteSavedPost}
-                />
-              ))}
-            </div>
-            
-            {/* Pagination Controls */}
-            <div className="flex items-center justify-center gap-4 mt-8">
-              <Button
-                onClick={handleFetchPreviousPage}
-                disabled={isSavedPostsLoading || currentPage === 0}
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2"
-              >
-                <ChevronLeft className="h-4 w-4" />
-                Previous
-              </Button>
-              
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span>Page {currentPage + 1}</span>
-                {isSavedPostsLoading && (
-                  <RefreshCw className="h-4 w-4 animate-spin" />
-                )}
-              </div>
-              
-              <Button
-                onClick={handleFetchNextPage}
-                disabled={isSavedPostsLoading || !nextPageToken}
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2"
-              >
-                Next
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
+            {[...savedPosts].reverse().map((savedPost, index) => (
+              <SavedPostCard 
+                key={savedPost.cid || index} 
+                savedPost={savedPost}
+                onDelete={handleDeleteSavedPost}
+              />
+            ))}
           </div>
         );
       }
@@ -510,51 +384,114 @@ export const MePage = () => {
     }
   };
 
+  // Get hero content based on active tab
+  const getHeroContent = () => {
+    switch (activeTab) {
+      case "my-posts":
+        return {
+          gradient: "from-violet-50 via-purple-50 to-fuchsia-50 dark:from-violet-950/30 dark:via-purple-950/30 dark:to-fuchsia-950/30",
+          titleGradient: "from-violet-600 via-purple-600 to-fuchsia-600 dark:from-violet-400 dark:via-purple-400 dark:to-fuchsia-400",
+          iconGradient: "from-violet-500 via-purple-600 to-fuchsia-600",
+          subtitle: "Share your expertise, <span class='text-foreground font-semibold'>earn from every sale</span>",
+          tagline: "Create once. Earn forever. Your content, your revenue."
+        };
+      case "library":
+        return {
+          gradient: "from-emerald-50 via-teal-50 to-cyan-50 dark:from-emerald-950/30 dark:via-teal-950/30 dark:to-cyan-950/30",
+          titleGradient: "from-emerald-600 via-teal-600 to-cyan-600 dark:from-emerald-400 dark:via-teal-400 dark:to-cyan-400",
+          iconGradient: "from-emerald-500 via-teal-600 to-cyan-600",
+          subtitle: "Curate your knowledge, <span class='text-foreground font-semibold'>access anytime</span>",
+          tagline: "Buy once. Own forever. No recurring fees."
+        };
+      case "drafts":
+        return {
+          gradient: "from-amber-50 via-orange-50 to-red-50 dark:from-amber-950/30 dark:via-orange-950/30 dark:to-red-950/30",
+          titleGradient: "from-amber-600 via-orange-600 to-red-600 dark:from-amber-400 dark:via-orange-400 dark:to-red-400",
+          iconGradient: "from-amber-500 via-orange-600 to-red-600",
+          subtitle: "Work in progress, <span class='text-foreground font-semibold'>finish and publish</span>",
+          tagline: "Save your ideas. Publish when ready. Never lose progress."
+        };
+    }
+  };
+
+  const heroContent = getHeroContent();
+
   return (
     <AuthGuard>
       <div className="px-4 sm:px-8 py-6 lg:px-12 xl:px-16 max-w-7xl mx-auto w-full">
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <div className={`p-2 rounded-lg bg-gradient-to-br ${tabConfig.gradient}`}>
-              <TabIcon className="h-6 w-6 text-white" />
-            </div>
-            <h1 className="text-3xl font-bold tracking-tight">
-              My Content
-            </h1>
-          </div>
-          
-          {/* Horizontal Scrollable Tab Card */}
-          <div className="-mx-4 sm:mx-0 w-[100vw] sm:w-auto bg-muted/50 border-y sm:border sm:border-border sm:rounded-xl">
-            <div className="overflow-x-auto scrollbar-hide px-4 py-2">
-              <div className="flex gap-3">
-                {TAB_OPTIONS.map((tab) => {
-                  const Icon = tab.icon;
-                  const isActive = activeTab === tab.id;
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`
-                        flex items-center gap-2 px-4 py-2 font-medium rounded-lg
-                        transition-all duration-200 whitespace-nowrap flex-shrink-0
-                        ${isActive 
-                          ? 'text-foreground bg-background/80' 
-                          : 'text-muted-foreground hover:text-foreground/80 hover:bg-background/40'
-                        }
-                      `}
-                    >
-                      <Icon className="h-4 w-4" />
-                      <span className="text-sm font-bold uppercase tracking-wider">
-                        {tab.label}
-                      </span>
-                    </button>
-                  );
-                })}
+        <div className="mb-10">
+          {/* Hero Section */}
+          <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${heroContent.gradient} p-8 mb-6 border border-border/50`}>
+            {/* Background Pattern */}
+            <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))] dark:bg-grid-slate-700/25" />
+            
+            <div className="relative z-10">
+              <div className="flex items-start gap-4 mb-4">
+                <div className={`p-3 rounded-xl bg-gradient-to-br ${heroContent.iconGradient} shadow-lg`}>
+                  <TabIcon className="h-7 w-7 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h1 className={`text-4xl sm:text-5xl font-bold tracking-tight mb-2 bg-gradient-to-r ${heroContent.titleGradient} bg-clip-text text-transparent`}>
+                    {tabConfig.title}
+                  </h1>
+                  <p className="text-lg sm:text-xl text-muted-foreground font-medium mb-2" dangerouslySetInnerHTML={{ __html: heroContent.subtitle }} />
+                  <p className="text-sm sm:text-base text-muted-foreground/80 font-medium">
+                    {heroContent.tagline}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
           
-          <p className="text-muted-foreground mt-4">{tabConfig.description}</p>
+          {/* Tab Bar and Search Bar Container */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-3">
+            {/* Horizontal Scrollable Tab Card */}
+            <div className="-mx-4 sm:mx-0 w-[100vw] sm:w-fit bg-muted/50 border-y sm:border sm:border-border sm:rounded-xl h-10">
+              <div className="overflow-x-auto scrollbar-hide px-0 h-full flex items-center">
+                <div className="flex gap-3">
+                  {TAB_OPTIONS.map((tab) => {
+                    const Icon = tab.icon;
+                    const isActive = activeTab === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`
+                          flex items-center gap-2 px-4 py-2 font-medium rounded-lg
+                          transition-all duration-200 whitespace-nowrap flex-shrink-0
+                          ${isActive 
+                            ? 'text-foreground bg-background shadow-md border border-border/50 scale-[1.02]' 
+                            : 'text-muted-foreground hover:text-foreground/80 hover:bg-background/40'
+                          }
+                        `}
+                      >
+                        <Icon className="h-4 w-4" />
+                        <span className="text-sm font-bold uppercase tracking-wider">
+                          {tab.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Search Bar (only show for my-posts and library tabs) */}
+            {(activeTab === "my-posts" || activeTab === "library") && (
+              <div className="w-full sm:w-auto sm:max-w-md">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    type="search"
+                    placeholder="Search posts by title..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 pr-4 h-10 w-full rounded-xl border-2 border-black dark:border-white focus-visible:ring-0 focus-visible:ring-offset-0 bg-muted/50"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
         
         <div className="w-full">

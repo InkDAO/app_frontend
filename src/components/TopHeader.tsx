@@ -59,7 +59,7 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
         <header className="fixed top-0 left-0 right-0 z-40 bg-background border-b border-gray-100 dark:border-gray-900">
       <div className="flex items-center justify-between px-4 py-3">
         {/* Left side - Hamburger menu and Logo */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-2 ml-2 sm:gap-5">
           <Button
             variant="ghost"
             size="sm"
@@ -73,9 +73,13 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
             />
           </Button>
           
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
-            <span className="text-3xl font-bold sm:hidden hover:opacity-80 transition-opacity">dX</span>
-            <span className="text-xl font-bold hidden sm:block hover:opacity-80 transition-opacity">decentralizedX</span>
+          <div className="flex items-center gap-2 ml-4 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/')}>
+            <img 
+              src={theme === "light" ? "/InkDAO_Dark_Circle.png" : "/InkDAO_Light_Circle.png"} 
+              alt="InkDAO" 
+              className="h-8 w-8 sm:h-10 sm:w-10 object-contain" 
+            />
+            <span className="text-xl sm:text-2xl font-bold">InkDAO</span>
           </div>
         </div>
 

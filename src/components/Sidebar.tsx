@@ -8,7 +8,7 @@ import {
   Sun,
   Moon
 } from "lucide-react";
-import { FaXTwitter, FaLinkedinIn, FaGithub, FaTelegram } from 'react-icons/fa6';
+import { FaXTwitter, FaGithub, FaTelegram } from 'react-icons/fa6';
 import { SiGitbook } from 'react-icons/si';
 import { useTheme } from "@/context/ThemeContext";
 import { TagSearch } from "@/components/TagSearch";
@@ -76,13 +76,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       text: "Twitter",
       href: "https://x.com/0xAakibAlam",
       label: "X (Twitter) Profile"
-    },
-    {
-      icon: <FaLinkedinIn className="h-4 w-4" />,
-      text: "LinkedIn",
-      href: "https://www.linkedin.com/in/0xaakibalam/",
-      label: "LinkedIn Profile"
-    },
+    }
   ];
 
   return (
@@ -96,18 +90,18 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       )}
       
       {/* Sidebar */}
-            <div className={cn(
-              "h-[calc(100vh-4rem)] w-64 sm:w-70 lg:w-72 bg-background border-r border-gray-100 dark:border-gray-900 transform transition-transform duration-300 ease-in-out flex flex-col overflow-hidden fixed left-0 z-50",
-              isOpen ? "translate-x-0 top-[calc(4rem+2px)]" : "-translate-x-full top-16"
-            )}>
-              {/* Top border line */}
-              <div className="w-full h-px bg-gray-100 dark:bg-gray-900"></div>
+        <div className={cn(
+          "h-[calc(100vh-4rem)] w-64 sm:w-70 lg:w-72 bg-background border-r border-gray-100 dark:border-gray-900 transform transition-transform duration-300 ease-in-out flex flex-col overflow-hidden fixed left-0 z-50",
+          isOpen ? "translate-x-0 top-[calc(4rem+2px)]" : "-translate-x-full top-16"
+        )}>
+          {/* Top border line */}
+          <div className="w-full h-px bg-gray-100 dark:bg-gray-900"></div>
         {/* Header - Empty space for alignment */}
         <div className="p-4 flex-shrink-0">
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+        <nav className="flex-1 px-4 space-y-2 overflow-y-auto">
           {navigationItems.map((item) => {
             const Icon = item.icon;
             return (

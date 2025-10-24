@@ -85,8 +85,37 @@ export const MePage = () => {
     return [...posts].reverse();
   };
 
+  // Get filtered Drafts based on search term
+  const getFilteredDrafts = () => {
+    let posts = savedPosts;
+    
+    if (searchTerm.trim()) {
+      posts = posts.filter(post => {
+        // Extract title from content or fallback to name
+        let postTitle = '';
+        
+        try {
+          if (post.content) {
+            const contentData = typeof post.content === 'string' ? JSON.parse(post.content) : post.content;
+            postTitle = contentData.title?.trim() || post.name?.trim() || '';
+          } else {
+            postTitle = post.name?.trim() || '';
+          }
+        } catch (error) {
+          postTitle = post.name?.trim() || '';
+        }
+        
+        return postTitle.toLowerCase().includes(searchTerm.toLowerCase());
+      });
+    }
+    
+    // Reverse to show new posts first
+    return [...posts].reverse();
+  };
+
   const filteredMyPosts = getFilteredMyPosts();
   const filteredLibraryPosts = getFilteredLibraryPosts();
+  const filteredDrafts = getFilteredDrafts();
 
   // Get visible posts for my posts
   const visibleMyPosts = filteredMyPosts.slice(0, myPostsVisibleCount);
@@ -376,10 +405,10 @@ export const MePage = () => {
         );
       }
 
-      if (savedPosts.length > 0) {
+      if (filteredDrafts.length > 0) {
         return (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
-            {[...savedPosts].reverse().map((savedPost, index) => (
+            {filteredDrafts.map((savedPost, index) => (
               <SavedPostCard 
                 key={savedPost.cid || index} 
                 savedPost={savedPost}
@@ -397,15 +426,17 @@ export const MePage = () => {
             <h2 className="text-2xl font-semibold">No Drafts</h2>
           </div>
           <p className="text-muted-foreground mb-6 max-w-md animate-in fade-in-50 slide-in-from-bottom-2 duration-1000">
-            Your saved posts will appear here when you have any
+            {searchTerm ? `No drafts found matching "${searchTerm}"` : "Your saved posts will appear here when you have any"}
           </p>
-          <div 
-            onClick={() => navigate('/app/editor')}
-            className="flex items-center gap-2 text-muted-foreground mb-6 max-w-md animate-in fade-in-50 slide-in-from-bottom-2 duration-1000 cursor-pointer hover:text-foreground transition-colors"
-          >
-            <p>Start writing your first post</p>
-            <ArrowRight className="h-4 w-4" />
-          </div>
+          {!searchTerm && (
+            <div 
+              onClick={() => navigate('/app/editor')}
+              className="flex items-center gap-2 text-muted-foreground mb-6 max-w-md animate-in fade-in-50 slide-in-from-bottom-2 duration-1000 cursor-pointer hover:text-foreground transition-colors"
+            >
+              <p>Start writing your first post</p>
+              <ArrowRight className="h-4 w-4" />
+            </div>
+          )}
         </div>
       );
     }
@@ -448,21 +479,21 @@ export const MePage = () => {
       <div className="px-4 sm:px-8 py-6 lg:px-12 xl:px-16 max-w-7xl mx-auto w-full">
         <div className="mb-10">
           {/* Hero Section */}
-          <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${heroContent.gradient} p-8 mb-6 border border-border/50`}>
+          <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${heroContent.gradient} p-4 sm:p-6 mb-6 border border-border/50`}>
             {/* Background Pattern */}
             <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))] dark:bg-grid-slate-700/25" />
             
             <div className="relative z-10">
-              <div className="flex items-start gap-4 mb-4">
-                <div className={`p-3 rounded-xl bg-gradient-to-br ${heroContent.iconGradient} shadow-lg`}>
-                  <TabIcon className="h-7 w-7 text-white" />
+              <div className="flex items-start gap-2 sm:gap-4">
+                <div className={`p-2 sm:p-3 rounded-xl bg-gradient-to-br ${heroContent.iconGradient} shadow-lg flex-shrink-0`}>
+                  <TabIcon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                 </div>
-                <div className="flex-1">
-                  <h1 className={`text-4xl sm:text-5xl font-bold tracking-tight mb-2 bg-gradient-to-r ${heroContent.titleGradient} bg-clip-text text-transparent`}>
+                <div className="flex-1 min-w-0">
+                  <h1 className={`text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-1 sm:mb-1.5 bg-gradient-to-r ${heroContent.titleGradient} bg-clip-text text-transparent`}>
                     {tabConfig.title}
                   </h1>
-                  <p className="text-lg sm:text-xl text-muted-foreground font-medium mb-2" dangerouslySetInnerHTML={{ __html: heroContent.subtitle }} />
-                  <p className="text-sm sm:text-base text-muted-foreground/80 font-medium">
+                  <p className="text-sm sm:text-base lg:text-lg text-muted-foreground font-medium mb-1 sm:mb-1.5 line-clamp-1" dangerouslySetInnerHTML={{ __html: heroContent.subtitle }} />
+                  <p className="text-xs sm:text-sm lg:text-base text-muted-foreground/80 font-medium line-clamp-1">
                     {heroContent.tagline}
                   </p>
                 </div>
@@ -503,21 +534,19 @@ export const MePage = () => {
               </div>
             </div>
 
-            {/* Search Bar (only show for my-posts and library tabs) */}
-            {(activeTab === "my-posts" || activeTab === "library") && (
-              <div className="w-full sm:w-auto sm:max-w-md">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    type="search"
-                    placeholder="Search posts by title..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 h-10 w-full rounded-xl border-2 border-black dark:border-white focus-visible:ring-0 focus-visible:ring-offset-0 bg-muted/50"
-                  />
-                </div>
+            {/* Search Bar */}
+            <div className="w-full sm:w-auto sm:max-w-md">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Search posts by title..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 pr-4 h-10 w-full rounded-xl border-2 border-black dark:border-white focus-visible:ring-0 focus-visible:ring-offset-0 bg-muted/50"
+                />
               </div>
-            )}
+            </div>
           </div>
         </div>
         

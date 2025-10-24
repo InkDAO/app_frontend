@@ -11,6 +11,16 @@ const ThemeContext = createContext<ThemeContextProps | undefined>(undefined);
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [theme, setTheme] = useState<Theme>("light");
+  
+  // Function to update favicon based on theme
+  const updateFavicon = (currentTheme: Theme) => {
+    const favicon = document.getElementById("favicon") as HTMLLinkElement;
+    if (favicon) {
+      // Use Light Circle logo for dark mode and Dark Circle logo for light mode
+      favicon.href = currentTheme === "dark" ? "/InkDAO_Light_Circle.png" : "/InkDAO_Dark_Circle.png";
+    }
+  };
+  
   // Initialize theme from localStorage or system preference
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme") as Theme;
@@ -18,14 +28,13 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     if (savedTheme) {
       setTheme(savedTheme);
       document.documentElement.classList.toggle("dark", savedTheme === "dark");
+      updateFavicon(savedTheme);
     } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
       setTheme("dark");
       document.documentElement.classList.add("dark");
-      // Update favicon for dark mode
-      const favicon = document.getElementById("favicon") as HTMLLinkElement;
-      if (favicon) {
-        favicon.href = "/exLight.png";
-      }
+      updateFavicon("dark");
+    } else {
+      updateFavicon("light");
     }
   }, []);
 
@@ -34,6 +43,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     setTheme(newTheme);
     document.documentElement.classList.toggle("dark");
     localStorage.setItem("theme", newTheme);
+    updateFavicon(newTheme);
   };
 
   return (

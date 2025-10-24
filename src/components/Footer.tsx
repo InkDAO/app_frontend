@@ -1,4 +1,4 @@
-import { FaXTwitter, FaLinkedinIn, FaGithub, FaTelegram } from 'react-icons/fa6';
+import { FaXTwitter, FaGithub, FaTelegram } from 'react-icons/fa6';
 import { SiGitbook } from 'react-icons/si';
 import { useTheme } from "@/context/ThemeContext";
 
@@ -29,13 +29,7 @@ const Footer = () => {
       text: "Twitter",
       href: "https://x.com/0xAakibAlam",
       label: "X (Twitter) Profile"
-    },
-    {
-      icon: <FaLinkedinIn className="h-4 w-4" />,
-      text: "LinkedIn",
-      href: "https://www.linkedin.com/in/0xaakibalam/",
-      label: "LinkedIn Profile"
-    },
+    }
   ];
 
   return (

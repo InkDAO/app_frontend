@@ -92,28 +92,75 @@ const HomePage = () => {
     threshold: 300, // Trigger when 300px from bottom
   });
 
+  // Get hero content based on active filter
+  const getHeroContent = () => {
+    switch (activeFilter) {
+      case "just-created":
+        return {
+          title: "Just Created",
+          gradient: "from-blue-50 via-purple-50 to-pink-50 dark:from-blue-950/30 dark:via-purple-950/30 dark:to-pink-950/30",
+          titleGradient: "from-blue-600 via-purple-600 to-pink-600 dark:from-blue-400 dark:via-purple-400 dark:to-pink-400",
+          iconGradient: "from-blue-500 via-purple-600 to-pink-600",
+          icon: Clock,
+          subtitle: "Fresh content from our community, <span class='text-foreground font-semibold'>hot off the press</span>",
+          tagline: "New posts. Fresh insights. Latest knowledge."
+        };
+      case "top-reads":
+        return {
+          title: "Top Reads",
+          gradient: "from-amber-50 via-yellow-50 to-orange-50 dark:from-amber-950/30 dark:via-yellow-950/30 dark:to-orange-950/30",
+          titleGradient: "from-amber-600 via-yellow-600 to-orange-600 dark:from-amber-400 dark:via-yellow-400 dark:to-orange-400",
+          iconGradient: "from-amber-500 via-yellow-600 to-orange-600",
+          icon: Star,
+          subtitle: "Most popular posts, <span class='text-foreground font-semibold'>loved by readers</span>",
+          tagline: "Trending content. Quality reads. Community favorites."
+        };
+      case "announcements":
+        return {
+          title: "Announcements",
+          gradient: "from-red-50 via-rose-50 to-pink-50 dark:from-red-950/30 dark:via-rose-950/30 dark:to-pink-950/30",
+          titleGradient: "from-red-600 via-rose-600 to-pink-600 dark:from-red-400 dark:via-rose-400 dark:to-pink-400",
+          iconGradient: "from-red-500 via-rose-600 to-pink-600",
+          icon: Megaphone,
+          subtitle: "Official updates and platform news, <span class='text-foreground font-semibold'>stay informed</span>",
+          tagline: "Platform updates. Important notices. Community news."
+        };
+      case "free":
+        return {
+          title: "Free Posts",
+          gradient: "from-emerald-50 via-teal-50 to-cyan-50 dark:from-emerald-950/30 dark:via-teal-950/30 dark:to-cyan-950/30",
+          titleGradient: "from-emerald-600 via-teal-600 to-cyan-600 dark:from-emerald-400 dark:via-teal-400 dark:to-cyan-400",
+          iconGradient: "from-emerald-500 via-teal-600 to-cyan-600",
+          icon: Gift,
+          subtitle: "Explore free content, <span class='text-foreground font-semibold'>no cost to access</span>",
+          tagline: "Free access. Zero cost. Open knowledge."
+        };
+    }
+  };
+
+  const heroContent = getHeroContent();
+  const HeroIcon = heroContent.icon;
+
   return (
     <div className="px-4 sm:px-8 py-6 lg:px-12 xl:px-16 max-w-7xl mx-auto w-full">
       <div className="mb-10">
-        {/* Hero Section with Punchline */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-blue-950/30 dark:via-purple-950/30 dark:to-pink-950/30 p-8 mb-6 border border-border/50">
+        {/* Hero Section with Dynamic Content */}
+        <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${heroContent.gradient} p-4 sm:p-6 mb-6 border border-border/50`}>
           {/* Background Pattern */}
           <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))] dark:bg-grid-slate-700/25" />
           
           <div className="relative z-10">
-            <div className="flex items-start gap-4 mb-4">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500 via-purple-600 to-pink-600 shadow-lg">
-                <Globe className="h-7 w-7 text-white" />
+            <div className="flex items-start gap-2 sm:gap-4">
+              <div className={`p-2 sm:p-3 rounded-xl bg-gradient-to-br ${heroContent.iconGradient} shadow-lg flex-shrink-0`}>
+                <HeroIcon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </div>
-              <div className="flex-1">
-                <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-2 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 dark:from-blue-400 dark:via-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
-                  Discover Posts
+              <div className="flex-1 min-w-0">
+                <h1 className={`text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-1 sm:mb-1.5 bg-gradient-to-r ${heroContent.titleGradient} bg-clip-text text-transparent`}>
+                  {heroContent.title}
                 </h1>
-                <p className="text-lg sm:text-xl text-muted-foreground font-medium mb-2">
-                  Explore decentralized content, <span className="text-foreground font-semibold">own your knowledge</span>
-                </p>
-                <p className="text-sm sm:text-base text-muted-foreground/80 font-medium">
-                  Pay once. Access forever. <span className="text-foreground/70">No subscriptions.</span>
+                <p className="text-sm sm:text-base lg:text-lg text-muted-foreground font-medium mb-1 sm:mb-1.5 line-clamp-1" dangerouslySetInnerHTML={{ __html: heroContent.subtitle }} />
+                <p className="text-xs sm:text-sm lg:text-base text-muted-foreground/80 font-medium line-clamp-1">
+                  {heroContent.tagline}
                 </p>
               </div>
             </div>

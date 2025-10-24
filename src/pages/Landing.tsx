@@ -17,7 +17,7 @@ import {
   Network,
   MessageSquare
 } from "lucide-react";
-import { FaXTwitter, FaLinkedinIn, FaGithub, FaTelegram } from 'react-icons/fa6';
+import { FaXTwitter, FaGithub, FaTelegram } from 'react-icons/fa6';
 import { SiGitbook } from 'react-icons/si';
 import { useTheme } from "@/context/ThemeContext";
 import { Sun, Moon } from "lucide-react";
@@ -85,13 +85,12 @@ const Landing = () => {
           {/* Hero Section */}
           <div className="flex flex-col items-center mb-16 animate-fade-in">
             <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 lg:gap-24 mb-6 md:mb-8 w-full max-w-6xl">
-              <div className="relative group">
-                <div className="absolute inset-0 bg-primary/20 rounded-lg blur-xl group-hover:scale-110 transition-transform duration-300" />
+              <div className="relative">
                 <div className="relative aspect-square w-48 sm:w-56 md:w-48 lg:w-64 rounded-lg transition-all duration-300 flex items-center justify-center">
                   <img 
-                    src="/dxLogo.png" 
-                    alt="dx" 
-                    className="h-full w-full object-contain drop-shadow-2xl" 
+                    src={theme === "light" ? "/InkDAO_Dark_Circle.png" : "/InkDAO_Light_Circle.png"} 
+                    alt="InkDAO" 
+                    className="h-full w-full object-contain" 
                   />
                 </div>
               </div>
@@ -110,13 +109,13 @@ const Landing = () => {
                 "
                 style={{ lineHeight: 1.1 }}
               >
-                decentralizedX
+                InkDAO
               </h1>
                 
                 <div className="flex items-center justify-center gap-2 mb-6">
                   <Sparkles className="h-5 w-5 text-primary animate-pulse" />
                   <p className="text-xl md:text-2xl font-semibold text-primary">
-                    The Future of Content Publishing
+                    Write. Share. Earn. Forever.
                   </p>
                   <Sparkles className="h-5 w-5 text-primary animate-pulse" />
             </div>
@@ -194,7 +193,7 @@ const Landing = () => {
           {/* Features Grid */}
           <div className="mb-24 md:mb-32">
             <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold mb-3">Why Choose decentralizedX?</h2>
+              <h2 className="text-3xl md:text-4xl font-bold mb-3">Why Choose InkDAO?</h2>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
@@ -376,20 +375,11 @@ const Landing = () => {
                 >
                   <FaXTwitter className="h-6 w-6" />
                 </a>
-                <a 
-                  href="https://www.linkedin.com/in/0xaakibalam/" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="p-3 rounded-lg bg-muted/50 text-muted-foreground hover:text-primary hover:bg-muted transition-all"
-                  aria-label="LinkedIn Profile"
-                >
-                  <FaLinkedinIn className="h-6 w-6" />
-                </a>
               </div>
 
               {/* Copyright */}
               <p className="text-sm text-muted-foreground">
-                © {new Date().getFullYear()} decentralizedX. All rights reserved.
+                © {new Date().getFullYear()} InkDAO. All rights reserved.
               </p>
             </div>
           </footer>

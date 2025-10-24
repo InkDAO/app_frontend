@@ -11,21 +11,30 @@
     <meta property="og:title" content="InkDAO" />
     
     <style>
-      /* Customize Chatbase chatbot size */
+      /* Customize Chatbase chatbot button - always fixed */
       #chatbase-bubble-button {
+        position: fixed !important;
         bottom: 20px !important;
         right: 20px !important;
+        left: auto !important;
+        top: auto !important;
+        transform: none !important;
       }
       
+      /* Desktop chatbot window */
       #chatbase-bubble-window {
+        position: fixed !important;
         max-width: 450px !important;
         max-height: 600px !important;
         width: 450px !important;
         height: 600px !important;
-        bottom: 80px !important;
+        bottom: 90px !important;
         right: 20px !important;
+        left: auto !important;
+        top: auto !important;
         border-radius: 16px !important;
         overflow: hidden !important;
+        transform: none !important;
       }
       
       iframe[src*="chatbase"] {
@@ -33,27 +42,65 @@
         max-height: 600px !important;
       }
       
+      /* Tablet responsiveness */
+      @media (max-width: 1024px) and (min-width: 769px) {
+        #chatbase-bubble-window {
+          width: 400px !important;
+          max-width: 400px !important;
+          height: 550px !important;
+          max-height: 550px !important;
+          bottom: 90px !important;
+          right: 20px !important;
+          left: auto !important;
+          transform: none !important;
+        }
+      }
+      
       /* Mobile responsiveness */
       @media (max-width: 768px) {
         #chatbase-bubble-window {
+          position: fixed !important;
           width: calc(100vw - 40px) !important;
-          max-width: 90vw !important;
-          left: 50% !important;
-          right: auto !important;
-          transform: translateX(-50%) !important;
-          bottom: 80px !important;
+          max-width: calc(100vw - 40px) !important;
+          left: 20px !important;
+          right: 20px !important;
+          top: auto !important;
+          transform: none !important;
+          bottom: 90px !important;
           height: 70vh !important;
-          max-height: 600px !important;
+          max-height: 500px !important;
         }
         
         #chatbase-bubble-button {
+          position: fixed !important;
           right: 20px !important;
           bottom: 20px !important;
+          left: auto !important;
+          top: auto !important;
+          transform: none !important;
         }
         
         iframe[src*="chatbase"] {
           max-width: 100% !important;
           width: 100% !important;
+        }
+      }
+      
+      /* Extra small mobile devices */
+      @media (max-width: 480px) {
+        #chatbase-bubble-window {
+          width: calc(100vw - 30px) !important;
+          max-width: calc(100vw - 30px) !important;
+          left: 15px !important;
+          right: 15px !important;
+          bottom: 85px !important;
+          height: 65vh !important;
+          max-height: 450px !important;
+        }
+        
+        #chatbase-bubble-button {
+          right: 15px !important;
+          bottom: 15px !important;
         }
       }
     </style>

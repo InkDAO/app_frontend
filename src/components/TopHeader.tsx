@@ -59,7 +59,7 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
         <header className="fixed top-0 left-0 right-0 z-40 bg-background border-b border-gray-100 dark:border-gray-900">
       <div className="flex items-center justify-between px-4 py-3">
         {/* Left side - Hamburger menu and Logo */}
-        <div className="flex items-center gap-2 ml-2 sm:gap-5">
+        <div className="flex items-center gap-2 sm:gap-5">
           <Button
             variant="ghost"
             size="sm"
@@ -73,7 +73,7 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
             />
           </Button>
           
-          <div className="flex items-center gap-2 ml-4 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/')}>
+          <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/')}>
             <img 
               src={theme === "light" ? "/InkDAO_Dark_Circle.png" : "/InkDAO_Light_Circle.png"} 
               alt="InkDAO" 
@@ -95,7 +95,7 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
                   <button
                     onClick={onSave}
                     disabled={!hasUnsavedChanges || isSaving || isPublishing || !address}
-                    className="group relative px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 disabled:hover:scale-100 mr-2"
+                    className="group relative px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 disabled:hover:scale-100 mr-1.5"
                     title={!editorIsAuthenticated ? "Authentication required to save" : !hasUnsavedChanges ? "No unsaved changes to save" : "Save content to IPFS (Ctrl/Cmd+S)"}
                   >
                     <div className="flex items-center space-x-2">
@@ -117,7 +117,7 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
                   <button
                     onClick={handlePublishClick}
                     disabled={hasUnsavedChanges || isSaving || !address || isEmpty}
-                    className="group relative px-4 py-2 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 disabled:hover:scale-100 mr-3"
+                    className="group relative px-4 py-2 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105 disabled:hover:scale-100 mr-2"
                     title={!editorIsAuthenticated ? "Authentication required to publish" : hasUnsavedChanges ? "Save changes before publishing" : isEmpty ? "Add content to publish" : "Publish content to blockchain"}
                   >
                     <div className="flex items-center space-x-2">
@@ -138,7 +138,7 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
                   </button>
 
                   {/* Divider */}
-                  <div className="h-6 w-px bg-gray-100 dark:bg-gray-900 mr-3"></div>
+                  <div className="h-6 w-px bg-gray-100 dark:bg-gray-900 mr-2"></div>
                 </>
               )}
 

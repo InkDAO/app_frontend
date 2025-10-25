@@ -120,7 +120,7 @@ export const AuthGuard = ({ children, fallback }: AuthGuardProps) => {
                   <div>
                     <p className="text-sm sm:text-base lg:text-lg font-semibold text-foreground mb-2">EIP-4361 Standard</p>
                     <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-                      Uses Sign-In with Ethereum protocol for secure wallet authentication
+                      Uses Sign-In with Ethereum (SIWE) protocol for secure, standardized wallet authentication
                     </p>
                   </div>
                 </div>

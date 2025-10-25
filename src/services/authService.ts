@@ -33,7 +33,7 @@ export const deleteCookie = (name: string) => {
 
 // Authentication interfaces
 export interface LoginRequest {
-  salt: string;
+  salt: string; // Contains the SIWE message (EIP-4361 formatted)
   address: string;
   signature: string;
 }
@@ -62,18 +62,18 @@ export class AuthService {
     return AuthService.instance;
   }
 
-  // Login with wallet signature
-  async login(address: string, salt: string, signature: string): Promise<LoginResponse> {
+  // Login with wallet signature (EIP-4361 SIWE message)
+  async login(address: string, siweMessage: string, signature: string): Promise<LoginResponse> {
     try {
       
-      // Send authentication request
+      // Send authentication request with SIWE message
       const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          salt,
+          salt: siweMessage, // SIWE message in EIP-4361 format
           address,
           signature
         }),

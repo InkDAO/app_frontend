@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
-import { useAccount, useSignMessage } from 'wagmi';
+import { useAccount, useSignMessage, useChainId } from 'wagmi';
 import { authService, type AuthState } from '@/services/authService';
 import { toast } from 'sonner';
+import { SiweMessage } from 'siwe';
 
 export const useAuth = () => {
   const { address, isConnected } = useAccount();
   const { signMessageAsync, isPending: isSigning } = useSignMessage();
+  const chainId = useChainId();
   const [authState, setAuthState] = useState<AuthState>({
     isAuthenticated: false,
     token: null,
@@ -102,9 +104,27 @@ export const useAuth = () => {
     try {
       setIsAuthenticating(true);
       
-      // Generate salt (current timestamp in seconds)
-      const timestamp = Math.floor(Date.now() / 1000);
-      const salt = `I want to authenticate for read operations at timestamp - ${timestamp}`;
+      // Get domain and origin from window
+      const domain = window.location.host;
+      const origin = window.location.origin;
+      
+      // Generate nonce (unique identifier for this session)
+      const nonce = Math.random().toString(36).substring(2, 15);
+      
+      // Create SIWE message according to EIP-4361 standard
+      const siweMessage = new SiweMessage({
+        domain,
+        address,
+        statement: 'Sign in with Ethereum to DecentralizedX',
+        uri: origin,
+        version: '1',
+        chainId,
+        nonce,
+        issuedAt: new Date().toISOString(),
+      });
+      
+      // Generate the properly formatted message string
+      const message = siweMessage.prepareMessage();
       
        // Create a timeout promise to handle locked/unresponsive wallets
        const timeoutPromise = new Promise<never>((_, reject) => {
@@ -116,7 +136,7 @@ export const useAuth = () => {
       // Race between signature and timeout
       const signature = await Promise.race([
         signMessageAsync({ 
-          message: salt,
+          message,
           account: address as `0x${string}`
         }),
         timeoutPromise
@@ -126,8 +146,8 @@ export const useAuth = () => {
         throw new Error('User cancelled signature or signature failed');
       }
             
-      // Continue with the authentication process
-      await authService.login(address, salt, signature);
+      // Continue with the authentication process with SIWE message
+      await authService.login(address, message, signature);
       
       // Small delay to ensure state is properly updated
       await new Promise(resolve => setTimeout(resolve, 100));

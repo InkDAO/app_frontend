@@ -98,8 +98,8 @@ const HomePage = () => {
       case "just-created":
         return {
           title: "Just Created",
-          gradient: "from-blue-50 via-purple-50 to-pink-50 dark:from-blue-950/30 dark:via-purple-950/30 dark:to-pink-950/30",
-          titleGradient: "from-blue-600 via-purple-600 to-pink-600 dark:from-blue-400 dark:via-purple-400 dark:to-pink-400",
+          gradient: "from-blue-50 via-purple-50 to-pink-50 dark:from-blue-900/20 dark:via-purple-900/20 dark:to-pink-900/20",
+          titleGradient: "from-blue-600 via-purple-600 to-pink-600 dark:from-blue-300 dark:via-purple-300 dark:to-pink-300",
           iconGradient: "from-blue-500 via-purple-600 to-pink-600",
           icon: Clock,
           subtitle: "Fresh content from our community, <span class='text-foreground font-semibold'>hot off the press</span>",
@@ -108,8 +108,8 @@ const HomePage = () => {
       case "top-reads":
         return {
           title: "Top Reads",
-          gradient: "from-amber-50 via-yellow-50 to-orange-50 dark:from-amber-950/30 dark:via-yellow-950/30 dark:to-orange-950/30",
-          titleGradient: "from-amber-600 via-yellow-600 to-orange-600 dark:from-amber-400 dark:via-yellow-400 dark:to-orange-400",
+          gradient: "from-amber-50 via-yellow-50 to-orange-50 dark:from-amber-900/20 dark:via-yellow-900/20 dark:to-orange-900/20",
+          titleGradient: "from-amber-600 via-yellow-600 to-orange-600 dark:from-amber-300 dark:via-yellow-300 dark:to-orange-300",
           iconGradient: "from-amber-500 via-yellow-600 to-orange-600",
           icon: Star,
           subtitle: "Most popular posts, <span class='text-foreground font-semibold'>loved by readers</span>",
@@ -118,8 +118,8 @@ const HomePage = () => {
       case "announcements":
         return {
           title: "Announcements",
-          gradient: "from-red-50 via-rose-50 to-pink-50 dark:from-red-950/30 dark:via-rose-950/30 dark:to-pink-950/30",
-          titleGradient: "from-red-600 via-rose-600 to-pink-600 dark:from-red-400 dark:via-rose-400 dark:to-pink-400",
+          gradient: "from-red-50 via-rose-50 to-pink-50 dark:from-red-900/20 dark:via-rose-900/20 dark:to-pink-900/20",
+          titleGradient: "from-red-600 via-rose-600 to-pink-600 dark:from-red-300 dark:via-rose-300 dark:to-pink-300",
           iconGradient: "from-red-500 via-rose-600 to-pink-600",
           icon: Megaphone,
           subtitle: "Official updates and platform news, <span class='text-foreground font-semibold'>stay informed</span>",
@@ -128,8 +128,8 @@ const HomePage = () => {
       case "free":
         return {
           title: "Free Posts",
-          gradient: "from-emerald-50 via-teal-50 to-cyan-50 dark:from-emerald-950/30 dark:via-teal-950/30 dark:to-cyan-950/30",
-          titleGradient: "from-emerald-600 via-teal-600 to-cyan-600 dark:from-emerald-400 dark:via-teal-400 dark:to-cyan-400",
+          gradient: "from-emerald-50 via-teal-50 to-cyan-50 dark:from-emerald-900/20 dark:via-teal-900/20 dark:to-cyan-900/20",
+          titleGradient: "from-emerald-600 via-teal-600 to-cyan-600 dark:from-emerald-300 dark:via-teal-300 dark:to-cyan-300",
           iconGradient: "from-emerald-500 via-teal-600 to-cyan-600",
           icon: Gift,
           subtitle: "Explore free content, <span class='text-foreground font-semibold'>no cost to access</span>",
@@ -145,9 +145,9 @@ const HomePage = () => {
     <div className="px-4 sm:px-8 py-6 lg:px-12 xl:px-16 max-w-7xl mx-auto w-full">
       <div className="mb-10">
         {/* Hero Section with Dynamic Content */}
-        <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${heroContent.gradient} p-4 sm:p-6 mb-6 border border-border/50`}>
+        <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${heroContent.gradient} p-4 sm:p-6 mb-6 border border-border/50 dark:border-border dark:shadow-lg dark:shadow-primary/5`}>
           {/* Background Pattern */}
-          <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))] dark:bg-grid-slate-700/25" />
+          <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))] dark:bg-grid-slate-400/10" />
           
           <div className="relative z-10">
             <div className="flex items-start gap-2 sm:gap-4">
@@ -158,8 +158,8 @@ const HomePage = () => {
                 <h1 className={`text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-1 sm:mb-1.5 bg-gradient-to-r ${heroContent.titleGradient} bg-clip-text text-transparent`}>
                   {heroContent.title}
                 </h1>
-                <p className="text-sm sm:text-base lg:text-lg text-muted-foreground font-medium mb-1 sm:mb-1.5 line-clamp-1" dangerouslySetInnerHTML={{ __html: heroContent.subtitle }} />
-                <p className="text-xs sm:text-sm lg:text-base text-muted-foreground/80 font-medium line-clamp-1">
+                <p className="text-sm sm:text-base lg:text-lg text-muted-foreground font-medium mb-1 sm:mb-1.5" dangerouslySetInnerHTML={{ __html: heroContent.subtitle }} />
+                <p className="text-xs sm:text-sm lg:text-base text-muted-foreground/80 font-medium">
                   {heroContent.tagline}
                 </p>
               </div>

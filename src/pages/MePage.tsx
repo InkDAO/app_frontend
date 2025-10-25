@@ -447,24 +447,24 @@ export const MePage = () => {
     switch (activeTab) {
       case "my-posts":
         return {
-          gradient: "from-violet-50 via-purple-50 to-fuchsia-50 dark:from-violet-950/30 dark:via-purple-950/30 dark:to-fuchsia-950/30",
-          titleGradient: "from-violet-600 via-purple-600 to-fuchsia-600 dark:from-violet-400 dark:via-purple-400 dark:to-fuchsia-400",
+          gradient: "from-violet-50 via-purple-50 to-fuchsia-50 dark:from-violet-900/20 dark:via-purple-900/20 dark:to-fuchsia-900/20",
+          titleGradient: "from-violet-600 via-purple-600 to-fuchsia-600 dark:from-violet-300 dark:via-purple-300 dark:to-fuchsia-300",
           iconGradient: "from-violet-500 via-purple-600 to-fuchsia-600",
           subtitle: "Share your expertise, <span class='text-foreground font-semibold'>earn from every sale</span>",
           tagline: "Create once. Earn forever. Your content, your revenue."
         };
       case "library":
         return {
-          gradient: "from-emerald-50 via-teal-50 to-cyan-50 dark:from-emerald-950/30 dark:via-teal-950/30 dark:to-cyan-950/30",
-          titleGradient: "from-emerald-600 via-teal-600 to-cyan-600 dark:from-emerald-400 dark:via-teal-400 dark:to-cyan-400",
+          gradient: "from-emerald-50 via-teal-50 to-cyan-50 dark:from-emerald-900/20 dark:via-teal-900/20 dark:to-cyan-900/20",
+          titleGradient: "from-emerald-600 via-teal-600 to-cyan-600 dark:from-emerald-300 dark:via-teal-300 dark:to-cyan-300",
           iconGradient: "from-emerald-500 via-teal-600 to-cyan-600",
           subtitle: "Curate your knowledge, <span class='text-foreground font-semibold'>access anytime</span>",
           tagline: "Buy once. Own forever. No recurring fees."
         };
       case "drafts":
         return {
-          gradient: "from-amber-50 via-orange-50 to-red-50 dark:from-amber-950/30 dark:via-orange-950/30 dark:to-red-950/30",
-          titleGradient: "from-amber-600 via-orange-600 to-red-600 dark:from-amber-400 dark:via-orange-400 dark:to-red-400",
+          gradient: "from-amber-50 via-orange-50 to-red-50 dark:from-amber-900/20 dark:via-orange-900/20 dark:to-red-900/20",
+          titleGradient: "from-amber-600 via-orange-600 to-red-600 dark:from-amber-300 dark:via-orange-300 dark:to-red-300",
           iconGradient: "from-amber-500 via-orange-600 to-red-600",
           subtitle: "Work in progress, <span class='text-foreground font-semibold'>finish and publish</span>",
           tagline: "Save your ideas. Publish when ready. Never lose progress."
@@ -479,9 +479,9 @@ export const MePage = () => {
       <div className="px-4 sm:px-8 py-6 lg:px-12 xl:px-16 max-w-7xl mx-auto w-full">
         <div className="mb-10">
           {/* Hero Section */}
-          <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${heroContent.gradient} p-4 sm:p-6 mb-6 border border-border/50`}>
+          <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${heroContent.gradient} p-4 sm:p-6 mb-6 border border-border/50 dark:border-border dark:shadow-lg dark:shadow-primary/5`}>
             {/* Background Pattern */}
-            <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))] dark:bg-grid-slate-700/25" />
+            <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))] dark:bg-grid-slate-400/10" />
             
             <div className="relative z-10">
               <div className="flex items-start gap-2 sm:gap-4">
@@ -492,8 +492,8 @@ export const MePage = () => {
                   <h1 className={`text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-1 sm:mb-1.5 bg-gradient-to-r ${heroContent.titleGradient} bg-clip-text text-transparent`}>
                     {tabConfig.title}
                   </h1>
-                  <p className="text-sm sm:text-base lg:text-lg text-muted-foreground font-medium mb-1 sm:mb-1.5 line-clamp-1" dangerouslySetInnerHTML={{ __html: heroContent.subtitle }} />
-                  <p className="text-xs sm:text-sm lg:text-base text-muted-foreground/80 font-medium line-clamp-1">
+                  <p className="text-sm sm:text-base lg:text-lg text-muted-foreground font-medium mb-1 sm:mb-1.5" dangerouslySetInnerHTML={{ __html: heroContent.subtitle }} />
+                  <p className="text-xs sm:text-sm lg:text-base text-muted-foreground/80 font-medium">
                     {heroContent.tagline}
                   </p>
                 </div>

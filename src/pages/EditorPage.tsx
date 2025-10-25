@@ -1,6 +1,6 @@
 import "../components/editor/Editor.css";
 import { useState, useCallback, useEffect, useRef } from "react";
-import { Edit3, Eye } from 'lucide-react';
+import { Edit3, Eye, BookOpen, ExternalLink } from 'lucide-react';
 import Editor from "../components/editor/Editor";
 import EditorTextParser from "../components/editor/EditorTextParser";
 import { useAccount, useSignMessage, usePublicClient } from 'wagmi';
@@ -520,6 +520,42 @@ const EditorPage = () => {
 	return (
 		<div className="bg-white dark:bg-gray-950 py-6 sm:py-8 px-4 sm:px-6 lg:px-8">
 			<div className="max-w-7xl mx-auto w-full">
+				{/* Tutorial Banner */}
+				<div className="mb-6 max-w-6xl mx-auto">
+					<div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-50 via-blue-50 to-cyan-50 dark:from-indigo-900/20 dark:via-blue-900/20 dark:to-cyan-900/20 p-4 sm:p-6 border border-border/50 dark:border-border dark:shadow-lg dark:shadow-primary/5">
+						{/* Background Pattern */}
+						<div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))] dark:bg-grid-slate-400/10" />
+						
+						<div className="relative z-10">
+							<div className="flex items-start gap-2 sm:gap-4">
+								<div className="p-2 sm:p-3 rounded-xl bg-gradient-to-br from-indigo-500 via-blue-600 to-cyan-600 shadow-lg flex-shrink-0">
+									<BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+								</div>
+								<div className="flex-1 min-w-0">
+									<h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-1 sm:mb-1.5 bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-600 dark:from-indigo-300 dark:via-blue-300 dark:to-cyan-300 bg-clip-text text-transparent">
+										Create Your Post
+									</h2>
+									<p className="text-sm sm:text-base lg:text-lg text-muted-foreground font-medium mb-1 sm:mb-1.5">
+										Write, format, and publish your content. <span className="text-foreground font-semibold">Monetize your knowledge</span>
+									</p>
+									<div className="flex items-center gap-2 text-xs sm:text-sm lg:text-base text-muted-foreground/80 font-medium">
+										{/* <span>Need help getting started?</span> */}
+										<a 
+											href="https://decentralizedx.gitbook.io/dx/tutorials/creating-first-post" 
+											target="_blank" 
+											rel="noopener noreferrer"
+											className="inline-flex items-center gap-1 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-semibold hover:underline transition-colors"
+										>
+											Read the tutorial
+											<ExternalLink className="h-3 w-3 sm:h-4 sm:w-4" />
+										</a>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
 				{/* Scroll Container */}
 				<div className="scroll-container">
 					{/* Top Wooden Handle */}

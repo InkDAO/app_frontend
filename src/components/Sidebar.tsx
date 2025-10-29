@@ -58,13 +58,13 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     {
       icon: <SiGitbook className="h-4 w-4" />,
       text: "Docs",
-      href: "https://decentralizedx.gitbook.io/dx",
+      href: "https://docs.inkdao.tech/",
       label: "Documentation"
     },
     {
       icon: <FaTelegram className="h-4 w-4" />,
       text: "Telegram",
-      href: "https://t.me/decentralizedX0",
+      href: "https://t.me/ink_dao",
       label: "Telegram Community"
     },
     {

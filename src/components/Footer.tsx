@@ -9,13 +9,13 @@ const Footer = () => {
     {
       icon: <SiGitbook className="h-4 w-4" />,
       text: "Docs",
-      href: "https://decentralizedx.gitbook.io/dx",
+      href: "https://docs.inkdao.tech/",
       label: "Documentation"
     },
     {
       icon: <FaTelegram className="h-4 w-4" />,
       text: "Telegram",
-      href: "https://t.me/decentralizedX0",
+      href: "https://t.me/ink_dao",
       label: "Telegram Community"
     },
     {
@@ -42,13 +42,6 @@ const Footer = () => {
     >
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          {/* Copyright */}
-          {/* <div 
-            className="text-sm"
-            style={{ color: theme === "light" ? "#6B7280" : "#9CA3AF" }}
-          >
-            Copyright © 2025 dX. All rights reserved.
-          </div> */}
           
           {/* Social Links */}
           <div className="flex items-center gap-6">

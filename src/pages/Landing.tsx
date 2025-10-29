@@ -341,7 +341,7 @@ const Landing = () => {
               {/* Social Icons */}
               <div className="flex gap-6 md:gap-8">
                 <a 
-                  href="https://decentralizedx.gitbook.io/dx" 
+                  href="https://docs.inkdao.tech/" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="p-3 rounded-lg bg-muted/50 text-muted-foreground hover:text-primary hover:bg-muted transition-all"
@@ -350,7 +350,7 @@ const Landing = () => {
                   <SiGitbook className="h-6 w-6" />
                 </a>
                 <a 
-                  href="https://t.me/decentralizedX0" 
+                  href="https://t.me/ink_dao" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="p-3 rounded-lg bg-muted/50 text-muted-foreground hover:text-primary hover:bg-muted transition-all"

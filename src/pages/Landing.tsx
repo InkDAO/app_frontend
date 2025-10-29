@@ -103,6 +103,7 @@ const Landing = () => {
                   md:text-6xl
                   lg:text-7xl
                   font-extrabold
+                  font-brand
                   tracking-tight
                     text-foreground
                     mb-4
@@ -193,7 +194,7 @@ const Landing = () => {
           {/* Features Grid */}
           <div className="mb-24 md:mb-32">
             <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold mb-3">Why Choose InkDAO?</h2>
+              <h2 className="text-3xl md:text-4xl font-bold font-brand mb-3">Why Choose InkDAO?</h2>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
@@ -358,7 +359,7 @@ const Landing = () => {
                   <FaTelegram className="h-6 w-6" />
                 </a>
                 <a 
-                  href="https://github.com/0xAakibAlam" 
+                  href="https://github.com/InkDAO" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="p-3 rounded-lg bg-muted/50 text-muted-foreground hover:text-primary hover:bg-muted transition-all"
@@ -378,7 +379,7 @@ const Landing = () => {
               </div>
 
               {/* Copyright */}
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground font-brand">
                 © {new Date().getFullYear()} InkDAO. All rights reserved.
               </p>
             </div>

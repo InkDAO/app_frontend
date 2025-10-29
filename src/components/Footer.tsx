@@ -21,7 +21,7 @@ const Footer = () => {
     {
       icon: <FaGithub className="h-4 w-4" />,
       text: "GitHub",
-      href: "https://github.com/0xAakibAlam",
+      href: "https://github.com/InkDAO",
       label: "GitHub Repository"
     },
     {

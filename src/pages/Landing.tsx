@@ -88,7 +88,7 @@ const Landing = () => {
               <div className="relative">
                 <div className="relative aspect-square w-48 sm:w-56 md:w-48 lg:w-64 rounded-lg transition-all duration-300 flex items-center justify-center">
                   <img 
-                    src={theme === "light" ? "/InkDAO_Dark_Circle.png" : "/InkDAO_Light_Circle.png"} 
+                    src={"/Inkdao_Circle_Logo.png"} 
                     alt="InkDAO" 
                     className="h-full w-full object-contain" 
                   />

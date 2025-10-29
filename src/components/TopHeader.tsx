@@ -60,7 +60,7 @@ const TopHeader = () => {
         {/* Left side - Logo */}
         <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity ml-2 sm:ml-4" onClick={() => navigate('/')}>
           <img 
-            src={theme === "light" ? "/InkDAO_Dark_Circle.png" : "/InkDAO_Light_Circle.png"} 
+            src={"/Inkdao_Circle_Logo.png"} 
             alt="InkDAO" 
             className="h-8 w-8 sm:h-10 sm:w-10 object-contain" 
           />

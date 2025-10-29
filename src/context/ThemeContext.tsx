@@ -17,7 +17,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     const favicon = document.getElementById("favicon") as HTMLLinkElement;
     if (favicon) {
       // Use Light Circle logo for dark mode and Dark Circle logo for light mode
-      favicon.href = currentTheme === "dark" ? "/InkDAO_Light_Circle.png" : "/InkDAO_Dark_Circle.png";
+      favicon.href = "/Inkdao_Circle_Logo.png";
     }
   };
   

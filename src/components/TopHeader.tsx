@@ -12,7 +12,6 @@ import { useEditor } from "@/context/EditorContext";
 import { PublishData } from './PublishOverlay';
 
 interface TopHeaderProps {
-  onMenuClick: () => void;
   onSave?: () => void;
   onPublish?: () => void;
   isSaving?: boolean;
@@ -20,7 +19,7 @@ interface TopHeaderProps {
   isAuthenticated?: boolean;
 }
 
-const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
+const TopHeader = () => {
   const { theme } = useTheme();
   const { address, isConnected } = useAccount();
   const { isAuthenticated, authenticate, logout, isAuthenticating } = useAuth();
@@ -58,29 +57,14 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
   return (
         <header className="fixed top-0 left-0 right-0 z-40 bg-background border-b border-gray-100 dark:border-gray-900">
       <div className="flex items-center justify-between px-4 py-3">
-        {/* Left side - Hamburger menu and Logo */}
-        <div className="flex items-center gap-2 sm:gap-5">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onMenuClick}
-            className="p-0"
-          >
-            <img
-              src="/hamburger.png"
-              alt="Menu" 
-              className="h-8 w-8 object-contain" 
-            />
-          </Button>
-          
-          <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/')}>
-            <img 
-              src={theme === "light" ? "/InkDAO_Dark_Circle.png" : "/InkDAO_Light_Circle.png"} 
-              alt="InkDAO" 
-              className="h-8 w-8 sm:h-10 sm:w-10 object-contain" 
-            />
-            <span className="text-xl sm:text-2xl font-bold">InkDAO</span>
-          </div>
+        {/* Left side - Logo */}
+        <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity ml-2 sm:ml-4" onClick={() => navigate('/')}>
+          <img 
+            src={theme === "light" ? "/InkDAO_Dark_Circle.png" : "/InkDAO_Light_Circle.png"} 
+            alt="InkDAO" 
+            className="h-8 w-8 sm:h-10 sm:w-10 object-contain" 
+          />
+          <span className="text-xl sm:text-2xl font-bold font-brand tracking-tight">InkDAO</span>
         </div>
 
         {/* Right side - Connect wallet */}

@@ -6,7 +6,9 @@ import {
   User2,
   Edit3,
   Sun,
-  Moon
+  Moon,
+  X,
+  PanelLeftClose
 } from "lucide-react";
 import { FaXTwitter, FaGithub, FaTelegram } from 'react-icons/fa6';
 import { SiGitbook } from 'react-icons/si';
@@ -96,8 +98,28 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
         )}>
           {/* Top border line */}
           <div className="w-full h-px bg-gray-100 dark:bg-gray-900"></div>
-        {/* Header - Empty space for alignment */}
-        <div className="p-4 flex-shrink-0">
+        {/* Header with Close Button */}
+        <div className="p-4 flex-shrink-0 flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Menu</h2>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-900 lg:hidden"
+            aria-label="Close sidebar"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="hidden lg:flex h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-900"
+            aria-label="Close sidebar"
+            title="Close sidebar"
+          >
+            <PanelLeftClose className="h-4 w-4" />
+          </Button>
         </div>
 
         {/* Navigation */}

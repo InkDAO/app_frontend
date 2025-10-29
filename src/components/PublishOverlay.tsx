@@ -5,7 +5,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { X, Upload, Image as ImageIcon, DollarSign, FileText } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 
 interface PublishOverlayProps {
   isOpen: boolean;
@@ -31,28 +30,17 @@ const PublishOverlay: React.FC<PublishOverlayProps> = ({
   const [price, setPrice] = useState('');
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { toast } = useToast();
 
   const handleThumbnailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       // Validate file type
       if (!file.type.startsWith('image/')) {
-        toast({
-          title: "Invalid file type",
-          description: "Please select an image file for the thumbnail.",
-          variant: "destructive"
-        });
         return;
       }
       
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        toast({
-          title: "File too large",
-          description: "Please select an image smaller than 5MB.",
-          variant: "destructive"
-        });
         return;
       }
       
@@ -78,40 +66,20 @@ const PublishOverlay: React.FC<PublishOverlayProps> = ({
   const handlePublish = () => {
     // Validate required fields
     if (!description.trim()) {
-      toast({
-        title: "Description required",
-        description: "Please provide a description for your post.",
-        variant: "destructive"
-      });
       return;
     }
 
     if (!thumbnail) {
-      toast({
-        title: "Thumbnail required",
-        description: "Please select a thumbnail image for your post.",
-        variant: "destructive"
-      });
       return;
     }
 
     if (!price.trim()) {
-      toast({
-        title: "Price required",
-        description: "Please set a price for your post.",
-        variant: "destructive"
-      });
       return;
     }
 
     // Validate price format (should be a positive number)
     const priceNumber = parseFloat(price);
     if (isNaN(priceNumber) || priceNumber < 0) {
-      toast({
-        title: "Invalid price",
-        description: "Please enter a valid positive number for the price.",
-        variant: "destructive"
-      });
       return;
     }
 

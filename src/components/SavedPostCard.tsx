@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Trash2, Loader2, Edit, FileImage, AlertTriangle } from "lucide-react";
 import { useState } from "react";
 import { useAccount, useSignMessage } from "wagmi";
-import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { deleteFileById } from "@/services/dXService";
 import {
@@ -37,7 +36,6 @@ export const SavedPostCard = ({ savedPost, onDelete }: SavedPostCardProps) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { address } = useAccount();
   const { signMessageAsync } = useSignMessage();
-  const { toast } = useToast();
   const navigate = useNavigate();
 
   // Parse content and extract title, image, and preview
@@ -158,11 +156,6 @@ export const SavedPostCard = ({ savedPost, onDelete }: SavedPostCardProps) => {
 
   const handleDeleteClick = () => {
     if (!cid || !address) {
-      toast({
-        title: "Error",
-        description: "Missing file CID or wallet address",
-        variant: "destructive"
-      });
       return;
     }
     setShowDeleteDialog(true);
@@ -177,22 +170,12 @@ export const SavedPostCard = ({ savedPost, onDelete }: SavedPostCardProps) => {
     try {
       await deleteFileById(cid, address, signMessageAsync);
       
-      toast({
-        title: "Success",
-        description: "File deleted successfully",
-      });
-
       // Call the onDelete callback to update the parent component
       if (onDelete) {
         onDelete(cid);
       }
     } catch (error) {
       console.error('Failed to delete file:', error);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to delete file",
-        variant: "destructive"
-      });
     } finally {
       setIsDeleting(false);
     }
@@ -200,11 +183,6 @@ export const SavedPostCard = ({ savedPost, onDelete }: SavedPostCardProps) => {
 
   const handleViewMore = () => {
     if (!content || !cid) {
-      toast({
-        title: "Error",
-        description: "No content or CID available to edit",
-        variant: "destructive"
-      });
       return;
     }
 
@@ -228,18 +206,8 @@ export const SavedPostCard = ({ savedPost, onDelete }: SavedPostCardProps) => {
 
       // Navigate to editor with CID in URL and refresh to ensure clean state
       window.location.href = `/app/editor/${cid}`;
-      
-      toast({
-        title: "Opening Editor",
-        description: "Loading content for editing...",
-      });
     } catch (error) {
       console.error('Failed to prepare content for editor:', error);
-      toast({
-        title: "Error",
-        description: "Failed to prepare content for editing",
-        variant: "destructive"
-      });
     }
   };
 

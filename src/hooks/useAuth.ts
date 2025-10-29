@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAccount, useSignMessage, useChainId } from 'wagmi';
 import { authService, type AuthState } from '@/services/authService';
-import { toast } from 'sonner';
 import { SiweMessage } from 'siwe';
 
 export const useAuth = () => {
@@ -50,10 +49,6 @@ export const useAuth = () => {
         token: null,
         address: null,
       });
-      
-      toast.info("You have been logged out due to wallet disconnection.", {
-        description: "Logged Out"
-      });
     }
   }, [isConnected, authState.isAuthenticated]);
 
@@ -69,10 +64,6 @@ export const useAuth = () => {
           token: null,
           address: null,
         });
-        
-        toast.warning("You have been logged out because your wallet address changed.", {
-          description: "Wallet Address Changed"
-        });
       }
     }
   }, [address, isConnected, authState.isAuthenticated, authState.address]);
@@ -80,9 +71,6 @@ export const useAuth = () => {
   // Manual authentication function
   const authenticate = async (): Promise<boolean> => {
     if (!isConnected || !address) {
-      toast.error("Please connect your wallet first.", {
-        description: "Wallet Required"
-      });
       return false;
     }
 
@@ -94,10 +82,6 @@ export const useAuth = () => {
     try {
       // Try to get account info to check if wallet is accessible
     } catch (error) {
-      toast.error("Your MetaMask wallet appears to be locked. Please unlock it and try again.", {
-        description: "Wallet Not Accessible",
-        duration: 6000,
-      });
       return false;
     }
 
@@ -155,43 +139,9 @@ export const useAuth = () => {
       const newState = authService.getAuthState();
       setAuthState(newState);
       
-      toast.success("You are now logged in with your wallet.", {
-        description: "Authentication Successful"
-      });
-      
       return true;
     } catch (error: any) {
       console.error('Authentication failed:', error);
-      
-      // Provide more specific error messages and toast notifications
-      let errorMessage = "Failed to authenticate with wallet.";
-      let toastTitle = "Authentication Failed";
-      let toastDuration = 5000;
-      
-      if (error.message) {
-        if (error.message.includes('locked') || error.message.includes('unresponsive')) {
-          errorMessage = "Wallet is locked or unresponsive. Please unlock your wallet and try again.";
-          toastTitle = "Wallet Locked";
-          toastDuration = 8000; // Show longer for wallet errors
-        } else if (error.message.includes('cancelled') || error.message.includes('rejected')) {
-          errorMessage = "Signature request was cancelled or rejected. Please try again.";
-          toastTitle = "Signature Cancelled";
-        } else if (error.message.includes('User rejected')) {
-          errorMessage = "You rejected the signature request. Please try again.";
-          toastTitle = "Signature Rejected";
-        } else if (error.message.includes('timeout')) {
-          errorMessage = "Request timed out. Please check your wallet and try again.";
-          toastTitle = "Request Timeout";
-          toastDuration = 6000;
-        } else {
-          errorMessage = error.message;
-        }
-      }
-      
-      toast.error(errorMessage, {
-        description: toastTitle,
-        duration: toastDuration,
-      });
       return false;
     } finally {
       setIsAuthenticating(false);
@@ -205,10 +155,6 @@ export const useAuth = () => {
       isAuthenticated: false,
       token: null,
       address: null,
-    });
-    
-    toast.info("You have been successfully logged out.", {
-      description: "Logged Out"
     });
   };
 

@@ -5,7 +5,6 @@ import Editor from "../components/editor/Editor";
 import EditorTextParser from "../components/editor/EditorTextParser";
 import { useAccount, useSignMessage, usePublicClient } from 'wagmi';
 import { createGroupPost, updateFileById, useAddAsset, publishFile } from '@/services/dXService';
-import { useToast } from '@/hooks/use-toast';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useEditor } from '@/context/EditorContext';
@@ -54,7 +53,6 @@ const EditorPage = () => {
 	const { address } = useAccount();
 	const { signMessageAsync } = useSignMessage();
 	const publicClient = usePublicClient();
-	const { toast } = useToast();
 	const { cid } = useParams();
 	const navigate = useNavigate();
 	const location = useLocation();
@@ -102,11 +100,6 @@ const EditorPage = () => {
 				}
 			} catch (error) {
 				console.error('Error loading content from IPFS:', error);
-				toast({
-					title: "Error",
-					description: "Failed to load content from IPFS. Redirecting to editor...",
-					variant: "destructive"
-				});
 				// Redirect to new editor page after a short delay
 				setTimeout(() => {
 					navigate('/app/editor');
@@ -117,7 +110,7 @@ const EditorPage = () => {
 		};
 
 		loadExistingPost();
-	}, [cid, toast, navigate]);
+	}, [cid, navigate]);
 
 	async function togglePreview() {
 		// If switching to preview mode, save the current editor state first
@@ -135,21 +128,11 @@ const EditorPage = () => {
 	// Save content to IPFS
 	const saveToAPI = useCallback(async () => {
 		if (!address) {
-			toast({
-				title: "Error",
-				description: "Please connect your wallet to save.",
-				variant: "destructive"
-			});
 			return false;
 		}
 
 		const authenticated = await ensureAuthenticated();
 		if (!authenticated) {
-			toast({
-				title: "Authentication Required",
-				description: "Please authenticate with your wallet to save content.",
-				variant: "destructive"
-			});
 			return false;
 		}
 
@@ -171,10 +154,6 @@ const EditorPage = () => {
 				const newCid = result?.upload?.cid || result?.cid || result?.data?.cid;
 				
 				if (newCid) {
-					toast({
-						title: "Success",
-						description: "Content updated successfully!",
-					});
 					navigate(`/app/editor/${newCid}`);
 				}
 			} else {
@@ -190,10 +169,6 @@ const EditorPage = () => {
 				const newCid = result?.updatedUpload?.cid || result?.cid || result?.data?.cid;
 				
 				if (newCid) {
-					toast({
-						title: "Success",
-						description: "Content saved successfully!",
-					});
 					navigate(`/app/editor/${newCid}`);
 				}
 			}
@@ -203,16 +178,11 @@ const EditorPage = () => {
 			return true;
 		} catch (error: any) {
 			console.error('Error saving:', error);
-			toast({
-				title: "Error",
-				description: error.message || "Failed to save content.",
-				variant: "destructive"
-			});
 			return false;
 		} finally {
 			setIsSaving(false);
 		}
-	}, [address, signMessageAsync, ensureAuthenticated, cid, data, documentTitle, toast, navigate]);
+	}, [address, signMessageAsync, ensureAuthenticated, cid, data, documentTitle, navigate]);
 
 	// Track changes when data updates
 	useEffect(() => {
@@ -388,31 +358,16 @@ const EditorPage = () => {
 	// Publish with data from overlay (with thumbnail upload)
 	const publishWithData = useCallback(async (publishData: PublishData) => {
 		if (!address) {
-			toast({
-				title: "Error",
-				description: "Please connect your wallet to publish.",
-				variant: "destructive"
-			});
 			return false;
 		}
 
 		if (!cid) {
-			toast({
-				title: "Error",
-				description: "Please save your content first before publishing.",
-				variant: "destructive"
-			});
 			return false;
 		}
 
 		// Ensure user is authenticated before publishing
 		const authenticated = await ensureAuthenticated();
 		if (!authenticated) {
-			toast({
-				title: "Authentication Required",
-				description: "Please authenticate with your wallet to publish content.",
-				variant: "destructive"
-			});
 			return false;
 		}
 
@@ -482,7 +437,7 @@ const EditorPage = () => {
 			setIsPublishing(false);
 			return false;
 		}
-	}, [address, ensureAuthenticated, cid, documentTitle, addAsset, signMessageAsync, toast]);
+	}, [address, ensureAuthenticated, cid, documentTitle, addAsset, signMessageAsync]);
 
 	// Simple publish without overlay (no thumbnail/price/description) - kept for backward compatibility
 	const publishToAPI = useCallback(async () => {

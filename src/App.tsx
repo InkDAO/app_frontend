@@ -1,4 +1,3 @@
-import { Toaster as Sonner } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AppLayout from "@/components/AppLayout";
@@ -59,10 +58,9 @@ const App = () => (
                     <EditorPage />
                   </AppLayout>
                 } />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-              <Sonner position="top-right" />
-            </BrowserRouter>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
           </TooltipProvider>
         </RainbowKitProvider>
       </QueryClientProvider>

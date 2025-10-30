@@ -63,7 +63,6 @@ const Landing = () => {
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-secondary/20 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse delay-1000" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-accent/5 rounded-full blur-3xl" />
       </div>
 
@@ -194,35 +193,56 @@ const Landing = () => {
           {/* Features Grid */}
           <div className="mb-24 md:mb-32">
             <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold font-brand mb-3">Why Choose InkDAO?</h2>
+              <h2 className="text-3xl md:text-4xl font-bold mb-3">Why Choose
+                  <span className="font-brand">&nbsp;InkDAO</span>
+                  ?
+              </h2>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-              {/* Tokenized Content Card */}
-              <div className="group p-8 md:p-10 rounded-2xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300 hover:border-primary/30">
-                <div className="bg-gradient-to-br from-primary/10 to-primary/5 p-4 rounded-xl w-fit mb-6">
-                  <Coins className="h-8 w-8 text-primary" />
+              {/* Tokenized Content Card - Glassy */}
+              <div className="group relative h-full">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-primary via-primary/80 to-primary/60 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
+                <div className="relative h-full p-8 md:p-10 rounded-2xl bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-0 shadow-2xl dark:shadow-primary/10 transition-all duration-300 overflow-hidden flex flex-col">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/20 to-primary/5 rounded-full blur-2xl animate-pulse"></div>
+                  <div className="relative z-10 flex flex-col h-full">
+                    <div className="bg-gradient-to-br from-primary/20 to-primary/10 p-4 rounded-xl w-fit mb-6 backdrop-blur-sm shadow-md">
+                      <Coins className="h-8 w-8 text-primary" />
+                    </div>
+                    <h3 className="text-2xl font-extrabold mb-4">Tokenized Content</h3>
+                    <p className="text-base text-muted-foreground leading-relaxed mb-6 font-medium flex-grow">Transform your posts into tradeable digital assets. Each piece of content becomes a token with real market value.</p>
+                  </div>
                 </div>
-                <h3 className="text-2xl font-bold mb-4">Tokenized Content</h3>
-                <p className="text-base text-muted-foreground leading-relaxed mb-6">Transform your posts into tradeable digital assets. Each piece of content becomes a token with real market value.</p>
               </div>
 
-              {/* Perpetual Earnings Card */}
-              <div className="group p-8 md:p-10 rounded-2xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300 hover:border-emerald-500/30">
-                <div className="bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 p-4 rounded-xl w-fit mb-6">
-                  <Infinity className="h-8 w-8 text-emerald-500" />
+              {/* Perpetual Earnings Card - Glassy */}
+              <div className="group relative h-full">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
+                <div className="relative h-full p-8 md:p-10 rounded-2xl bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-0 shadow-2xl dark:shadow-emerald-500/10 transition-all duration-300 overflow-hidden flex flex-col">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 rounded-full blur-2xl animate-pulse"></div>
+                  <div className="relative z-10 flex flex-col h-full">
+                    <div className="bg-gradient-to-br from-emerald-500/20 to-emerald-500/10 p-4 rounded-xl w-fit mb-6 backdrop-blur-sm shadow-md">
+                      <Infinity className="h-8 w-8 text-emerald-500" />
+                    </div>
+                    <h3 className="text-2xl font-extrabold mb-4">Earn Forever</h3>
+                    <p className="text-base text-muted-foreground leading-relaxed mb-6 font-medium flex-grow">Publish once and earn perpetually. Receive royalties every time your content is traded or accessed.</p>
+                  </div>
                 </div>
-                <h3 className="text-2xl font-bold mb-4">Earn Forever</h3>
-                <p className="text-base text-muted-foreground leading-relaxed mb-6">Publish once and earn perpetually. Receive royalties every time your content is traded or accessed.</p>
               </div>
 
-              {/* No Censorship Card */}
-              <div className="group p-8 md:p-10 rounded-2xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300 hover:border-blue-500/30">
-                <div className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 p-4 rounded-xl w-fit mb-6">
-                  <Shield className="h-8 w-8 text-blue-500" />
+              {/* No Censorship Card - Glassy */}
+              <div className="group relative h-full">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
+                <div className="relative h-full p-8 md:p-10 rounded-2xl bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-0 shadow-2xl dark:shadow-blue-500/10 transition-all duration-300 overflow-hidden flex flex-col">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500/20 to-blue-500/5 rounded-full blur-2xl animate-pulse"></div>
+                  <div className="relative z-10 flex flex-col h-full">
+                    <div className="bg-gradient-to-br from-blue-500/20 to-blue-500/10 p-4 rounded-xl w-fit mb-6 backdrop-blur-sm shadow-md">
+                      <Shield className="h-8 w-8 text-blue-500" />
+                    </div>
+                    <h3 className="text-2xl font-extrabold mb-4">True Ownership</h3>
+                    <p className="text-base text-muted-foreground leading-relaxed mb-6 font-medium flex-grow">Your content, your rules. Immutable on-chain publishing means no one can censor or remove your work.</p>
+                  </div>
                 </div>
-                <h3 className="text-2xl font-bold mb-4">True Ownership</h3>
-                <p className="text-base text-muted-foreground leading-relaxed mb-6">Your content, your rules. Immutable on-chain publishing means no one can censor or remove your work.</p>
               </div>
             </div>
           </div>
@@ -237,99 +257,135 @@ const Landing = () => {
             
             {/* Grid Layout */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 md:gap-8 lg:gap-10 px-4 md:px-0">
-              {/* IPFS */}
-              <div className="flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
-                <div className="flex items-center gap-2 md:gap-3">
-                  <Database className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/60" />
-                  <span className="font-medium text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground/80 break-words text-center">IPFS</span>
+              {/* IPFS - Glassy */}
+              <div className="group relative">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-slate-600 to-slate-400 rounded-xl blur opacity-10 group-hover:opacity-30 transition duration-500"></div>
+                <div className="relative flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
+                  <div className="flex items-center gap-2 md:gap-3">
+                    <Database className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/70" />
+                    <span className="font-bold text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground break-words text-center">IPFS</span>
+                  </div>
                 </div>
               </div>
 
-              {/* Pinata */}
-              <div className="flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
-                <div className="flex items-center gap-2 md:gap-3">
-                  <Cloud className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/60" />
-                  <span className="font-medium text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground/80 break-words text-center">Pinata</span>
+              {/* Pinata - Glassy */}
+              <div className="group relative">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-slate-600 to-slate-400 rounded-xl blur opacity-10 group-hover:opacity-30 transition duration-500"></div>
+                <div className="relative flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
+                  <div className="flex items-center gap-2 md:gap-3">
+                    <Cloud className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/70" />
+                    <span className="font-bold text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground break-words text-center">Pinata</span>
+                  </div>
                 </div>
               </div>
 
-              {/* Sepolia */}
-              <div className="flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
-                <div className="flex items-center gap-2 md:gap-3">
-                  <Zap className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/60" />
-                  <span className="font-medium text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground/80 break-words text-center">Sepolia</span>
+              {/* Sepolia - Glassy */}
+              <div className="group relative">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-slate-600 to-slate-400 rounded-xl blur opacity-10 group-hover:opacity-30 transition duration-500"></div>
+                <div className="relative flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
+                  <div className="flex items-center gap-2 md:gap-3">
+                    <Zap className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/70" />
+                    <span className="font-bold text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground break-words text-center">Sepolia</span>
+                  </div>
                 </div>
               </div>
 
-              {/* Netlify */}
-              <div className="flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
-                <div className="flex items-center gap-2 md:gap-3">
-                  <Globe className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/60" />
-                  <span className="font-medium text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground/80 break-words text-center">Netlify</span>
+              {/* Netlify - Glassy */}
+              <div className="group relative">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-slate-600 to-slate-400 rounded-xl blur opacity-10 group-hover:opacity-30 transition duration-500"></div>
+                <div className="relative flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
+                  <div className="flex items-center gap-2 md:gap-3">
+                    <Globe className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/70" />
+                    <span className="font-bold text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground break-words text-center">Netlify</span>
+                  </div>
                 </div>
               </div>
 
-              {/* Alchemy */}
-              <div className="flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
-                <div className="flex items-center gap-2 md:gap-3">
-                  <Webhook className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/60" />
-                  <span className="font-medium text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground/80 break-words text-center">Alchemy</span>
+              {/* Alchemy - Glassy */}
+              <div className="group relative">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-slate-600 to-slate-400 rounded-xl blur opacity-10 group-hover:opacity-30 transition duration-500"></div>
+                <div className="relative flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
+                  <div className="flex items-center gap-2 md:gap-3">
+                    <Webhook className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/70" />
+                    <span className="font-bold text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground break-words text-center">Alchemy</span>
+                  </div>
                 </div>
               </div>
 
-              {/* QuickNode */}
-              <div className="flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
-                <div className="flex items-center gap-2 md:gap-3">
-                  <Webhook className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/60" />
-                  <span className="font-medium text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground/80 break-words text-center">QuickNode</span>
+              {/* QuickNode - Glassy */}
+              <div className="group relative">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-slate-600 to-slate-400 rounded-xl blur opacity-10 group-hover:opacity-30 transition duration-500"></div>
+                <div className="relative flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
+                  <div className="flex items-center gap-2 md:gap-3">
+                    <Webhook className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/70" />
+                    <span className="font-bold text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground break-words text-center">QuickNode</span>
+                  </div>
                 </div>
               </div>
 
-              {/* Chainstack */}
-              <div className="flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
-                <div className="flex items-center gap-2 md:gap-3">
-                  <Server className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/60" />
-                  <span className="font-medium text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground/80 break-words text-center">Chainstack</span>
+              {/* Chainstack - Glassy */}
+              <div className="group relative">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-slate-600 to-slate-400 rounded-xl blur opacity-10 group-hover:opacity-30 transition duration-500"></div>
+                <div className="relative flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
+                  <div className="flex items-center gap-2 md:gap-3">
+                    <Server className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/70" />
+                    <span className="font-bold text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground break-words text-center">Chainstack</span>
+                  </div>
                 </div>
               </div>
 
-              {/* The Graph */}
-              <div className="flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
-                <div className="flex items-center gap-2 md:gap-3">
-                  <Network className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/60" />
-                  <span className="font-medium text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground/80 break-words text-center">The Graph</span>
+              {/* The Graph - Glassy */}
+              <div className="group relative">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-slate-600 to-slate-400 rounded-xl blur opacity-10 group-hover:opacity-30 transition duration-500"></div>
+                <div className="relative flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
+                  <div className="flex items-center gap-2 md:gap-3">
+                    <Network className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/70" />
+                    <span className="font-bold text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground break-words text-center">The Graph</span>
+                  </div>
                 </div>
               </div>
 
-              {/* Chatbase */}
-              <div className="flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
-                <div className="flex items-center gap-2 md:gap-3">
-                  <MessageSquare className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/60" />
-                  <span className="font-medium text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground/80 break-words text-center">Chatbase</span>
+              {/* Chatbase - Glassy */}
+              <div className="group relative">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-slate-600 to-slate-400 rounded-xl blur opacity-10 group-hover:opacity-30 transition duration-500"></div>
+                <div className="relative flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
+                  <div className="flex items-center gap-2 md:gap-3">
+                    <MessageSquare className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/70" />
+                    <span className="font-bold text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground break-words text-center">Chatbase</span>
+                  </div>
                 </div>
               </div>
 
-              {/* Wagmi */}
-              <div className="flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
-                <div className="flex items-center gap-2 md:gap-3">
-                  <Zap className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/60" />
-                  <span className="font-medium text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground/80 break-words text-center">Wagmi</span>
+              {/* Wagmi - Glassy */}
+              <div className="group relative">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-slate-600 to-slate-400 rounded-xl blur opacity-10 group-hover:opacity-30 transition duration-500"></div>
+                <div className="relative flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
+                  <div className="flex items-center gap-2 md:gap-3">
+                    <Zap className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/70" />
+                    <span className="font-bold text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground break-words text-center">Wagmi</span>
+                  </div>
                 </div>
               </div>
 
-              {/* EditorJS */}
-              <div className="flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
-                <div className="flex items-center gap-2 md:gap-3">
-                  <Edit className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/60" />
-                  <span className="font-medium text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground/80 break-words text-center">EditorJS</span>
+              {/* EditorJS - Glassy */}
+              <div className="group relative">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-slate-600 to-slate-400 rounded-xl blur opacity-10 group-hover:opacity-30 transition duration-500"></div>
+                <div className="relative flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
+                  <div className="flex items-center gap-2 md:gap-3">
+                    <Edit className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/70" />
+                    <span className="font-bold text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground break-words text-center">EditorJS</span>
+                  </div>
                 </div>
               </div>
 
-              {/* RainbowKit */}
-              <div className="flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-card border-2 border-border shadow-md hover:shadow-xl transition-all duration-300">
-                <div className="flex items-center gap-2 md:gap-3">
-                  <Wallet className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/60" />
-                  <span className="font-medium text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground/80 break-words text-center">RainbowKit</span>
+              {/* RainbowKit - Glassy */}
+              <div className="group relative">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-slate-600 to-slate-400 rounded-xl blur opacity-10 group-hover:opacity-30 transition duration-500"></div>
+                <div className="relative flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
+                  <div className="flex items-center gap-2 md:gap-3">
+                    <Wallet className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/70" />
+                    <span className="font-bold text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground break-words text-center">RainbowKit</span>
+                  </div>
                 </div>
               </div>
             </div>

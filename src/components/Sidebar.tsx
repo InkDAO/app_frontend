@@ -172,10 +172,9 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 
         {/* Theme Toggle */}
         <div className="p-4 border-t border-gray-100 dark:border-gray-900 flex-shrink-0">
-          <Button
-            variant="ghost"
+          <button
             onClick={toggleTheme}
-            className="w-full justify-start gap-3 h-10"
+            className="w-full flex items-center justify-start gap-3 h-10 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors rounded-lg hover:bg-gray-100/50 dark:hover:bg-gray-800/50 px-3"
           >
             {theme === "light" ? (
               <>
@@ -188,7 +187,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
                 <span>Light Mode</span>
               </>
             )}
-          </Button>
+          </button>
         </div>
 
         {/* Footer Section */}

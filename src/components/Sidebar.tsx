@@ -40,25 +40,29 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       name: "Home",
       href: "/app",
       icon: Home,
-      current: location.pathname === "/app"
+      current: location.pathname === "/app",
+      disabled: false
     },
     {
       name: "Write",
       href: "/app/editor",
       icon: Edit3,
-      current: location.pathname === "/app/editor" || location.pathname.startsWith("/app/editor/")
+      current: location.pathname === "/app/editor" || location.pathname.startsWith("/app/editor/"),
+      disabled: false
     },
     {
       name: "Me",
       href: "/app/me",
       icon: User2,
-      current: location.pathname === "/app/me"
+      current: location.pathname === "/app/me",
+      disabled: false
     },
     {
       name: "Dashboard",
       href: address ? `/dashboard/${address}` : "#",
       icon: BarChart3,
-      current: location.pathname.startsWith("/dashboard")
+      current: location.pathname.startsWith("/dashboard"),
+      disabled: !address
     },
   ];
 
@@ -134,23 +138,42 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
         <nav className="flex-1 px-4 space-y-2 overflow-y-auto">
           {navigationItems.map((item) => {
             const Icon = item.icon;
+            
+            if (item.disabled) {
+              return (
+                <div key={item.name} title="Connect wallet to access">
+                  <Button
+                    variant="ghost"
+                    disabled
+                    className={cn(
+                      "w-full justify-start gap-3 h-10",
+                      "text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50"
+                    )}
+                  >
+                    <Icon className="h-5 w-5" />
+                    <span>{item.name}</span>
+                  </Button>
+                </div>
+              );
+            }
+            
             return (
               <Link key={item.name} to={item.href}>
-                     <Button
-                       variant="ghost"
-                       className={cn(
-                         "w-full justify-start gap-3 h-10",
-                         item.current
-                           ? "bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-medium"
-                           : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-200"
-                       )}
-                     >
-                       <Icon className={cn(
-                         "h-5 w-5",
-                         item.current ? "fill-current" : ""
-                       )} />
-                       <span>{item.name}</span>
-                     </Button>
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    "w-full justify-start gap-3 h-10",
+                    item.current
+                      ? "bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-medium"
+                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900 hover:text-gray-900 dark:hover:text-gray-200"
+                  )}
+                >
+                  <Icon className={cn(
+                    "h-5 w-5",
+                    item.current ? "fill-current" : ""
+                  )} />
+                  <span>{item.name}</span>
+                </Button>
               </Link>
             );
           })}

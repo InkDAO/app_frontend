@@ -131,7 +131,7 @@ const Landing = () => {
                       <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
                     </Button>
                   </Link>
-                  <Link to="https://decentralizedx.gitbook.io/dx" className="flex-1 sm:flex-initial" target="_blank" rel="noopener noreferrer">
+                  <Link to="https://docs.inkdao.tech/" className="flex-1 sm:flex-initial" target="_blank" rel="noopener noreferrer">
                     <Button
                       size="lg"
                       variant="outline"
@@ -153,25 +153,25 @@ const Landing = () => {
           {/* Platform Metrics Section */}
           <div className="mb-24 md:mb-32">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 px-4">
-              {/* Total Posts */}
+              {/* Published Content */}
               <div className="text-center">
-                <p className="text-xs sm:text-sm text-muted-foreground mb-3 uppercase tracking-wide">Total Posts</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mb-3 uppercase tracking-wide">Published Content</p>
                 <h3 className="text-4xl sm:text-5xl md:text-6xl font-bold">
                   {isLoading ? <Skeleton className="h-12 sm:h-16 w-24 sm:w-32 mx-auto" /> : <AnimatedCounter value={totalPosts} />}
                 </h3>
               </div>
 
-              {/* Total Users */}
+              {/* Active Users */}
               <div className="text-center">
-                <p className="text-xs sm:text-sm text-muted-foreground mb-3 uppercase tracking-wide">Total Users</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mb-3 uppercase tracking-wide">Active Users</p>
                 <h3 className="text-4xl sm:text-5xl md:text-6xl font-bold">
                   {isLoading ? <Skeleton className="h-12 sm:h-16 w-24 sm:w-32 mx-auto" /> : <AnimatedCounter value={totalUsers} />}
                 </h3>
               </div>
 
-              {/* Total Value Traded */}
+              {/* Total Sales */}
               <div className="text-center">
-                <p className="text-xs sm:text-sm text-muted-foreground mb-3 uppercase tracking-wide">Total Value Traded</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mb-3 uppercase tracking-wide">Total Sales</p>
                 <h3 className="text-4xl sm:text-5xl md:text-6xl font-bold">
                   {isLoading ? <Skeleton className="h-12 sm:h-16 w-32 sm:w-40 mx-auto" /> : (
                     <span><AnimatedCounter value={parseFloat(totalValueTraded)} decimals={4} /> ETH</span>
@@ -179,9 +179,9 @@ const Landing = () => {
                 </h3>
               </div>
 
-              {/* Total Worth of Assets */}
+              {/* Marketplace Value */}
               <div className="text-center">
-                <p className="text-xs sm:text-sm text-muted-foreground mb-3 uppercase tracking-wide">Total Worth of Assets</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mb-3 uppercase tracking-wide">Marketplace Value</p>
                 <h3 className="text-4xl sm:text-5xl md:text-6xl font-bold">
                   {isLoading ? <Skeleton className="h-12 sm:h-16 w-32 sm:w-40 mx-auto" /> : (
                     <span><AnimatedCounter value={parseFloat(totalWorthOfAssets)} decimals={4} /> ETH</span>

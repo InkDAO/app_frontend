@@ -8,7 +8,8 @@ import {
   Sun,
   Moon,
   X,
-  PanelLeftClose
+  PanelLeftClose,
+  BarChart3
 } from "lucide-react";
 import { FaXTwitter, FaGithub, FaTelegram } from 'react-icons/fa6';
 import { SiGitbook } from 'react-icons/si';
@@ -16,6 +17,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { useSearch } from "@/context/SearchContext";
 import { TagSearch } from "@/components/TagSearch";
 import { cn } from "@/lib/utils";
+import { useAccount } from "wagmi";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -27,6 +29,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const { theme, toggleTheme } = useTheme();
   const { selectedTags, setSelectedTags } = useSearch();
   const [isTagSearchLoading, setIsTagSearchLoading] = useState(false);
+  const { address } = useAccount();
 
   const handleTagSearch = (tags: string[]) => {
     setSelectedTags(tags);
@@ -40,16 +43,22 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       current: location.pathname === "/app"
     },
     {
+      name: "Write",
+      href: "/app/editor",
+      icon: Edit3,
+      current: location.pathname === "/app/editor" || location.pathname.startsWith("/app/editor/")
+    },
+    {
       name: "Me",
       href: "/app/me",
       icon: User2,
       current: location.pathname === "/app/me"
     },
     {
-      name: "Write",
-      href: "/app/editor",
-      icon: Edit3,
-      current: location.pathname === "/app/editor" || location.pathname.startsWith("/app/editor/")
+      name: "Dashboard",
+      href: address ? `/dashboard/${address}` : "#",
+      icon: BarChart3,
+      current: location.pathname.startsWith("/dashboard")
     },
   ];
 

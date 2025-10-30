@@ -27,10 +27,7 @@ export const CustomConnectButton = ({ isEditorPage = false }: CustomConnectButto
           <button
             onClick={connected ? (chain?.unsupported ? openChainModal : openAccountModal) : openConnectModal}
             className={cn(
-              "flex items-center gap-2 px-3 py-2 border shadow-md transition-all duration-200 transform",
-              isEditorPage 
-                ? "rounded-lg border-r border-gray-300 dark:border-gray-600"
-                : "rounded-l-lg rounded-r-none border-r-0",
+              "flex items-center gap-2 px-3 py-2 border shadow-md transition-all duration-200 transform rounded-lg",
               chain?.unsupported 
                 ? "text-red-600 border-red-300 bg-red-50 hover:bg-red-100"
                 : theme === "dark"

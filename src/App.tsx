@@ -5,6 +5,7 @@ import Landing from "@/pages/Landing";
 import HomePage from "@/pages/HomePage";
 import { PostPreviewPage } from "@/pages/PostPreviewPage";
 import { MePage } from "@/pages/MePage";
+import { DashboardPage } from "@/pages/DashboardPage";
 import NotFound from "@/pages/NotFound";
 import EditorPage from "@/pages/EditorPage";
 import { ThemeProvider } from "@/context/ThemeContext";
@@ -41,6 +42,11 @@ const App = () => (
                 <Route path="/app" element={
                   <AppLayout>
                     <HomePage />
+                  </AppLayout>
+                } />
+                <Route path="/dashboard/:address" element={
+                  <AppLayout>
+                    <DashboardPage />
                   </AppLayout>
                 } />
                 <Route path="/app/post/:assetAddress" element={

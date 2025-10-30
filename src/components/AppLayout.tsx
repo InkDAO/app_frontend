@@ -18,8 +18,8 @@ const AppLayout = ({ children }: AppLayoutProps) => {
   const touchStartX = useRef<number>(0);
   const touchEndX = useRef<number>(0);
 
-  // Show sidebar only for app routes (routes that start with /app)
-  const showSidebar = location.pathname.startsWith('/app');
+  // Show sidebar for app routes and dashboard routes
+  const showSidebar = location.pathname.startsWith('/app') || location.pathname.startsWith('/dashboard');
 
   // Set sidebar to open by default on large screens
   useEffect(() => {

@@ -183,43 +183,52 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
   const totalPrice = pricePerAsset;
 
   return (
-    <Card 
-      className="w-full max-w-sm hover:shadow-xl transition-all duration-300 group overflow-hidden cursor-pointer border-2"
-      onClick={handleCardClick}
-    >
-      <div className="relative h-48 bg-muted/30 overflow-hidden flex items-center justify-center rounded-t-2xl">
-        {isLoadingThumbnail ? (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted/50 to-muted/80">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          </div>
-        ) : thumbnailError || !asset.thumbnailCid ? (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted/50 to-muted/80">
-            <FileImage className="h-16 w-16 text-muted-foreground/50" />
-          </div>
-        ) : thumbnailImage ? (
-          <img 
-            src={thumbnailImage} 
-            alt={postTitle}
-            className="group-hover:scale-105 transition-transform duration-500 w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted/50 to-muted/80">
-            <FileImage className="h-16 w-16 text-muted-foreground/50" />
-          </div>
-        )}
-        
-      </div>
+    <div className="group relative w-full max-w-sm">
+      {/* Glowing border effect */}
+      <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
+      
+      <Card 
+        className="relative w-full hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer border-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm"
+        onClick={handleCardClick}
+      >
+        <div className="relative h-48 bg-gradient-to-br from-muted/30 to-muted/50 overflow-hidden flex items-center justify-center rounded-t-2xl">
+          {/* Subtle animated blob in thumbnail */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400/10 to-purple-400/10 rounded-full blur-2xl animate-pulse" />
+          
+          {isLoadingThumbnail ? (
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted/50 to-muted/80 relative z-10">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : thumbnailError || !asset.thumbnailCid ? (
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted/50 to-muted/80 relative z-10">
+              <FileImage className="h-16 w-16 text-muted-foreground/50" />
+            </div>
+          ) : thumbnailImage ? (
+            <img 
+              src={thumbnailImage} 
+              alt={postTitle}
+              className="group-hover:scale-110 transition-transform duration-500 w-full h-full object-cover relative z-10"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted/50 to-muted/80 relative z-10">
+              <FileImage className="h-16 w-16 text-muted-foreground/50" />
+            </div>
+          )}
+        </div>
 
-      <CardContent className="p-5">
+      <CardContent className="p-5 relative">
+        {/* Subtle background pattern */}
+        <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(180deg,transparent,white,transparent)] dark:bg-grid-slate-400/5 opacity-30" />
+        
         {/* Date, Author Info, and Price at Top */}
-        <div className="flex items-center mb-3 gap-2 flex-wrap">
+        <div className="relative z-10 flex items-center mb-3 gap-2 flex-wrap">
           {formattedDate.short && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Badge 
                     variant="secondary" 
-                    className="text-xs px-3 py-1 flex-shrink-0 font-medium cursor-pointer"
+                    className="text-xs px-3 py-1 flex-shrink-0 font-medium cursor-pointer bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm hover:bg-white/80 dark:hover:bg-gray-800/80 transition-colors"
                   >
                     {formattedDate.short}
                   </Badge>
@@ -233,23 +242,23 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
           
           <Badge 
             variant="secondary" 
-            className="text-xs px-3 py-1.5 flex-shrink-0 font-medium"
+            className="text-xs px-3 py-1.5 flex-shrink-0 font-medium bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm"
           >
             {asset.author?.slice(0, 6)}...{asset.author?.slice(-4)}
           </Badge>
           
           <Badge 
             variant="secondary" 
-            className="text-xs px-3 py-1 flex-shrink-0 font-medium"
+            className="text-xs px-3 py-1 flex-shrink-0 font-semibold bg-gradient-to-r from-blue-500/20 to-purple-500/20 backdrop-blur-sm border-blue-300 dark:border-blue-700"
           >
             {pricePerAsset === 0 ? "FREE" : `${pricePerAsset.toFixed(4)} ETH`}
           </Badge>
         </div>
 
         {/* Content area */}
-        <div className="flex flex-col">
+        <div className="relative z-10 flex flex-col">
           <div className="mb-2">
-            <h3 className="font-semibold text-base leading-tight line-clamp-2 text-foreground group-hover:text-primary transition-colors mb-2">
+            <h3 className="font-bold text-base leading-tight line-clamp-2 text-foreground group-hover:text-primary transition-colors mb-2">
               {postTitle}
             </h3>
             
@@ -263,7 +272,7 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
                     <Badge 
                       key={index}
                       variant="outline"
-                      className="text-xs px-2 py-0.5 font-medium text-primary border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors"
+                      className="text-xs px-2 py-0.5 font-medium text-primary border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors backdrop-blur-sm"
                     >
                       #{trimmedTag}
                     </Badge>
@@ -279,13 +288,13 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
             </p>
             {/* Gradient fade overlay - only visible when content overflows */}
             {postDescription && postDescription.length > 100 && (
-              <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-card to-transparent pointer-events-none" />
+              <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white/80 dark:from-gray-900/80 to-transparent pointer-events-none" />
             )}
           </div>
         </div>
 
         {/* Total Supply and Action Section */}
-        <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/50">
+        <div className="relative z-10 flex items-center justify-between mt-3 pt-3 border-t border-border/30">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Users className="h-4 w-4" />
             <span className="font-medium">
@@ -295,7 +304,7 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
           {isOwned || pricePerAsset === 0 ? (
             <Badge 
               variant="secondary"
-              className="cursor-pointer text-xs px-3 py-1 font-medium"
+              className="cursor-pointer text-xs px-3 py-1.5 font-semibold bg-gradient-to-r from-emerald-500/20 to-teal-500/20 hover:from-emerald-500/30 hover:to-teal-500/30 backdrop-blur-sm border-emerald-300 dark:border-emerald-700 transition-all shadow-sm hover:shadow-md"
               onClick={(e) => {
                 e.stopPropagation();
                 handleCardClick();
@@ -309,7 +318,7 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
               <DialogTrigger asChild>
                 <Badge 
                   variant="secondary"
-                  className="cursor-pointer text-xs px-3 py-1 font-medium"
+                  className="cursor-pointer text-xs px-3 py-1.5 font-semibold bg-gradient-to-r from-blue-500/20 to-purple-500/20 hover:from-blue-500/30 hover:to-purple-500/30 backdrop-blur-sm border-blue-300 dark:border-blue-700 transition-all shadow-sm hover:shadow-md"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <ShoppingCart className="h-3 w-3 mr-1" />
@@ -383,5 +392,6 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
         </div>
       </CardContent>
     </Card>
+    </div>
   );
 };

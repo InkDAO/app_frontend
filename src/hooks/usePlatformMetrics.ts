@@ -32,7 +32,7 @@ export const usePlatformMetrics = (): PlatformMetrics => {
       try {
         setMetrics(prev => ({ ...prev, isLoading: true }));
         
-        const response = await fetch("https://api.decentralizedx.tech/landingPage");
+        const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/landingPage`);
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);

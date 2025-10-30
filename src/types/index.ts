@@ -8,6 +8,7 @@ export interface Asset {
     costInNative?: string,
     hashtags?: string,
     publishedAt?: string,
+    totalSupply?: bigint | string | number,
 }
 
 export interface Comment {

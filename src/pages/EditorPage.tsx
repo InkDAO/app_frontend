@@ -475,27 +475,30 @@ const EditorPage = () => {
 		<div className="bg-white dark:bg-gray-950 py-6 sm:py-8 px-4 sm:px-6 lg:px-8">
 			<div className="max-w-7xl mx-auto w-full">
 				{/* Tutorial Banner */}
-				<div className="mb-6 max-w-6xl mx-auto">
-					<div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-50 via-blue-50 to-cyan-50 dark:from-indigo-900/20 dark:via-blue-900/20 dark:to-cyan-900/20 p-4 sm:p-6 border border-border/50 dark:border-border dark:shadow-lg dark:shadow-primary/5">
+				<div className="mb-6 sm:mb-8 max-w-6xl mx-auto">
+					<div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-indigo-50 via-blue-50 to-cyan-50 dark:from-indigo-950/40 dark:via-blue-950/40 dark:to-cyan-950/40 p-4 sm:p-6 lg:p-8 border-0 shadow-2xl dark:shadow-primary/10">
+						{/* Animated Background Blobs */}
+						<div className="absolute top-0 left-0 w-48 h-48 sm:w-72 sm:h-72 bg-gradient-to-br from-indigo-400/30 to-blue-400/30 rounded-full blur-3xl animate-pulse" />
+						<div className="absolute bottom-0 right-0 w-64 h-64 sm:w-96 sm:h-96 bg-gradient-to-br from-cyan-400/20 to-blue-400/20 rounded-full blur-3xl animate-pulse delay-1000" />
 						{/* Background Pattern */}
-						<div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))] dark:bg-grid-slate-400/10" />
+						<div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))] dark:bg-grid-slate-400/5" />
 						
 						<div className="relative z-10">
-							<div className="flex items-start gap-2 sm:gap-4">
-								<div className="p-2 sm:p-3 rounded-xl bg-gradient-to-br from-indigo-500 via-blue-600 to-cyan-600 shadow-lg flex-shrink-0">
-									<BookOpen className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+							<div className="flex items-start gap-3 sm:gap-4">
+								<div className="p-2.5 sm:p-3 lg:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-indigo-500 via-blue-600 to-cyan-600 shadow-lg sm:shadow-xl shadow-indigo-500/50 flex-shrink-0 transform hover:scale-105 transition-transform duration-300">
+									<BookOpen className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7 text-white" />
 								</div>
 								<div className="flex-1 min-w-0">
-									<h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-1 sm:mb-1.5 bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-600 dark:from-indigo-300 dark:via-blue-300 dark:to-cyan-300 bg-clip-text text-transparent">
+									<h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-extrabold tracking-tight mb-1.5 sm:mb-2 bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-600 dark:from-indigo-300 dark:via-blue-300 dark:to-cyan-300 bg-clip-text text-transparent drop-shadow-sm">
 										Create Your Post
 									</h2>
-									<p className="text-sm sm:text-base lg:text-lg text-muted-foreground font-medium mb-1 sm:mb-1.5">
-										Write, format, and publish your content. <span className="text-foreground font-semibold">Monetize your knowledge</span>
+									<p className="text-sm sm:text-base lg:text-lg xl:text-xl text-muted-foreground font-semibold mb-2 sm:mb-2.5">
+										Write, format, and publish your content. <span className="text-foreground font-bold">Monetize your knowledge</span>
 									</p>
 									<div className="flex items-center gap-2 text-xs sm:text-sm lg:text-base text-muted-foreground/80 font-medium">
 										{/* <span>Need help getting started?</span> */}
 										<a 
-											href="https://decentralizedx.gitbook.io/dx/tutorials/creating-first-post" 
+											href="https://docs.inkdao.tech/tutorials/creating-first-post" 
 											target="_blank" 
 											rel="noopener noreferrer"
 											className="inline-flex items-center gap-1 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-semibold hover:underline transition-colors"

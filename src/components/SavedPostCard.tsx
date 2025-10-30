@@ -212,26 +212,33 @@ export const SavedPostCard = ({ savedPost, onDelete }: SavedPostCardProps) => {
   };
 
   return (
-    <Card className="w-full max-w-sm hover:shadow-lg transition-all duration-200 group overflow-hidden">
-      {/* Image Section */}
-      <div className="relative h-48 bg-muted/30 overflow-hidden flex items-center justify-center">
-        {postImage ? (
-          <img 
-            src={postImage} 
-            alt={postTitle}
-            className="group-hover:scale-105 transition-transform duration-300 w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted/50 to-muted/80">
-            <FileImage className="h-16 w-16 text-muted-foreground/50" />
-          </div>
-        )}
-        
-        {/* Overlay gradient for better text readability */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+    <div className="group relative w-full max-w-sm">
+      {/* Glowing border effect */}
+      <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-600 via-orange-600 to-red-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
+      
+      <Card className="relative w-full hover:shadow-2xl transition-all duration-200 overflow-hidden border-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
+        {/* Image Section */}
+        <div className="relative h-48 bg-gradient-to-br from-muted/30 to-muted/50 overflow-hidden flex items-center justify-center rounded-t-2xl">
+          {/* Subtle animated blob in thumbnail */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-400/10 to-orange-400/10 rounded-full blur-2xl animate-pulse" />
+          
+          {postImage ? (
+            <img 
+              src={postImage} 
+              alt={postTitle}
+              className="group-hover:scale-110 transition-transform duration-500 w-full h-full object-cover relative z-10"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted/50 to-muted/80 relative z-10">
+              <FileImage className="h-16 w-16 text-muted-foreground/50" />
+            </div>
+          )}
+          
+          {/* Overlay gradient for better text readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20" />
         
         {/* Action Buttons Overlay */}
-        <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-y-1 group-hover:translate-y-0">
+        <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-y-1 group-hover:translate-y-0 z-30">
           <Button
             variant="secondary"
             size="sm"
@@ -259,17 +266,20 @@ export const SavedPostCard = ({ savedPost, onDelete }: SavedPostCardProps) => {
         </div>
       </div>
 
-      <CardContent className="p-4">
+      <CardContent className="p-4 relative">
+        {/* Subtle background pattern */}
+        <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(180deg,transparent,white,transparent)] dark:bg-grid-slate-400/5 opacity-30" />
+        
         {/* Title */}
-        <div className="mb-2">
-          <h3 className="font-semibold text-base leading-tight line-clamp-2 text-foreground group-hover:text-primary transition-colors">
+        <div className="relative z-10 mb-2">
+          <h3 className="font-bold text-base leading-tight line-clamp-2 text-foreground group-hover:text-primary transition-colors">
             {postTitle}
           </h3>
         </div>
 
         {/* Content Preview */}
         {postPreview && (
-          <div className="mb-3">
+          <div className="relative z-10 mb-3">
             <p className="text-sm text-muted-foreground leading-relaxed line-clamp-5">
               {postPreview}
             </p>
@@ -278,7 +288,7 @@ export const SavedPostCard = ({ savedPost, onDelete }: SavedPostCardProps) => {
 
         {/* Error state */}
         {contentError && (
-          <div className="text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 p-2 rounded">
+          <div className="relative z-10 text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/20 p-2 rounded">
             Failed to load content
           </div>
         )}
@@ -322,5 +332,6 @@ export const SavedPostCard = ({ savedPost, onDelete }: SavedPostCardProps) => {
         </AlertDialogContent>
       </AlertDialog>
     </Card>
+    </div>
   );
 };

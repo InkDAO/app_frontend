@@ -447,25 +447,34 @@ export const MePage = () => {
     switch (activeTab) {
       case "my-posts":
         return {
-          gradient: "from-violet-50 via-purple-50 to-fuchsia-50 dark:from-violet-900/20 dark:via-purple-900/20 dark:to-fuchsia-900/20",
+          gradient: "from-violet-50 via-purple-50 to-fuchsia-50 dark:from-violet-950/40 dark:via-purple-950/40 dark:to-fuchsia-950/40",
           titleGradient: "from-violet-600 via-purple-600 to-fuchsia-600 dark:from-violet-300 dark:via-purple-300 dark:to-fuchsia-300",
           iconGradient: "from-violet-500 via-purple-600 to-fuchsia-600",
+          iconShadow: "shadow-violet-500/50",
+          blobGradient1: "from-violet-400/30 to-purple-400/30",
+          blobGradient2: "from-fuchsia-400/20 to-pink-400/20",
           subtitle: "Share your expertise, <span class='text-foreground font-semibold'>earn from every sale</span>",
           tagline: "Create once. Earn forever. Your content, your revenue."
         };
       case "library":
         return {
-          gradient: "from-emerald-50 via-teal-50 to-cyan-50 dark:from-emerald-900/20 dark:via-teal-900/20 dark:to-cyan-900/20",
+          gradient: "from-emerald-50 via-teal-50 to-cyan-50 dark:from-emerald-950/40 dark:via-teal-950/40 dark:to-cyan-950/40",
           titleGradient: "from-emerald-600 via-teal-600 to-cyan-600 dark:from-emerald-300 dark:via-teal-300 dark:to-cyan-300",
           iconGradient: "from-emerald-500 via-teal-600 to-cyan-600",
+          iconShadow: "shadow-emerald-500/50",
+          blobGradient1: "from-emerald-400/30 to-teal-400/30",
+          blobGradient2: "from-cyan-400/20 to-blue-400/20",
           subtitle: "Curate your knowledge, <span class='text-foreground font-semibold'>access anytime</span>",
           tagline: "Buy once. Own forever. No recurring fees."
         };
       case "drafts":
         return {
-          gradient: "from-amber-50 via-orange-50 to-red-50 dark:from-amber-900/20 dark:via-orange-900/20 dark:to-red-900/20",
+          gradient: "from-amber-50 via-orange-50 to-red-50 dark:from-amber-950/40 dark:via-orange-950/40 dark:to-red-950/40",
           titleGradient: "from-amber-600 via-orange-600 to-red-600 dark:from-amber-300 dark:via-orange-300 dark:to-red-300",
           iconGradient: "from-amber-500 via-orange-600 to-red-600",
+          iconShadow: "shadow-amber-500/50",
+          blobGradient1: "from-amber-400/30 to-orange-400/30",
+          blobGradient2: "from-red-400/20 to-pink-400/20",
           subtitle: "Work in progress, <span class='text-foreground font-semibold'>finish and publish</span>",
           tagline: "Save your ideas. Publish when ready. Never lose progress."
         };
@@ -477,22 +486,25 @@ export const MePage = () => {
   return (
     <AuthGuard>
       <div className="px-4 sm:px-8 py-6 lg:px-12 xl:px-16 max-w-7xl mx-auto w-full">
-        <div className="mb-10">
+        <div className="mb-8 sm:mb-10">
           {/* Hero Section */}
-          <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${heroContent.gradient} p-4 sm:p-6 mb-6 border border-border/50 dark:border-border dark:shadow-lg dark:shadow-primary/5`}>
+          <div className={`relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br ${heroContent.gradient} p-4 sm:p-6 lg:p-8 mb-6 border-0 shadow-2xl dark:shadow-primary/10`}>
+            {/* Animated Background Blobs */}
+            <div className={`absolute top-0 left-0 w-48 h-48 sm:w-72 sm:h-72 bg-gradient-to-br ${heroContent.blobGradient1 || 'from-blue-400/30 to-indigo-400/30'} rounded-full blur-3xl animate-pulse`} />
+            <div className={`absolute bottom-0 right-0 w-64 h-64 sm:w-96 sm:h-96 bg-gradient-to-br ${heroContent.blobGradient2 || 'from-purple-400/20 to-pink-400/20'} rounded-full blur-3xl animate-pulse delay-1000`} />
             {/* Background Pattern */}
-            <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))] dark:bg-grid-slate-400/10" />
+            <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))] dark:bg-grid-slate-400/5" />
             
             <div className="relative z-10">
-              <div className="flex items-start gap-2 sm:gap-4">
-                <div className={`p-2 sm:p-3 rounded-xl bg-gradient-to-br ${heroContent.iconGradient} shadow-lg flex-shrink-0`}>
-                  <TabIcon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+              <div className="flex items-start gap-3 sm:gap-4">
+                <div className={`p-2.5 sm:p-3 lg:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br ${heroContent.iconGradient} shadow-lg sm:shadow-xl ${heroContent.iconShadow || 'shadow-blue-500/50'} flex-shrink-0 transform hover:scale-105 transition-transform duration-300`}>
+                  <TabIcon className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h1 className={`text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-1 sm:mb-1.5 bg-gradient-to-r ${heroContent.titleGradient} bg-clip-text text-transparent`}>
+                  <h1 className={`text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-extrabold tracking-tight mb-1.5 sm:mb-2 bg-gradient-to-r ${heroContent.titleGradient} bg-clip-text text-transparent drop-shadow-sm`}>
                     {tabConfig.title}
                   </h1>
-                  <p className="text-sm sm:text-base lg:text-lg text-muted-foreground font-medium mb-1 sm:mb-1.5" dangerouslySetInnerHTML={{ __html: heroContent.subtitle }} />
+                  <p className="text-sm sm:text-base lg:text-lg xl:text-xl text-muted-foreground font-semibold mb-2 sm:mb-2.5" dangerouslySetInnerHTML={{ __html: heroContent.subtitle }} />
                   <p className="text-xs sm:text-sm lg:text-base text-muted-foreground/80 font-medium">
                     {heroContent.tagline}
                   </p>

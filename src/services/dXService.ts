@@ -21,7 +21,7 @@ export const createGroupPost = async (content: any, title: string, address: stri
       content: contentJson
     };
 
-    const response = await authenticatedFetch(`${import.meta.env.VITE_SERVER_URL}/create/group`, {
+    const response = await authenticatedFetch(`${import.meta.env.VITE_LOCAL_SERVER_URL}/create/group`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -47,7 +47,7 @@ export const createGroupPost = async (content: any, title: string, address: stri
 };
 
 // API function to publish file (upload thumbnail image) with wallet signature
-export const publishFile = async (file: File, address: string, signMessage: any, cid: string): Promise<{ thumbnailCid: string }> => {
+export const publishFile = async (file: File, address: string, signMessage: any, cid: string, hashtags?: string): Promise<{ thumbnailCid: string }> => {
   try {
     // Generate salt (current timestamp in seconds)
     const timestamp = Math.floor(Date.now() / 1000);
@@ -66,8 +66,13 @@ export const publishFile = async (file: File, address: string, signMessage: any,
     formData.append('address', address);
     formData.append('signature', signature);
     
+    // Add hashtags if provided
+    if (hashtags && hashtags.trim()) {
+      formData.append('hashtags', hashtags.trim());
+    }
+    
     // Make authenticated API call to publish file
-    const response = await authenticatedFetch(`${import.meta.env.VITE_SERVER_URL}/publish/file?cid=${cid}`, {
+    const response = await authenticatedFetch(`${import.meta.env.VITE_LOCAL_SERVER_URL}/publish/file?cid=${cid}`, {
       method: 'POST',
       body: formData
     });
@@ -293,7 +298,7 @@ export const fetchFileContentByAssetAddress = async (assetAddress: string, userA
   try {
     // First, try the public free endpoint to check if the post is free
     try {
-      const baseUrl = import.meta.env.VITE_SERVER_URL;
+      const baseUrl = import.meta.env.VITE_LOCAL_SERVER_URL;
       const freeResponse = await fetch(`${baseUrl}/freeFileByAddress?assetAddress=${assetAddress}`, {
         method: 'GET',
         headers: {
@@ -304,7 +309,6 @@ export const fetchFileContentByAssetAddress = async (assetAddress: string, userA
       // If the post is free (status 200), return the data
       if (freeResponse.ok) {
         const freeData = await freeResponse.json();
-        console.log('✅ Fetched free content for asset:', assetAddress);
         
         // Apply same extraction logic as authenticated endpoint
         if (freeData && typeof freeData === 'object') {
@@ -326,7 +330,6 @@ export const fetchFileContentByAssetAddress = async (assetAddress: string, userA
       if (freeResponse.status === 400) {
         const errorData = await freeResponse.json();
         if (errorData.error === 'File is not free') {
-          console.log('🔒 Post is not free, using authenticated endpoint');
           // Fall through to authenticated flow below
         } else {
           // Other 400 error, throw it
@@ -335,7 +338,6 @@ export const fetchFileContentByAssetAddress = async (assetAddress: string, userA
       }
     } catch (freeEndpointError) {
       // If free endpoint fails for any reason other than "not free", fall through to authenticated endpoint
-      console.log('ℹ️ Free endpoint check failed, trying authenticated endpoint');
     }
     
     // Make authenticated API call to get file content by asset address
@@ -384,7 +386,7 @@ export const deleteFileById = async (cid: string, address: string, signMessage: 
     };
     
     // Make authenticated API call to delete the file
-    const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/delete/file?cid=${cid}`, {
+    const response = await fetch(`${import.meta.env.VITE_LOCAL_SERVER_URL}/delete/file?cid=${cid}`, {
       method: 'post',
       headers: {
         'Content-Type': 'application/json',
@@ -438,7 +440,7 @@ export const updateFileById = async (cid: string, content: any, title: string, a
     
     
     // Make authenticated API call to update the file
-    const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/update/file?cid=${cid}`, {
+    const response = await fetch(`${import.meta.env.VITE_LOCAL_SERVER_URL}/update/file?cid=${cid}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -550,7 +552,7 @@ export const fetchSavedPostsByNextPageToken = async (owner: string, nextPageToke
     }
 
     // Make authenticated API call to fetch saved posts by next page token
-    const endpoint = `/filesByOwnerByNextPageToken?owner=${owner}&next_page_token=${nextPageToken}`;
+    const endpoint = `/filesByNextPageToken?next_page_token=${nextPageToken}`;
     
     const response = await apiService.get(endpoint);
     
@@ -611,6 +613,63 @@ export const fetchSavedPostsByNextPageToken = async (owner: string, nextPageToke
     
   } catch (error) {
     console.error('❌ Error fetching saved posts by next page token:', error);
+    throw error;
+  }
+};
+
+// API function to fetch all file metadata with pagination
+export const fetchAllFileMetadata = async (nextPageToken?: string): Promise<{ files: any[], nextPageToken?: string }> => {
+  try {
+    // Build the endpoint with optional next_page_token
+    const endpoint = nextPageToken 
+      ? `/filesByNextPageToken?next_page_token=${nextPageToken}`
+      : '/filesMetaData';
+    
+    // Try with apiService first (authenticated)
+    try {
+      const response = await fetch(`${import.meta.env.VITE_LOCAL_SERVER_URL}${endpoint}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      // Extract files and next_page_token from response
+      const files = Array.isArray(data) ? data : (data.files || []);
+      const newNextPageToken = data.next_page_token;
+      
+      return { files, nextPageToken: newNextPageToken };
+    } catch (authError) {
+      // If authenticated request fails, try without authentication (public endpoint)
+      const baseUrl = import.meta.env.VITE_LOCAL_SERVER_URL;
+      const fullUrl = `${baseUrl}${endpoint}`;
+      
+      const response = await fetch(fullUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      const files = Array.isArray(data) ? data : (data.files || []);
+      const newNextPageToken = data.next_page_token;
+      
+      return { files, nextPageToken: newNextPageToken };
+    }
+  } catch (error) {
+    console.error('❌ Error fetching all file metadata:', error);
     throw error;
   }
 };

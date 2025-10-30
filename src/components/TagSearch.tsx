@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Hash, X, Loader2 } from "lucide-react";
+import { useSearch } from "@/context/SearchContext";
 
 interface TagSearchProps {
   onTagSearch: (tags: string[]) => void;
@@ -20,7 +21,13 @@ export const TagSearch = ({
   showAddButton = true
 }: TagSearchProps) => {
   const [tagInput, setTagInput] = useState("");
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const { selectedTags: contextTags } = useSearch();
+  const [selectedTags, setSelectedTags] = useState<string[]>(contextTags);
+
+  // Sync with context tags
+  useEffect(() => {
+    setSelectedTags(contextTags);
+  }, [contextTags]);
 
   const handleAddTag = (tag: string) => {
     const trimmedTag = tag.trim().toLowerCase();

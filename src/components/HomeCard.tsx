@@ -2,6 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { FileImage, ShoppingCart, Loader2, Eye, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useBuyAsset, getAssetCost, fetchFileContentByAssetAddress } from "@/services/dXService";
@@ -19,6 +20,8 @@ interface HomeCardProps {
     thumbnailCid?: string;
     description?: string;
     costInNative?: string;
+    hashtags?: string;
+    publishedAt?: string;
   };
 }
 
@@ -123,6 +126,26 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
   // Use asset data from contract
   const postTitle = asset.assetTitle || 'Untitled';
   const postDescription = asset.description || '';
+  
+  // Format published date
+  const formatPublishedDate = (dateString: string | undefined) => {
+    if (!dateString) return { short: null, full: null };
+    try {
+      const date = new Date(dateString);
+      const month = date.toLocaleDateString('en-US', { month: 'short' });
+      const day = date.getDate();
+      const year = date.getFullYear();
+      const fullMonth = date.toLocaleDateString('en-US', { month: 'long' });
+      return { 
+        short: `${month} ${day}`,
+        full: `${fullMonth} ${day}, ${year}`
+      };
+    } catch {
+      return { short: null, full: null };
+    }
+  };
+  
+  const formattedDate = formatPublishedDate(asset.publishedAt);
 
   const handleCardClick = async () => {
     if (!asset.assetAddress) return;
@@ -188,8 +211,26 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
       </div>
 
       <CardContent className="p-5">
-        {/* Author Info and Price at Top */}
-        <div className="flex items-center mb-3 gap-2">
+        {/* Date, Author Info, and Price at Top */}
+        <div className="flex items-center mb-3 gap-2 flex-wrap">
+          {formattedDate.short && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge 
+                    variant="secondary" 
+                    className="text-xs px-3 py-1 flex-shrink-0 font-medium cursor-pointer"
+                  >
+                    {formattedDate.short}
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{formattedDate.full}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+          
           <Badge 
             variant="secondary" 
             className="text-xs px-3 py-1.5 flex-shrink-0 font-medium"
@@ -208,9 +249,28 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
         {/* Content area */}
         <div className="flex flex-col">
           <div className="mb-2">
-            <h3 className="font-semibold text-base leading-tight line-clamp-2 text-foreground group-hover:text-primary transition-colors">
+            <h3 className="font-semibold text-base leading-tight line-clamp-2 text-foreground group-hover:text-primary transition-colors mb-2">
               {postTitle}
             </h3>
+            
+            {/* Hashtags Section - Right after title */}
+            {asset.hashtags && (
+              <div className="flex flex-wrap gap-1.5">
+                {asset.hashtags.split(',').slice(0, 4).map((tag, index) => {
+                  const trimmedTag = tag.trim();
+                  if (!trimmedTag) return null;
+                  return (
+                    <Badge 
+                      key={index}
+                      variant="outline"
+                      className="text-xs px-2 py-0.5 font-medium text-primary border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors"
+                    >
+                      #{trimmedTag}
+                    </Badge>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <div className="relative min-h-[4.5rem] max-h-[4.5rem] overflow-hidden">

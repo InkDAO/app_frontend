@@ -2,12 +2,16 @@ import { useState, useEffect } from "react";
 import { HomeCard } from "@/components/HomeCard";
 import { HomeCardSkeleton } from "@/components/HomeCardSkeleton";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { useSearch } from "@/context/SearchContext";
 import { useAssets } from "@/hooks/useAssets";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
-import { MessageSquare, ArrowRight, Globe, Clock, Search, Megaphone, Gift, Star, Loader2 } from "lucide-react";
+import { handleGetFilesByTags } from "@/services/pinataService";
+import { MessageSquare, ArrowRight, Globe, Clock, Search, Megaphone, Gift, Star, Loader2, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { admin } from "@/contracts/dXmaster";
+import { useReadContracts } from "wagmi";
+import { dXassetContract } from "@/contracts/dXasset";
 
 const POSTS_PER_PAGE = 9;
 
@@ -21,16 +25,69 @@ const FILTER_OPTIONS: { id: FilterType; label: string; icon: React.ElementType }
 ];
 
 const HomePage = () => {
-  const { searchTerm, setSearchTerm } = useSearch();
+  const { searchTerm, setSearchTerm, selectedTags, setSelectedTags } = useSearch();
   const { allAssets, isAllAssetLoading } = useAssets();
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState<FilterType>("just-created");
   const [visibleCount, setVisibleCount] = useState(POSTS_PER_PAGE);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [tagFilteredCids, setTagFilteredCids] = useState<string[]>([]);
+  const [assetSupplies, setAssetSupplies] = useState<Record<string, number>>({});
+  
+  // Batch read all totalSupply values
+  // @ts-ignore - Type instantiation depth issue with dynamic contract array
+  const { data: totalSupplyData } = useReadContracts({
+    contracts: allAssets.map((asset) => ({
+      address: asset.assetAddress as `0x${string}`,
+      abi: dXassetContract.abi,
+      functionName: 'totalSupply',
+    })),
+  });
 
-  // Get the posts to display based on title search and active filter
+  // Update asset supplies when data is loaded
+  useEffect(() => {
+    if (totalSupplyData && allAssets.length > 0) {
+      const supplies: Record<string, number> = {};
+      allAssets.forEach((asset, index) => {
+        const result = totalSupplyData[index];
+        if (result && result.status === 'success' && result.result !== undefined) {
+          supplies[asset.assetAddress] = Number(result.result);
+        } else {
+          supplies[asset.assetAddress] = 0;
+        }
+      });
+      setAssetSupplies(supplies);
+    }
+  }, [totalSupplyData, allAssets]);
+
+  // Fetch files by tags when tags are selected
+  useEffect(() => {
+    const fetchByTags = async () => {
+      if (selectedTags.length > 0) {
+        try {
+          const tagFiles = await handleGetFilesByTags(selectedTags);
+          const cids = tagFiles.map((file: any) => file.cid).filter(Boolean);
+          setTagFilteredCids(cids);
+        } catch (error) {
+          console.error('Error fetching files by tags:', error);
+          setTagFilteredCids([]);
+        }
+      } else {
+        setTagFilteredCids([]);
+      }
+    };
+    
+    fetchByTags();
+  }, [selectedTags]);
+
+  // Get the posts to display based on title search, tags, and active filter
   const getPostsToDisplay = () => {
     let posts = allAssets;
+    
+    // Apply tag filter first (if any tags selected)
+    if (selectedTags.length > 0 && tagFilteredCids.length > 0) {
+      posts = posts.filter(asset => tagFilteredCids.includes(asset.assetCid));
+    }
     
     // Apply search filter
     if (searchTerm.trim()) {
@@ -46,19 +103,28 @@ const HomePage = () => {
         const costInEth = parseFloat(cost) / 1e18;
         return costInEth === 0;
       });
+      // Reverse to show new posts first
+      return [...posts].reverse();
     } else if (activeFilter === "just-created") {
       // Show newest posts first (already reversed below)
-      posts = [...posts];
+      // Reverse to show new posts first
+      return [...posts].reverse();
     } else if (activeFilter === "top-reads") {
-      // Could be based on number of purchases or revenue in the future
-      posts = [...posts];
+      // Sort by totalSupply (number of mints) in descending order
+      return [...posts].sort((a, b) => {
+        const supplyA = assetSupplies[a.assetAddress] || 0;
+        const supplyB = assetSupplies[b.assetAddress] || 0;
+        return supplyB - supplyA; // Descending order
+      });
     } else if (activeFilter === "announcements") {
       posts = posts.filter(asset => {
         return asset.author.toLowerCase() === admin.toLowerCase();
       });
+      // Reverse to show new posts first
+      return [...posts].reverse();
     }
     
-    // Reverse to show new posts first
+    // Default: reverse to show new posts first
     return [...posts].reverse();
   };
 
@@ -71,7 +137,7 @@ const HomePage = () => {
   // Reset visible count when filters change
   useEffect(() => {
     setVisibleCount(POSTS_PER_PAGE);
-  }, [searchTerm, activeFilter]);
+  }, [searchTerm, activeFilter, selectedTags]);
 
   // Handle view more
   const handleViewMore = () => {
@@ -167,6 +233,32 @@ const HomePage = () => {
           </div>
         </div>
         
+        {/* Selected Tags Display */}
+        {selectedTags.length > 0 && (
+          <div className="mb-4 p-4 bg-primary/5 border border-primary/20 rounded-xl">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm font-medium text-foreground">Filtering by tags:</span>
+              {selectedTags.map((tag) => (
+                <Badge
+                  key={tag}
+                  variant="default"
+                  className="flex items-center gap-1 cursor-pointer hover:bg-primary/80 transition-colors"
+                  onClick={() => setSelectedTags(selectedTags.filter(t => t !== tag))}
+                >
+                  #{tag}
+                  <X className="h-3 w-3" />
+                </Badge>
+              ))}
+              <button
+                onClick={() => setSelectedTags([])}
+                className="text-xs text-muted-foreground hover:text-foreground underline ml-2"
+              >
+                Clear all
+              </button>
+            </div>
+          </div>
+        )}
+        
         {/* Filter Bar and Search Bar Container */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-3 mb-4">
           {/* Horizontal Scrollable Filter Card */}
@@ -219,7 +311,7 @@ const HomePage = () => {
       <div className="w-full">
         {isAllAssetLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => (
               <HomeCardSkeleton key={i} />
             ))}
           </div>
@@ -256,7 +348,9 @@ const HomePage = () => {
               <h2 className="text-2xl font-semibold">No Posts Yet</h2>
             </div>
             <p className="text-muted-foreground mb-6 max-w-md animate-in fade-in-50 slide-in-from-bottom-2 duration-1000">
-              {searchTerm && activeFilter === "free" 
+              {selectedTags.length > 0
+                ? `No posts found with the selected tags`
+                : searchTerm && activeFilter === "free" 
                 ? `No free posts found matching "${searchTerm}"` 
                 : searchTerm 
                 ? `No posts found matching "${searchTerm}"` 

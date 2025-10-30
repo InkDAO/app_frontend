@@ -6,6 +6,8 @@ export interface Asset {
     thumbnailCid?: string,
     description?: string,
     costInNative?: string,
+    hashtags?: string,
+    publishedAt?: string,
 }
 
 export interface Comment {

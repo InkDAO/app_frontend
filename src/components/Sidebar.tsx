@@ -13,6 +13,7 @@ import {
 import { FaXTwitter, FaGithub, FaTelegram } from 'react-icons/fa6';
 import { SiGitbook } from 'react-icons/si';
 import { useTheme } from "@/context/ThemeContext";
+import { useSearch } from "@/context/SearchContext";
 import { TagSearch } from "@/components/TagSearch";
 import { cn } from "@/lib/utils";
 
@@ -24,13 +25,11 @@ interface SidebarProps {
 const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const { selectedTags, setSelectedTags } = useSearch();
   const [isTagSearchLoading, setIsTagSearchLoading] = useState(false);
 
   const handleTagSearch = (tags: string[]) => {
     setSelectedTags(tags);
-    // You can add additional logic here to communicate with parent components
-    // For now, we'll just update the local state
   };
 
   const navigationItems = [

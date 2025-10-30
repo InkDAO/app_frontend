@@ -313,7 +313,6 @@ const EditorPage = () => {
 						setPublishedAssetAddress(assetAddress);
 						setPublishStep('completed');
 						setIsPublishing(false);
-						console.log('✅ Published asset address:', assetAddress);
 					} else {
 						// Fallback: show success without redirect
 						console.warn('Asset address not found in contract');
@@ -389,9 +388,8 @@ const EditorPage = () => {
 			let thumbnailCid = "";
 			if (publishData.thumbnail) {
 				try {
-					const result = await publishFile(publishData.thumbnail, address, signMessageAsync, cid);
+					const result = await publishFile(publishData.thumbnail, address, signMessageAsync, cid, publishData.hashtags);
 					thumbnailCid = result.thumbnailCid;
-					console.log('✅ Thumbnail uploaded successfully:', thumbnailCid);
 				} catch (uploadError) {
 					console.error('❌ Error uploading thumbnail:', uploadError);
 					setPublishStep('error');
@@ -445,7 +443,8 @@ const EditorPage = () => {
 		return await publishWithData({
 			thumbnail: null,
 			description: "",
-			price: "0"
+			price: "0",
+			hashtags: ""
 		});
 	}, [publishWithData]);
 

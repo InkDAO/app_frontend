@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Loader2, User, FileImage, Lock, Eye, ExternalLink, Users, Copy, Check, UserPlus, ChevronDown, ChevronUp, Shield, Wallet, Sparkles, Info } from "lucide-react";
 import EditorTextParser from "@/components/editor/EditorTextParser";
 import { fetchFileContentByAssetAddress, useAssetCidByAddress, useAssetData, useBuyAsset } from "@/services/dXService";
@@ -12,6 +13,7 @@ import { useAccount, useReadContract } from "wagmi";
 import { useAssetOwnership } from "@/hooks/useAssetOwnership";
 import { AuthGuard } from "@/components/AuthGuard";
 import { dXassetContract } from "@/contracts/dXasset";
+import { handleGetFileMetadataByCid } from "@/services/pinataService";
 
 export const PostPreviewPage = () => {
   const { assetAddress } = useParams<{ assetAddress: string }>();
@@ -40,17 +42,46 @@ export const PostPreviewPage = () => {
   const [copiedCid, setCopiedCid] = useState(false);
   const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
   const [isTransactionPending, setIsTransactionPending] = useState(false);
+  const [hashtags, setHashtags] = useState<string | undefined>(undefined);
 
   // Update post title when asset data is loaded
   useEffect(() => {
     if (assetData) {
-      console.log('Asset Data:', assetData);
-      console.log('Thumbnail CID:', assetData.thumbnailCid);
       if (assetData.assetTitle) {
         setPostTitle(assetData.assetTitle);
       }
     }
   }, [assetData]);
+
+  // Fetch metadata to get hashtags
+  useEffect(() => {
+    const fetchMetadata = async () => {
+      if (!assetCid) return;
+      
+      try {
+        const metadata = await handleGetFileMetadataByCid(assetCid);
+        
+        if (metadata?.keyvalues && typeof metadata.keyvalues === 'object') {
+          const hashtagArray: string[] = [];
+          
+          // Extract hashtags from keyvalues where key === value
+          Object.entries(metadata.keyvalues).forEach(([key, value]) => {
+            if (key === value && typeof value === 'string') {
+              hashtagArray.push(key);
+            }
+          });
+          
+          if (hashtagArray.length > 0) {
+            setHashtags(hashtagArray.join(','));
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching metadata for hashtags:', error);
+      }
+    };
+    
+    fetchMetadata();
+  }, [assetCid]);
 
   // Set access denied when user doesn't own the asset (but not for free posts)
   useEffect(() => {
@@ -421,6 +452,26 @@ export const PostPreviewPage = () => {
                           Premium
                         </span>
                       </div>
+                      
+                      {/* Hashtags Section - Right after title */}
+                      {hashtags && (
+                        <div className="flex flex-wrap gap-1.5 mb-3">
+                          {hashtags.split(',').slice(0, 4).map((tag, index) => {
+                            const trimmedTag = tag.trim();
+                            if (!trimmedTag) return null;
+                            return (
+                              <Badge 
+                                key={index}
+                                variant="outline"
+                                className="text-xs px-2 py-0.5 font-medium text-primary border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors"
+                              >
+                                #{trimmedTag}
+                              </Badge>
+                            );
+                          })}
+                        </div>
+                      )}
+                      
                       {assetData?.description && (
                         <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 leading-relaxed mb-3">
                           {assetData.description}
@@ -702,7 +753,29 @@ export const PostPreviewPage = () => {
               </div>
 
               {/* Metadata */}
-              <div className="mb-8 flex flex-wrap items-center justify-end gap-4 text-sm text-muted-foreground pb-6 border-b border-gray-200 dark:border-gray-700">
+              <div className="mb-8 flex flex-wrap items-center justify-between gap-4 text-sm text-muted-foreground pb-6 border-b border-gray-200 dark:border-gray-700">
+                {/* Hashtags on the left */}
+                <div className="flex flex-wrap gap-1.5">
+                  {hashtags ? (
+                    hashtags.split(',').slice(0, 4).map((tag, index) => {
+                      const trimmedTag = tag.trim();
+                      if (!trimmedTag) return null;
+                      return (
+                        <Badge 
+                          key={index}
+                          variant="outline"
+                          className="text-xs px-2 py-0.5 font-medium text-primary border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors"
+                        >
+                          #{trimmedTag}
+                        </Badge>
+                      );
+                    })
+                  ) : (
+                    <div className="h-6"></div>
+                  )}
+                </div>
+                
+                {/* Author on the right */}
                 <div className="flex items-center gap-1">
                   <User className="h-4 w-4" />
                   <span className="text-xs">

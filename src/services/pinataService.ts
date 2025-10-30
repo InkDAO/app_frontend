@@ -40,7 +40,7 @@ export const handleCreateGroup = async (group_name: string): Promise<GroupRespon
   }
 
   try {
-    const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/create/${group_name}`, {
+    const response = await fetch(`${import.meta.env.VITE_LOCAL_SERVER_URL}/create/${group_name}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -86,7 +86,7 @@ export interface FileMetadata {
 
 export const handleGetFileMetadataByCid = async (cid: string): Promise<FileMetadata> => {
   try {
-    const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/fileByCid/${cid}`, {
+    const response = await fetch(`${import.meta.env.VITE_LOCAL_SERVER_URL}/filesMetaData?cid=${cid}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json"
@@ -98,9 +98,23 @@ export const handleGetFileMetadataByCid = async (cid: string): Promise<FileMetad
     }
 
     const result = await response.json()
+    
+    // Handle both single file and array response
+    let fileData;
+    if (result.files && Array.isArray(result.files) && result.files.length > 0) {
+      // If response has files array, take the first one
+      fileData = result.files[0];
+    } else if (result.file) {
+      // If response has a single file object
+      fileData = result.file;
+    } else {
+      // Otherwise assume result is the file data itself
+      fileData = result;
+    }
+    
     return {
       success: true,
-      ...result.files[0]
+      ...fileData
     }
   } catch (error) {
     return {
@@ -152,7 +166,7 @@ export const handleGetFilesByTags = async (tags: string[]): Promise<FileMetadata
     // Convert all tags to lowercase for consistent searching
     const lowercaseTags = tags.map(tag => tag.trim().toLowerCase());
     const tagsParam = lowercaseTags.join(',');
-    const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/filesByTags?tags=${tagsParam}`, {
+    const response = await fetch(`${import.meta.env.VITE_LOCAL_SERVER_URL}/filesByTags?tags=${tagsParam}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json"

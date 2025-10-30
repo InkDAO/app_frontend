@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { X, Upload, Image as ImageIcon, DollarSign, FileText } from 'lucide-react';
+import { X, Upload, Image as ImageIcon, DollarSign, FileText, Hash } from 'lucide-react';
 
 interface PublishOverlayProps {
   isOpen: boolean;
@@ -17,6 +17,7 @@ export interface PublishData {
   description: string;
   thumbnail: File | null;
   price: string;
+  hashtags: string;
 }
 
 const PublishOverlay: React.FC<PublishOverlayProps> = ({
@@ -28,6 +29,7 @@ const PublishOverlay: React.FC<PublishOverlayProps> = ({
   const [description, setDescription] = useState('');
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [price, setPrice] = useState('');
+  const [hashtags, setHashtags] = useState('');
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -87,7 +89,8 @@ const PublishOverlay: React.FC<PublishOverlayProps> = ({
     onPublish({
       description: description.trim(),
       thumbnail,
-      price: price.trim()
+      price: price.trim(),
+      hashtags: hashtags.trim()
     });
   };
 
@@ -96,6 +99,7 @@ const PublishOverlay: React.FC<PublishOverlayProps> = ({
     setDescription('');
     setThumbnail(null);
     setPrice('');
+    setHashtags('');
     setThumbnailPreview(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -137,6 +141,26 @@ const PublishOverlay: React.FC<PublishOverlayProps> = ({
             {/* <p className="text-sm text-muted-foreground">
               This description will be visible to everyone browsing posts.
             </p> */}
+          </div>
+
+          {/* Hashtags */}
+          <div className="space-y-2">
+            <Label htmlFor="hashtags" className="flex items-center gap-2">
+              <Hash className="h-4 w-4" />
+              Hashtags
+            </Label>
+            <Input
+              id="hashtags"
+              type="text"
+              placeholder="web3, blockchain, crypto"
+              value={hashtags}
+              onChange={(e) => setHashtags(e.target.value)}
+              disabled={isPublishing}
+              className="w-full"
+            />
+            <p className="text-sm text-muted-foreground">
+              Enter hashtags separated by commas (e.g., web3, blockchain, crypto)
+            </p>
           </div>
 
           {/* Thumbnail */}

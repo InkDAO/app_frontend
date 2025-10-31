@@ -6,7 +6,7 @@ import { Loader2, User, FileImage, Lock, Eye, ExternalLink, Users, Copy, Check, 
 import EditorTextParser from "@/components/editor/EditorTextParser";
 import { fetchFileContentByAssetAddress, useAssetCidByAddress, useAssetData, useBuyAsset } from "@/services/dXService";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import "@/components/editor/Editor.css";
 import { useAccount, useReadContract } from "wagmi";
@@ -775,40 +775,58 @@ export const PostPreviewPage = () => {
 
             {/* Subscription Dialog - Glassy Responsive */}
             <Dialog open={isPurchaseDialogOpen} onOpenChange={setIsPurchaseDialogOpen}>
-              <DialogContent className="sm:max-w-md bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-0 shadow-2xl">
-                <DialogHeader className="text-center pb-3 sm:pb-4 space-y-2">
-                  <div className="mx-auto mb-2 sm:mb-3 p-2.5 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/40 dark:to-indigo-900/40 backdrop-blur-sm w-fit shadow-lg">
-                    <UserPlus className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 dark:text-blue-400" />
+              <DialogContent className="w-[calc(100vw-2rem)] max-w-[400px] sm:max-w-md bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-0 shadow-2xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
+                <DialogHeader className="pb-2 sm:pb-3 space-y-2">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="p-2 sm:p-2.5 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/40 dark:to-indigo-900/40 backdrop-blur-sm shadow-lg flex-shrink-0">
+                      <UserPlus className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <DialogTitle className="text-base sm:text-lg md:text-xl font-extrabold text-left leading-tight">Complete Subscription</DialogTitle>
                   </div>
-                  <DialogTitle className="text-lg sm:text-xl md:text-2xl font-extrabold">Complete Subscription</DialogTitle>
-                  <DialogDescription className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm font-medium">
+                  <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm font-medium text-left">
                     Confirm your subscription to unlock this content
-                  </DialogDescription>
+                  </p>
                 </DialogHeader>
                 
-                <div className="py-4">
-                  <div className="relative overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/40 rounded-xl p-4 sm:p-6 border border-blue-200/50 dark:border-blue-700/50 backdrop-blur-sm shadow-md">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-blue-400/20 to-indigo-400/20 rounded-full blur-2xl"></div>
-                    <div className="relative flex justify-between items-center">
-                      <span className="font-bold text-base sm:text-lg text-slate-800 dark:text-slate-200">Price:</span>
-                      <span className="text-2xl sm:text-3xl font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{pricePerAsset.toFixed(4)} ETH</span>
+                <div className="py-3 sm:py-4 space-y-2.5 sm:space-y-3">
+                  <div className="relative overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/40 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-blue-200/50 dark:border-blue-700/50 backdrop-blur-sm shadow-md">
+                    <div className="absolute top-0 right-0 w-16 h-16 sm:w-24 sm:h-24 bg-gradient-to-br from-blue-400/20 to-indigo-400/20 rounded-full blur-2xl"></div>
+                    <div className="relative flex justify-between items-center gap-2">
+                      <span className="font-bold text-sm sm:text-base text-slate-800 dark:text-slate-200">Price:</span>
+                      <span className="text-xl sm:text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">{pricePerAsset.toFixed(4)} ETH</span>
+                    </div>
+                  </div>
+
+                  {/* Additional Info */}
+                  <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
+                    <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0"></div>
+                      <span>Lifetime access to this content</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0"></div>
+                      <span>Blockchain-verified ownership</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0"></div>
+                      <span>Support the creator directly</span>
                     </div>
                   </div>
                 </div>
 
-                <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-3 pt-2">
+                <div className="flex flex-col sm:flex-row justify-end gap-2 pt-2">
                   <Button 
                     variant="outline" 
                     onClick={() => setIsPurchaseDialogOpen(false)}
                     disabled={isTransactionPending}
-                    className="w-full sm:w-auto border-2 h-11 sm:h-10 text-sm sm:text-base font-semibold bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm hover:bg-white/80 dark:hover:bg-slate-800/80 shadow-sm hover:shadow-md transition-all"
+                    className="w-full sm:w-auto border-2 h-10 text-sm font-semibold bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm hover:bg-white/80 dark:hover:bg-slate-800/80 shadow-sm hover:shadow-md transition-all px-4 sm:px-6"
                   >
                     Cancel
                   </Button>
                   <Button 
                     onClick={handlePurchase}
                     disabled={isBuying || isTransactionPending}
-                    className="w-full sm:w-auto bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90 font-bold h-11 sm:h-10 text-sm sm:text-base shadow-lg hover:shadow-xl transition-all"
+                    className="w-full sm:w-auto bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90 font-bold h-10 text-sm shadow-lg hover:shadow-xl transition-all px-4 sm:px-6"
                   >
                     {isBuying || isTransactionPending ? (
                       <>
@@ -822,7 +840,7 @@ export const PostPreviewPage = () => {
                       </>
                     )}
                   </Button>
-                </DialogFooter>
+                </div>
               </DialogContent>
             </Dialog>
         </div>

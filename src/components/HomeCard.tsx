@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { FileImage, ShoppingCart, Loader2, Eye, Users } from "lucide-react";
+import { FileImage, ShoppingCart, Loader2, Eye, Users, UserPlus } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { useBuyAsset, getAssetCost, fetchFileContentByAssetAddress } from "@/services/dXService";
 import { useAccount, useReadContract } from "wagmi";
@@ -327,46 +327,71 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
                   className="cursor-pointer text-xs px-3 py-1.5 font-semibold bg-gradient-to-r from-blue-500/20 to-purple-500/20 hover:from-blue-500/30 hover:to-purple-500/30 backdrop-blur-sm border-blue-300 dark:border-blue-700 transition-all shadow-sm hover:shadow-md"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <ShoppingCart className="h-3 w-3 mr-1" />
-                  Mint
+                  <UserPlus className="h-3 w-3 mr-1" />
+                  Subscribe
                 </Badge>
               </DialogTrigger>
               <DialogContent 
-                className="sm:max-w-sm"
+                className="w-[calc(100vw-2rem)] max-w-[400px] sm:max-w-md bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-0 shadow-2xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto"
                 onClick={(e) => e.stopPropagation()}
               >
-                <DialogHeader className="text-center pb-3 space-y-2">
-                  <div className="mx-auto mb-2 p-2 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 w-fit">
-                    <ShoppingCart className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 dark:text-blue-400" />
+                <DialogHeader className="pb-2 sm:pb-3 space-y-2">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="p-2 sm:p-2.5 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/40 dark:to-indigo-900/40 backdrop-blur-sm shadow-lg flex-shrink-0">
+                      <UserPlus className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <DialogTitle className="text-base sm:text-lg md:text-xl font-extrabold text-left leading-tight">Complete Subscription</DialogTitle>
                   </div>
-                  <DialogTitle className="text-lg sm:text-xl font-bold">Complete Purchase</DialogTitle>
+                  <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm font-medium text-left">
+                    Confirm your subscription to unlock this content
+                  </p>
                 </DialogHeader>
                 
-                <div className="py-4">
-                  <div className={`rounded-lg p-4 sm:p-6 border ${totalPrice === 0 
-                    ? "bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border-emerald-200/50 dark:border-emerald-700/50"
-                    : "bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200/50 dark:border-blue-700/50"
+                <div className="py-3 sm:py-4 space-y-2.5 sm:space-y-3">
+                  <div className={`relative overflow-hidden rounded-lg sm:rounded-xl p-3 sm:p-4 border backdrop-blur-sm shadow-md ${totalPrice === 0 
+                    ? "bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/40 border-emerald-200/50 dark:border-emerald-700/50"
+                    : "bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/40 border-blue-200/50 dark:border-blue-700/50"
                   }`}>
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold text-base sm:text-lg text-slate-800 dark:text-slate-200">Price:</span>
-                      <span className={`text-2xl sm:text-3xl font-bold bg-clip-text text-transparent ${totalPrice === 0
-                        ? "bg-gradient-to-r from-emerald-600 to-teal-600"
-                        : "bg-gradient-to-r from-blue-600 to-indigo-600"
+                    <div className={`absolute top-0 right-0 w-16 h-16 sm:w-24 sm:h-24 rounded-full blur-2xl ${totalPrice === 0
+                      ? "bg-gradient-to-br from-emerald-400/20 to-teal-400/20"
+                      : "bg-gradient-to-br from-blue-400/20 to-indigo-400/20"
+                    }`}></div>
+                    <div className="relative flex justify-between items-center gap-2">
+                      <span className="font-bold text-sm sm:text-base text-slate-800 dark:text-slate-200">Price:</span>
+                      <span className={`text-xl sm:text-2xl md:text-3xl font-extrabold bg-gradient-to-r bg-clip-text text-transparent ${totalPrice === 0
+                        ? "from-emerald-600 to-teal-600"
+                        : "from-blue-600 to-indigo-600"
                       }`}>
                         {totalPrice === 0 ? "FREE" : `${totalPrice.toFixed(4)} ETH`}
                       </span>
                     </div>
                   </div>
+
+                  {/* Additional Info */}
+                  <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
+                    <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0"></div>
+                      <span>Lifetime access to this content</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0"></div>
+                      <span>Blockchain-verified ownership</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0"></div>
+                      <span>Support the creator directly</span>
+                    </div>
+                  </div>
                 </div>
                 
-                <div className="flex space-x-2 pt-2">
+                <div className="flex flex-col sm:flex-row justify-end gap-2 pt-2">
                   <Button
                     variant="outline"
                     onClick={(e) => {
                       e.stopPropagation();
                       setIsDialogOpen(false);
                     }}
-                    className="flex-1 h-11 sm:h-10"
+                    className="w-full sm:w-auto border-2 h-10 text-sm font-semibold bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm hover:bg-white/80 dark:hover:bg-slate-800/80 shadow-sm hover:shadow-md transition-all px-4 sm:px-6"
                     disabled={isBuying}
                   >
                     Cancel
@@ -377,17 +402,17 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
                       handleConfirmBuy();
                     }}
                     disabled={isBuying}
-                    className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 h-11 sm:h-10"
+                    className="w-full sm:w-auto bg-black dark:bg-white text-white dark:text-black hover:bg-black/90 dark:hover:bg-white/90 font-bold h-10 text-sm shadow-lg hover:shadow-xl transition-all px-4 sm:px-6"
                   >
                     {isBuying ? (
                       <>
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Processing...
+                        Confirming...
                       </>
                     ) : (
                       <>
-                        <ShoppingCart className="h-4 w-4 mr-2" />
-                        Confirm Purchase
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Confirm Subscription
                       </>
                     )}
                   </Button>

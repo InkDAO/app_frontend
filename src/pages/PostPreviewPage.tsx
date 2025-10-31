@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, User, FileImage, Lock, Eye, ExternalLink, Users, Copy, Check, UserPlus, ChevronDown, ChevronUp, Shield, Wallet, Sparkles, Info, Calendar } from "lucide-react";
@@ -42,10 +42,20 @@ export const PostPreviewPage = () => {
   const [copiedAsset, setCopiedAsset] = useState(false);
   const [copiedAuthor, setCopiedAuthor] = useState(false);
   const [copiedCid, setCopiedCid] = useState(false);
+  const [copiedShareLink, setCopiedShareLink] = useState(false);
   const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
   const [isTransactionPending, setIsTransactionPending] = useState(false);
   const [hashtags, setHashtags] = useState<string | undefined>(undefined);
   const [publishDate, setPublishDate] = useState<string | undefined>(undefined);
+  const [isAnimated, setIsAnimated] = useState(false);
+
+  // Trigger scroll animation on mount
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsAnimated(true);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Update post title when asset data is loaded
   useEffect(() => {
@@ -226,6 +236,13 @@ export const PostPreviewPage = () => {
     }
   };
 
+  const handleCopyShareLink = async () => {
+    const shareUrl = window.location.href;
+    await navigator.clipboard.writeText(shareUrl);
+    setCopiedShareLink(true);
+    setTimeout(() => setCopiedShareLink(false), 2000);
+  };
+
   const handlePurchase = async () => {
     if (!assetAddress || !assetData) return;
 
@@ -268,8 +285,54 @@ export const PostPreviewPage = () => {
     return (
       <div className="bg-transparent py-8 px-4 sm:px-6 lg:px-8 min-h-screen">
         <div className="w-full max-w-7xl mx-auto">
+          {/* Share Banner Container - matches editor page banner width */}
+          <div className="mb-6 sm:mb-8 max-w-6xl mx-auto">
+            <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-950/40 dark:via-indigo-950/40 dark:to-purple-950/40 p-4 sm:p-6 lg:p-8 border-0 shadow-2xl dark:shadow-blue-500/10">
+              {/* Animated Background Blobs */}
+              <div className="absolute top-0 left-0 w-48 h-48 sm:w-72 sm:h-72 bg-gradient-to-br from-blue-400/30 to-indigo-400/30 rounded-full blur-3xl animate-pulse" />
+              <div className="absolute bottom-0 right-0 w-64 h-64 sm:w-96 sm:h-96 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full blur-3xl animate-pulse delay-1000" />
+              {/* Background Pattern */}
+              <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))] dark:bg-grid-slate-400/5" />
+              
+              <div className="relative z-10">
+                <div className="flex items-start gap-3 sm:gap-4">
+                  <div className="p-2.5 sm:p-3 lg:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 shadow-lg sm:shadow-xl shadow-blue-500/50 flex-shrink-0 transform hover:scale-105 transition-transform duration-300">
+                    <ExternalLink className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-4 mb-1.5 sm:mb-2">
+                      <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-300 dark:via-indigo-300 dark:to-purple-300 bg-clip-text text-transparent drop-shadow-sm">
+                        Share this post
+                      </h2>
+                      <Button
+                        onClick={handleCopyShareLink}
+                        variant="outline"
+                        className="flex items-center gap-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 font-semibold shadow-md hover:shadow-lg transition-all flex-shrink-0"
+                      >
+                        {copiedShareLink ? (
+                          <>
+                            <Check className="h-4 w-4 text-green-600 dark:text-green-400" />
+                            <span className="text-green-600 dark:text-green-400">Copied!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="h-4 w-4" />
+                            <span>Copy Link</span>
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                    <p className="text-sm sm:text-base lg:text-lg xl:text-xl text-muted-foreground font-semibold">
+                      Copy the link and <span className="text-foreground font-bold">share with others</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Scroll Container with Loading State */}
-          <div className="scroll-container">
+          <div className={`scroll-container ${isAnimated ? 'animated' : ''}`}>
             {/* Top Wooden Handle */}
             <div className="wooden-handle wooden-handle-top">
               <div className="handle-rod">
@@ -336,7 +399,7 @@ export const PostPreviewPage = () => {
         <div className="bg-transparent py-8 px-4 sm:px-6 lg:px-8 min-h-screen">
           <div className="w-full max-w-7xl mx-auto">
             {/* Scroll Container with Loading State */}
-            <div className="scroll-container">
+            <div className={`scroll-container ${isAnimated ? 'animated' : ''}`}>
               {/* Top Wooden Handle */}
               <div className="wooden-handle wooden-handle-top">
                 <div className="handle-rod">
@@ -509,10 +572,13 @@ export const PostPreviewPage = () => {
                           </div>
                         )}
                         {/* Author */}
-                        <div className="flex items-center gap-2">
+                        <Link 
+                          to={`/dashboard/${assetData?.author}`}
+                          className="flex items-center gap-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                        >
                           <User className="h-4 w-4" />
-                          <span className="font-semibold">By {assetData?.author?.slice(0, 6)}...{assetData?.author?.slice(-4)}</span>
-                        </div>
+                          <span className="font-semibold">{assetData?.author?.slice(0, 6)}...{assetData?.author?.slice(-4)}</span>
+                        </Link>
                       </div>
                     </div>
                   </div>
@@ -778,8 +844,54 @@ export const PostPreviewPage = () => {
     return (
       <div className="bg-transparent py-8 px-4 sm:px-6 lg:px-8 min-h-screen">
         <div className="w-full max-w-7xl mx-auto">
+          {/* Share Banner Container - matches editor page banner width */}
+          <div className="mb-6 sm:mb-8 max-w-6xl mx-auto">
+            <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-950/40 dark:via-indigo-950/40 dark:to-purple-950/40 p-4 sm:p-6 lg:p-8 border-0 shadow-2xl dark:shadow-blue-500/10">
+              {/* Animated Background Blobs */}
+              <div className="absolute top-0 left-0 w-48 h-48 sm:w-72 sm:h-72 bg-gradient-to-br from-blue-400/30 to-indigo-400/30 rounded-full blur-3xl animate-pulse" />
+              <div className="absolute bottom-0 right-0 w-64 h-64 sm:w-96 sm:h-96 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full blur-3xl animate-pulse delay-1000" />
+              {/* Background Pattern */}
+              <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))] dark:bg-grid-slate-400/5" />
+              
+              <div className="relative z-10">
+                <div className="flex items-start gap-3 sm:gap-4">
+                  <div className="p-2.5 sm:p-3 lg:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 shadow-lg sm:shadow-xl shadow-blue-500/50 flex-shrink-0 transform hover:scale-105 transition-transform duration-300">
+                    <ExternalLink className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7 text-white" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-4 mb-1.5 sm:mb-2">
+                      <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-300 dark:via-indigo-300 dark:to-purple-300 bg-clip-text text-transparent drop-shadow-sm">
+                        Share this post
+                      </h2>
+                      <Button
+                        onClick={handleCopyShareLink}
+                        variant="outline"
+                        className="flex items-center gap-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 font-semibold shadow-md hover:shadow-lg transition-all flex-shrink-0"
+                      >
+                        {copiedShareLink ? (
+                          <>
+                            <Check className="h-4 w-4 text-green-600 dark:text-green-400" />
+                            <span className="text-green-600 dark:text-green-400">Copied!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="h-4 w-4" />
+                            <span>Copy Link</span>
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                    <p className="text-sm sm:text-base lg:text-lg xl:text-xl text-muted-foreground font-semibold">
+                      Copy the link and <span className="text-foreground font-bold">share with others</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Scroll Container with Loading State */}
-          <div className="scroll-container">
+          <div className={`scroll-container ${isAnimated ? 'animated' : ''}`}>
             {/* Top Wooden Handle */}
             <div className="wooden-handle wooden-handle-top">
               <div className="handle-rod">
@@ -833,8 +945,54 @@ export const PostPreviewPage = () => {
   return (
     <div className="bg-transparent py-8 px-4 sm:px-6 lg:px-8 min-h-screen">
       <div className="w-full max-w-7xl mx-auto">
+        {/* Share Banner Container - matches editor page banner width */}
+        <div className="mb-6 sm:mb-8 max-w-6xl mx-auto">
+          <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-950/40 dark:via-indigo-950/40 dark:to-purple-950/40 p-4 sm:p-6 lg:p-8 border-0 shadow-2xl dark:shadow-blue-500/10">
+            {/* Animated Background Blobs */}
+            <div className="absolute top-0 left-0 w-48 h-48 sm:w-72 sm:h-72 bg-gradient-to-br from-blue-400/30 to-indigo-400/30 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute bottom-0 right-0 w-64 h-64 sm:w-96 sm:h-96 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full blur-3xl animate-pulse delay-1000" />
+            {/* Background Pattern */}
+            <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))] dark:bg-grid-slate-400/5" />
+            
+            <div className="relative z-10">
+              <div className="flex items-start gap-3 sm:gap-4">
+                <div className="p-2.5 sm:p-3 lg:p-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 shadow-lg sm:shadow-xl shadow-blue-500/50 flex-shrink-0 transform hover:scale-105 transition-transform duration-300">
+                  <ExternalLink className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-4 mb-1.5 sm:mb-2">
+                    <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-300 dark:via-indigo-300 dark:to-purple-300 bg-clip-text text-transparent drop-shadow-sm">
+                      Share this post
+                    </h2>
+                    <Button
+                      onClick={handleCopyShareLink}
+                      variant="outline"
+                      className="flex items-center gap-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 font-semibold shadow-md hover:shadow-lg transition-all flex-shrink-0"
+                    >
+                      {copiedShareLink ? (
+                        <>
+                          <Check className="h-4 w-4 text-green-600 dark:text-green-400" />
+                          <span className="text-green-600 dark:text-green-400">Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-4 w-4" />
+                          <span>Copy Link</span>
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                  <p className="text-sm sm:text-base lg:text-lg xl:text-xl text-muted-foreground font-semibold">
+                    Copy the link and <span className="text-foreground font-bold">share with others</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Scroll Container */}
-        <div className="scroll-container">
+        <div className={`scroll-container ${isAnimated ? 'animated' : ''}`}>
           {/* Top Wooden Handle */}
           <div className="wooden-handle wooden-handle-top">
             <div className="handle-rod">
@@ -857,11 +1015,11 @@ export const PostPreviewPage = () => {
               </div>
 
               {/* Metadata */}
-              <div className="mb-8 flex flex-wrap items-center justify-between gap-4 text-sm text-muted-foreground pb-6 border-b border-gray-200 dark:border-gray-700">
-                {/* Hashtags on the left */}
-                <div className="flex flex-wrap gap-1.5">
-                  {hashtags ? (
-                    hashtags.split(',').slice(0, 4).map((tag, index) => {
+              <div className="mb-8 pb-6 border-b border-gray-200 dark:border-gray-700">
+                {/* Hashtags row */}
+                {hashtags && hashtags.trim() && (
+                  <div className="flex flex-wrap gap-1.5 mb-3">
+                    {hashtags.split(',').slice(0, 4).map((tag, index) => {
                       const trimmedTag = tag.trim();
                       if (!trimmedTag) return null;
                       return (
@@ -873,18 +1031,34 @@ export const PostPreviewPage = () => {
                           #{trimmedTag}
                         </Badge>
                       );
-                    })
-                  ) : (
-                    <div className="h-6"></div>
-                  )}
-                </div>
+                    })}
+                  </div>
+                )}
                 
-                {/* Author on the right */}
-                <div className="flex items-center gap-1">
-                  <User className="h-4 w-4" />
-                  <span className="text-xs">
-                    {assetData?.author?.slice(0, 6)}...{assetData?.author?.slice(-4)}
-                  </span>
+                {/* Author and Date row */}
+                <div className={`flex items-center justify-end gap-4 text-sm text-muted-foreground ${hashtags && hashtags.trim() ? 'mt-5' : 'mt-2'}`}>
+                  {publishDate && (
+                    <div className="flex items-center gap-1.5">
+                      <Calendar className="h-4 w-4" />
+                      <span className="text-xs font-medium">
+                        {new Date(publishDate).toLocaleDateString('en-US', { 
+                          year: 'numeric', 
+                          month: 'short', 
+                          day: 'numeric' 
+                        })}
+                      </span>
+                    </div>
+                  )}
+                  
+                  <Link 
+                    to={`/dashboard/${assetData?.author}`}
+                    className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline transition-colors font-medium"
+                  >
+                    <User className="h-4 w-4" />
+                    <span className="text-xs font-semibold">
+                      {assetData?.author?.slice(0, 6)}...{assetData?.author?.slice(-4)}
+                    </span>
+                  </Link>
                 </div>
               </div>
 

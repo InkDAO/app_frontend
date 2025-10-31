@@ -14,7 +14,7 @@ body {
 /* Scroll Container Styles */
 .scroll-container {
 	position: relative;
-	max-width: 1200px;
+	max-width: 1250px; /* Matches max-w-6xl from Tailwind (banner width) */
 	width: 100%;
 	margin: 0 auto;
 	padding: 0;

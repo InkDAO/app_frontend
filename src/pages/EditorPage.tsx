@@ -49,6 +49,7 @@ const EditorPage = () => {
 	const [showProgressModal, setShowProgressModal] = useState(false);
 	const [publishError, setPublishError] = useState<string>('');
 	const [publishedAssetAddress, setPublishedAssetAddress] = useState<string>('');
+	const [isAnimated, setIsAnimated] = useState(false);
 	
 	const { address } = useAccount();
 	const { signMessageAsync } = useSignMessage();
@@ -59,6 +60,14 @@ const EditorPage = () => {
 	const { ensureAuthenticated, isAuthenticated } = useAuth();
 	const { setEditorProps } = useEditor();
 	const { addAsset, isPending: isContractPending, isConfirming: isContractConfirming, isConfirmed: isContractConfirmed, isError: isContractError, hash: txHash } = useAddAsset();
+
+	// Trigger scroll animation on mount
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setIsAnimated(true);
+		}, 100);
+		return () => clearTimeout(timer);
+	}, []);
 
 	// Load existing post content from IPFS when CID is present, or clear editor when no CID
 	useEffect(() => {
@@ -514,7 +523,7 @@ const EditorPage = () => {
 				</div>
 
 				{/* Scroll Container */}
-				<div className="scroll-container">
+				<div className={`scroll-container ${isAnimated ? 'animated' : ''}`}>
 					{/* Top Wooden Handle */}
 					<div className="wooden-handle wooden-handle-top">
 						<div className="handle-rod"></div>

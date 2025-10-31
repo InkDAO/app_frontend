@@ -99,7 +99,7 @@ export const useAuth = () => {
       const siweMessage = new SiweMessage({
         domain,
         address,
-        statement: 'Sign in with Ethereum to DecentralizedX',
+        statement: 'Sign in with Ethereum to InkDAO',
         uri: origin,
         version: '1',
         chainId,

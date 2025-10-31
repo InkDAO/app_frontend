@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CheckCircle2, Loader2, Upload, FileText, Wallet, ExternalLink } from 'lucide-react';
@@ -24,6 +24,18 @@ const PublishProgressModal: React.FC<PublishProgressModalProps> = ({
   assetAddress
 }) => {
   const navigate = useNavigate();
+  
+  // Automatically redirect to the post page when successfully published
+  useEffect(() => {
+    if (currentStep === 'completed' && assetAddress) {
+      // Wait 1.5 seconds to show the success message before redirecting
+      const timer = setTimeout(() => {
+        navigate(`/app/post/${assetAddress}`);
+      }, 1500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [currentStep, assetAddress, navigate]);
   
   const steps = [
     {

@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { FileImage, ShoppingCart, Loader2, Eye, Users } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useBuyAsset, getAssetCost, fetchFileContentByAssetAddress } from "@/services/dXService";
 import { useAccount, useReadContract } from "wagmi";
 import { useState, useEffect } from "react";
@@ -240,12 +240,18 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
             </TooltipProvider>
           )}
           
-          <Badge 
-            variant="secondary" 
-            className="text-xs px-3 py-1.5 flex-shrink-0 font-medium bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm"
+          <Link 
+            to={`/dashboard/${asset.author}`}
+            onClick={(e) => e.stopPropagation()}
+            className="inline-block"
           >
-            {asset.author?.slice(0, 6)}...{asset.author?.slice(-4)}
-          </Badge>
+            <Badge 
+              variant="secondary" 
+              className="text-xs px-3 py-1.5 flex-shrink-0 font-medium bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors cursor-pointer"
+            >
+              {asset.author?.slice(0, 6)}...{asset.author?.slice(-4)}
+            </Badge>
+          </Link>
           
           <Badge 
             variant="secondary" 
@@ -255,8 +261,8 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
           </Badge>
         </div>
 
-        {/* Content area */}
-        <div className="relative z-10 flex flex-col">
+        {/* Content area - Fixed height for consistency */}
+        <div className="relative z-10 flex flex-col h-[7.5rem]">
           <div className="mb-2">
             <h3 className="font-bold text-base leading-tight line-clamp-2 text-foreground group-hover:text-primary transition-colors mb-2">
               {postTitle}
@@ -264,7 +270,7 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
             
             {/* Hashtags Section - Right after title */}
             {asset.hashtags && (
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-1.5 mb-2">
                 {asset.hashtags.split(',').slice(0, 4).map((tag, index) => {
                   const trimmedTag = tag.trim();
                   if (!trimmedTag) return null;
@@ -282,7 +288,7 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
             )}
           </div>
 
-          <div className="relative min-h-[4.5rem] max-h-[4.5rem] overflow-hidden">
+          <div className="relative flex-1 overflow-hidden">
             <p className="text-sm text-muted-foreground leading-relaxed">
               {postDescription}
             </p>

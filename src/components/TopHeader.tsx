@@ -71,7 +71,7 @@ const TopHeader = () => {
                       {isSaving && !isPublishing ? (
                         <>
                           <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                          <span className="text-sm">Saving...</span>
+                          <span className="text-sm hidden sm:inline">Saving...</span>
                         </>
                       ) : (
                         <>
@@ -93,7 +93,7 @@ const TopHeader = () => {
                       {isPublishing ? (
                         <>
                           <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                          <span className="text-sm">Publishing to blockchain...</span>
+                          <span className="text-sm hidden sm:inline">Publishing to blockchain...</span>
                         </>
                       ) : (
                         <>

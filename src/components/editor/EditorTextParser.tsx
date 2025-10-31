@@ -123,7 +123,7 @@ export default function EditorTextParser({ data }: EditorTextParserProps) {
         return <hr key={key} />;
 
       case 'raw':
-        return <div key={key} dangerouslySetInnerHTML={{ __html: block.data.html }} />;
+        return <div key={key} dangerouslySetInnerHTML={{ __html: block.data.html }} style={{ maxWidth: '100%', overflow: 'hidden', wordBreak: 'break-word', overflowWrap: 'break-word' }} />;
 
       case 'table':
         return (
@@ -161,7 +161,7 @@ export default function EditorTextParser({ data }: EditorTextParserProps) {
 
       case 'embed':
         return (
-          <div key={key}>
+          <div key={key} style={{ maxWidth: '100%', overflow: 'hidden' }}>
             <iframe
               src={block.data.embed}
               width={block.data.width || '100%'}
@@ -169,9 +169,10 @@ export default function EditorTextParser({ data }: EditorTextParserProps) {
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
+              style={{ maxWidth: '100%' }}
             />
             {block.data.caption && (
-              <div style={{ textAlign: 'center', fontStyle: 'italic', color: '#666', marginTop: '8px' }}>
+              <div style={{ textAlign: 'center', fontStyle: 'italic', color: '#666', marginTop: '8px', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                 {block.data.caption}
               </div>
             )}
@@ -199,9 +200,11 @@ export default function EditorTextParser({ data }: EditorTextParserProps) {
         if (customWidth) {
           styles.width = `${customWidth}px`;
           styles.height = 'auto';
+          styles.maxWidth = '100%'; // Ensure it doesn't overflow container
         } else if (customHeight) {
           styles.height = `${customHeight}px`;
           styles.width = 'auto';
+          styles.maxWidth = '100%'; // Ensure it doesn't overflow container
         }
 
         // Build data attributes
@@ -229,11 +232,11 @@ export default function EditorTextParser({ data }: EditorTextParserProps) {
       case 'linkTool':
       case 'link':
         return (
-          <div key={key} style={{ border: '1px solid #e0e0e0', padding: '1em', margin: '1em 0', borderRadius: '4px' }}>
-            <a href={block.data.link} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
-              <div style={{ fontWeight: 'bold', marginBottom: '0.5em' }}>{block.data.meta?.title || block.data.link}</div>
+          <div key={key} style={{ border: '1px solid #e0e0e0', padding: '1em', margin: '1em 0', borderRadius: '4px', maxWidth: '100%', boxSizing: 'border-box', overflow: 'hidden' }}>
+            <a href={block.data.link} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+              <div style={{ fontWeight: 'bold', marginBottom: '0.5em', wordBreak: 'break-word', overflowWrap: 'break-word' }}>{block.data.meta?.title || block.data.link}</div>
               {block.data.meta?.description && (
-                <div style={{ fontSize: '0.9em', color: '#666' }}>{block.data.meta.description}</div>
+                <div style={{ fontSize: '0.9em', color: '#666', wordBreak: 'break-word', overflowWrap: 'break-word' }}>{block.data.meta.description}</div>
               )}
             </a>
           </div>
@@ -241,10 +244,10 @@ export default function EditorTextParser({ data }: EditorTextParserProps) {
 
       case 'simpleImage':
         return (
-          <div key={key}>
+          <div key={key} style={{ maxWidth: '100%', overflow: 'hidden' }}>
             <img src={block.data.url} alt={block.data.caption || ''} style={{ maxWidth: '100%', height: 'auto' }} />
             {block.data.caption && (
-              <div style={{ textAlign: 'center', fontStyle: 'italic', color: '#666', marginTop: '8px' }}>
+              <div style={{ textAlign: 'center', fontStyle: 'italic', color: '#666', marginTop: '8px', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                 {block.data.caption}
               </div>
             )}

@@ -47,15 +47,6 @@ export const PostPreviewPage = () => {
   const [isTransactionPending, setIsTransactionPending] = useState(false);
   const [hashtags, setHashtags] = useState<string | undefined>(undefined);
   const [publishDate, setPublishDate] = useState<string | undefined>(undefined);
-  const [isAnimated, setIsAnimated] = useState(false);
-
-  // Trigger scroll animation on mount
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsAnimated(true);
-    }, 100);
-    return () => clearTimeout(timer);
-  }, []);
 
   // Update post title when asset data is loaded
   useEffect(() => {
@@ -283,7 +274,7 @@ export const PostPreviewPage = () => {
   // Loading state - show while fetching initial data
   if (isCidLoading || isAssetDataLoading || isOwnershipLoading) {
     return (
-      <div className="bg-transparent py-8 px-4 sm:px-6 lg:px-8 min-h-screen">
+      <div className="bg-transparent py-8 px-2 sm:px-4 md:px-6 lg:px-8 min-h-screen overflow-x-hidden">
         <div className="w-full max-w-7xl mx-auto">
           {/* Share Banner Container - matches editor page banner width */}
           <div className="mb-6 sm:mb-8 max-w-6xl mx-auto">
@@ -327,54 +318,45 @@ export const PostPreviewPage = () => {
                     </p>
                   </div>
                 </div>
-              </div>
             </div>
           </div>
+        </div>
 
-          {/* Scroll Container with Loading State */}
-          <div className={`scroll-container ${isAnimated ? 'animated' : ''}`}>
-            {/* Top Wooden Handle */}
-            <div className="wooden-handle wooden-handle-top">
-              <div className="handle-rod">
-                <div className="handle-knob handle-knob-left"></div>
-                <div className="handle-knob handle-knob-right"></div>
-              </div>
-            </div>
-            
-            {/* Top Paper Roll */}
-            <div className="paper-roll paper-roll-top"></div>
-            
-            {/* Parchment Paper Content with Loading State */}
-            <div className="parchment-paper">
-              <div className="parchment-content">
-                {/* Loading Title Skeleton */}
-                <div className="mb-6">
-                  <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-lg w-3/4 animate-pulse"></div>
-                </div>
+          {/* Modern Glassy Container - Loading State */}
+          <div className="max-w-6xl mx-auto">
+            {/* Glowing border effect */}
+            <div className="relative group">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-3xl blur opacity-20 transition duration-500"></div>
+              
+              {/* Main Content Card */}
+              <div className="relative bg-white/80 dark:bg-gray-900/80 backdrop-blur-md rounded-3xl shadow-2xl dark:shadow-primary/10 border-0 overflow-hidden">
+                {/* Subtle animated blobs */}
+                <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-400/10 to-purple-400/10 rounded-full blur-3xl animate-pulse pointer-events-none"></div>
+                <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-br from-purple-400/10 to-pink-400/10 rounded-full blur-3xl animate-pulse delay-1000 pointer-events-none"></div>
+                
+                {/* Background Pattern */}
+                <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(180deg,transparent,white,white,transparent)] dark:bg-grid-slate-400/5 opacity-30 pointer-events-none"></div>
+                
+                {/* Content Container */}
+                <div className="relative z-10 px-4 py-6 sm:px-8 md:px-12 lg:px-16 xl:px-20">
+                  {/* Loading Title Skeleton */}
+                  <div className="mb-6">
+                    <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-lg w-3/4 animate-pulse"></div>
+                  </div>
 
-                {/* Loading Metadata Skeleton */}
-                <div className="mb-8 flex flex-wrap items-center justify-end gap-4 pb-6 border-b border-gray-200 dark:border-gray-700">
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24 animate-pulse"></div>
-                </div>
+                  {/* Loading Metadata Skeleton */}
+                  <div className="mb-8 flex flex-wrap items-center justify-end gap-4 pb-6 border-b border-border/30">
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24 animate-pulse"></div>
+                  </div>
 
-                {/* Loading Content Area */}
-                <div className="min-h-[500px] w-full flex items-center justify-center">
-                  <div className="text-center">
-                    <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-400" />
-                    <p className="text-gray-600 dark:text-gray-400">Loading content...</p>
+                  {/* Loading Content Area */}
+                  <div className="min-h-[500px] w-full flex items-center justify-center">
+                    <div className="text-center">
+                      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-400" />
+                      <p className="text-gray-600 dark:text-gray-400">Loading content...</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
-            
-            {/* Bottom Paper Roll */}
-            <div className="paper-roll paper-roll-bottom"></div>
-            
-            {/* Bottom Wooden Handle */}
-            <div className="wooden-handle wooden-handle-bottom">
-              <div className="handle-rod">
-                <div className="handle-knob handle-knob-left"></div>
-                <div className="handle-knob handle-knob-right"></div>
               </div>
             </div>
           </div>
@@ -396,52 +378,43 @@ export const PostPreviewPage = () => {
     if (pricePerAsset === 0) {
       // For free posts, just show loading or wait for content to load
       return (
-        <div className="bg-transparent py-8 px-4 sm:px-6 lg:px-8 min-h-screen">
+        <div className="bg-transparent py-8 px-2 sm:px-4 md:px-6 lg:px-8 min-h-screen overflow-x-hidden">
           <div className="w-full max-w-7xl mx-auto">
-            {/* Scroll Container with Loading State */}
-            <div className={`scroll-container ${isAnimated ? 'animated' : ''}`}>
-              {/* Top Wooden Handle */}
-              <div className="wooden-handle wooden-handle-top">
-                <div className="handle-rod">
-                  <div className="handle-knob handle-knob-left"></div>
-                  <div className="handle-knob handle-knob-right"></div>
-                </div>
-              </div>
-              
-              {/* Top Paper Roll */}
-              <div className="paper-roll paper-roll-top"></div>
-              
-              {/* Parchment Paper Content with Loading State */}
-              <div className="parchment-paper">
-                <div className="parchment-content">
-                  {/* Loading Title Skeleton */}
-                  <div className="mb-6">
-                    <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-lg w-3/4 animate-pulse"></div>
-                  </div>
+            {/* Modern Glassy Container - Loading State */}
+            <div className="max-w-6xl mx-auto">
+              {/* Glowing border effect */}
+              <div className="relative group">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-3xl blur opacity-20 transition duration-500"></div>
+                
+                {/* Main Content Card */}
+                <div className="relative bg-white/80 dark:bg-gray-900/80 backdrop-blur-md rounded-3xl shadow-2xl dark:shadow-primary/10 border-0 overflow-hidden">
+                  {/* Subtle animated blobs */}
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-400/10 to-purple-400/10 rounded-full blur-3xl animate-pulse pointer-events-none"></div>
+                  <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-br from-purple-400/10 to-pink-400/10 rounded-full blur-3xl animate-pulse delay-1000 pointer-events-none"></div>
+                  
+                  {/* Background Pattern */}
+                  <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(180deg,transparent,white,white,transparent)] dark:bg-grid-slate-400/5 opacity-30 pointer-events-none"></div>
+                  
+                  {/* Content Container */}
+                  <div className="relative z-10 px-4 py-6 sm:px-8 md:px-12 lg:px-16 xl:px-20">
+                    {/* Loading Title Skeleton */}
+                    <div className="mb-6">
+                      <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-lg w-3/4 animate-pulse"></div>
+                    </div>
 
-                  {/* Loading Metadata Skeleton */}
-                  <div className="mb-8 flex flex-wrap items-center justify-end gap-4 pb-6 border-b border-gray-200 dark:border-gray-700">
-                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24 animate-pulse"></div>
-                  </div>
+                    {/* Loading Metadata Skeleton */}
+                    <div className="mb-8 flex flex-wrap items-center justify-end gap-4 pb-6 border-b border-border/30">
+                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24 animate-pulse"></div>
+                    </div>
 
-                  {/* Loading Content Area */}
-                  <div className="min-h-[500px] w-full flex items-center justify-center">
-                    <div className="text-center">
-                      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-400" />
-                      <p className="text-gray-600 dark:text-gray-400">Loading free content...</p>
+                    {/* Loading Content Area */}
+                    <div className="min-h-[500px] w-full flex items-center justify-center">
+                      <div className="text-center">
+                        <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-400" />
+                        <p className="text-gray-600 dark:text-gray-400">Loading free content...</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
-              
-              {/* Bottom Paper Roll */}
-              <div className="paper-roll paper-roll-bottom"></div>
-              
-              {/* Bottom Wooden Handle */}
-              <div className="wooden-handle wooden-handle-bottom">
-                <div className="handle-rod">
-                  <div className="handle-knob handle-knob-left"></div>
-                  <div className="handle-knob handle-knob-right"></div>
                 </div>
               </div>
             </div>
@@ -860,7 +833,7 @@ export const PostPreviewPage = () => {
   // Show loading state while fetching content
   if (isLoading) {
     return (
-      <div className="bg-transparent py-8 px-4 sm:px-6 lg:px-8 min-h-screen">
+      <div className="bg-transparent py-8 px-2 sm:px-4 md:px-6 lg:px-8 min-h-screen overflow-x-hidden">
         <div className="w-full max-w-7xl mx-auto">
           {/* Share Banner Container - matches editor page banner width */}
           <div className="mb-6 sm:mb-8 max-w-6xl mx-auto">
@@ -908,50 +881,41 @@ export const PostPreviewPage = () => {
             </div>
           </div>
 
-          {/* Scroll Container with Loading State */}
-          <div className={`scroll-container ${isAnimated ? 'animated' : ''}`}>
-            {/* Top Wooden Handle */}
-            <div className="wooden-handle wooden-handle-top">
-              <div className="handle-rod">
-                <div className="handle-knob handle-knob-left"></div>
-                <div className="handle-knob handle-knob-right"></div>
-              </div>
-            </div>
-            
-            {/* Top Paper Roll */}
-            <div className="paper-roll paper-roll-top"></div>
-            
-            {/* Parchment Paper Content with Loading State */}
-            <div className="parchment-paper">
-              <div className="parchment-content">
-                {/* Loading Title Skeleton */}
-                <div className="mb-6">
-                  <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-lg w-3/4 animate-pulse"></div>
-                </div>
+          {/* Modern Glassy Container - Loading State */}
+          <div className="max-w-6xl mx-auto">
+            {/* Glowing border effect */}
+            <div className="relative group">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-3xl blur opacity-20 transition duration-500"></div>
+              
+              {/* Main Content Card */}
+              <div className="relative bg-white/80 dark:bg-gray-900/80 backdrop-blur-md rounded-3xl shadow-2xl dark:shadow-primary/10 border-0 overflow-hidden">
+                {/* Subtle animated blobs */}
+                <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-400/10 to-purple-400/10 rounded-full blur-3xl animate-pulse pointer-events-none"></div>
+                <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-br from-purple-400/10 to-pink-400/10 rounded-full blur-3xl animate-pulse delay-1000 pointer-events-none"></div>
+                
+                {/* Background Pattern */}
+                <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(180deg,transparent,white,white,transparent)] dark:bg-grid-slate-400/5 opacity-30 pointer-events-none"></div>
+                
+                {/* Content Container */}
+                <div className="relative z-10 px-4 py-6 sm:px-8 md:px-12 lg:px-16 xl:px-20">
+                  {/* Loading Title Skeleton */}
+                  <div className="mb-6">
+                    <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-lg w-3/4 animate-pulse"></div>
+                  </div>
 
-                {/* Loading Metadata Skeleton */}
-                <div className="mb-8 flex flex-wrap items-center justify-end gap-4 pb-6 border-b border-gray-200 dark:border-gray-700">
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24 animate-pulse"></div>
-                </div>
+                  {/* Loading Metadata Skeleton */}
+                  <div className="mb-8 flex flex-wrap items-center justify-end gap-4 pb-6 border-b border-border/30">
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24 animate-pulse"></div>
+                  </div>
 
-                {/* Loading Content Area */}
-                <div className="min-h-[500px] w-full flex items-center justify-center">
-                  <div className="text-center">
-                    <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-400" />
-                    <p className="text-gray-600 dark:text-gray-400">Loading content...</p>
+                  {/* Loading Content Area */}
+                  <div className="min-h-[500px] w-full flex items-center justify-center">
+                    <div className="text-center">
+                      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-400" />
+                      <p className="text-gray-600 dark:text-gray-400">Loading content...</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
-            
-            {/* Bottom Paper Roll */}
-            <div className="paper-roll paper-roll-bottom"></div>
-            
-            {/* Bottom Wooden Handle */}
-            <div className="wooden-handle wooden-handle-bottom">
-              <div className="handle-rod">
-                <div className="handle-knob handle-knob-left"></div>
-                <div className="handle-knob handle-knob-right"></div>
               </div>
             </div>
           </div>
@@ -961,7 +925,7 @@ export const PostPreviewPage = () => {
   }
 
   return (
-    <div className="bg-transparent py-8 px-4 sm:px-6 lg:px-8 min-h-screen">
+    <div className="bg-transparent py-8 px-2 sm:px-4 md:px-6 lg:px-8 min-h-screen overflow-x-hidden">
       <div className="w-full max-w-7xl mx-auto">
         {/* Share Banner Container - matches editor page banner width */}
         <div className="mb-6 sm:mb-8 max-w-6xl mx-auto">
@@ -1009,99 +973,90 @@ export const PostPreviewPage = () => {
           </div>
         </div>
 
-        {/* Scroll Container */}
-        <div className={`scroll-container ${isAnimated ? 'animated' : ''}`}>
-          {/* Top Wooden Handle */}
-          <div className="wooden-handle wooden-handle-top">
-            <div className="handle-rod">
-              <div className="handle-knob handle-knob-left"></div>
-              <div className="handle-knob handle-knob-right"></div>
-            </div>
-          </div>
-          
-          {/* Top Paper Roll */}
-          <div className="paper-roll paper-roll-top"></div>
-          
-          {/* Parchment Paper Content */}
-          <div className="parchment-paper">
-            <div className="parchment-content">
-              {/* Title */}
-              <div className="mb-6">
-                <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-black dark:text-white">
-                  {postTitle}
-                </h1>
-              </div>
+        {/* Modern Glassy Container */}
+        <div className="max-w-6xl mx-auto">
+          {/* Glowing border effect */}
+          <div className="relative group">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-3xl blur opacity-20 group-hover:opacity-30 transition duration-500"></div>
+            
+            {/* Main Content Card */}
+            <div className="relative bg-white/80 dark:bg-gray-900/80 backdrop-blur-md rounded-3xl shadow-2xl dark:shadow-primary/10 border-0 overflow-hidden">
+              {/* Subtle animated blobs */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-400/10 to-purple-400/10 rounded-full blur-3xl animate-pulse pointer-events-none"></div>
+              <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-br from-purple-400/10 to-pink-400/10 rounded-full blur-3xl animate-pulse delay-1000 pointer-events-none"></div>
+              
+              {/* Background Pattern */}
+              <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(180deg,transparent,white,white,transparent)] dark:bg-grid-slate-400/5 opacity-30 pointer-events-none"></div>
+              
+              {/* Content Container */}
+              <div className="relative z-10 px-4 py-6 sm:px-8 md:px-12 lg:px-16 xl:px-20">
+                {/* Title */}
+                <div className="mb-6">
+                  <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground">
+                    {postTitle}
+                  </h1>
+                </div>
 
-              {/* Metadata */}
-              <div className="mb-8 pb-6 border-b border-gray-200 dark:border-gray-700">
-                {/* Hashtags row */}
-                {hashtags && hashtags.trim() && (
-                  <div className="flex flex-wrap gap-1.5 mb-3">
-                    {hashtags.split(',').slice(0, 4).map((tag, index) => {
-                      const trimmedTag = tag.trim();
-                      if (!trimmedTag) return null;
-                      return (
-                        <Badge 
-                          key={index}
-                          variant="outline"
-                          className="text-xs px-2 py-0.5 font-medium text-primary border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors"
-                        >
-                          #{trimmedTag}
-                        </Badge>
-                      );
-                    })}
-                  </div>
-                )}
-                
-                {/* Author and Date row */}
-                <div className={`flex items-center justify-end gap-4 text-sm text-muted-foreground ${hashtags && hashtags.trim() ? 'mt-5' : 'mt-2'}`}>
-                  {publishDate && (
-                    <div className="flex items-center gap-1.5">
-                      <Calendar className="h-4 w-4" />
-                      <span className="text-xs font-medium">
-                        {new Date(publishDate).toLocaleDateString('en-US', { 
-                          year: 'numeric', 
-                          month: 'short', 
-                          day: 'numeric' 
-                        })}
-                      </span>
+                {/* Metadata */}
+                <div className="pb-4 border-b border-border/30">
+                  {/* Hashtags row */}
+                  {hashtags && hashtags.trim() && (
+                    <div className="flex flex-wrap gap-1.5 mb-3">
+                      {hashtags.split(',').slice(0, 4).map((tag, index) => {
+                        const trimmedTag = tag.trim();
+                        if (!trimmedTag) return null;
+                        return (
+                          <Badge 
+                            key={index}
+                            variant="outline"
+                            className="text-xs px-2 py-0.5 font-medium text-primary border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors"
+                          >
+                            #{trimmedTag}
+                          </Badge>
+                        );
+                      })}
                     </div>
                   )}
                   
-                  <Link 
-                    to={`/dashboard/${assetData?.author}`}
-                    className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline transition-colors font-medium"
-                  >
-                    <User className="h-4 w-4" />
-                    <span className="text-xs font-semibold">
-                      {assetData?.author?.slice(0, 6)}...{assetData?.author?.slice(-4)}
-                    </span>
-                  </Link>
+                  {/* Author and Date row */}
+                  <div className={`flex items-center justify-end gap-4 text-sm text-muted-foreground ${hashtags && hashtags.trim() ? 'mt-5' : 'mt-2'}`}>
+                    {publishDate && (
+                      <div className="flex items-center gap-1.5">
+                        <Calendar className="h-4 w-4" />
+                        <span className="text-xs font-medium">
+                          {new Date(publishDate).toLocaleDateString('en-US', { 
+                            year: 'numeric', 
+                            month: 'short', 
+                            day: 'numeric' 
+                          })}
+                        </span>
+                      </div>
+                    )}
+                    
+                    <Link 
+                      to={`/dashboard/${assetData?.author}`}
+                      className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline transition-colors font-medium"
+                    >
+                      <User className="h-4 w-4" />
+                      <span className="text-xs font-semibold">
+                        {assetData?.author?.slice(0, 6)}...{assetData?.author?.slice(-4)}
+                      </span>
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="min-h-[500px] w-full">
+                  {previewData ? (
+                    <EditorTextParser data={previewData} />
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <FileImage className="h-16 w-16 mx-auto mb-4 opacity-50" />
+                      <p>No content available</p>
+                    </div>
+                  )}
                 </div>
               </div>
-
-              {/* Content */}
-              <div className="min-h-[500px] w-full">
-                {previewData ? (
-                  <EditorTextParser data={previewData} />
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <FileImage className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                    <p>No content available</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-          
-          {/* Bottom Paper Roll */}
-          <div className="paper-roll paper-roll-bottom"></div>
-          
-          {/* Bottom Wooden Handle */}
-          <div className="wooden-handle wooden-handle-bottom">
-            <div className="handle-rod">
-              <div className="handle-knob handle-knob-left"></div>
-              <div className="handle-knob handle-knob-right"></div>
             </div>
           </div>
         </div>

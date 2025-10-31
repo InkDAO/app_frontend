@@ -110,18 +110,18 @@ const PublishOverlay: React.FC<PublishOverlayProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent 
-        className="w-[calc(100vw-2rem)] max-w-[600px] sm:max-w-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-0 shadow-2xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto"
+        className="w-[calc(100vw-2rem)] max-w-[600px] sm:max-w-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-0 shadow-2xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto overflow-x-hidden box-border"
         onClick={(e) => e.stopPropagation()}
       >
         <DialogHeader className="pb-3">
-          <DialogTitle className="text-xl sm:text-2xl font-extrabold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+          <DialogTitle className="text-xl sm:text-2xl font-extrabold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent break-words">
             Publish Post
           </DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4 sm:space-y-5">
+        <div className="space-y-4 sm:space-y-5 max-w-full overflow-hidden">
           {/* Description */}
-          <div className="space-y-2">
+          <div className="space-y-2 max-w-full">
             <Label htmlFor="description" className="flex items-center justify-between font-semibold">
               <span className="flex items-center gap-2 text-sm sm:text-base">
                 <FileText className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
@@ -136,14 +136,14 @@ const PublishOverlay: React.FC<PublishOverlayProps> = ({
               placeholder="Enter a description that will be shown publicly on the post card..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="min-h-[100px] resize-none bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border-2 focus:border-emerald-500 dark:focus:border-emerald-500 transition-colors"
+              className="min-h-[100px] resize-none bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border-2 focus:border-emerald-500 dark:focus:border-emerald-500 transition-colors w-full box-border"
               disabled={isPublishing}
               maxLength={500}
             />
           </div>
 
           {/* Hashtags */}
-          <div className="space-y-2">
+          <div className="space-y-2 max-w-full">
             <Label htmlFor="hashtags" className="flex items-center gap-2 font-semibold text-sm sm:text-base">
               <Hash className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
               Hashtags
@@ -155,32 +155,33 @@ const PublishOverlay: React.FC<PublishOverlayProps> = ({
               value={hashtags}
               onChange={(e) => setHashtags(e.target.value)}
               disabled={isPublishing}
-              className="w-full bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border-2 focus:border-emerald-500 dark:focus:border-emerald-500 transition-colors"
+              className="w-full bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border-2 focus:border-emerald-500 dark:focus:border-emerald-500 transition-colors box-border"
             />
-            <p className="text-xs sm:text-sm text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground break-words">
               Enter hashtags separated by commas (e.g., web3, blockchain, crypto)
             </p>
           </div>
 
           {/* Thumbnail */}
-          <div className="space-y-2">
+          <div className="space-y-2 max-w-full overflow-hidden">
             <Label className="flex items-center gap-2 font-semibold text-sm sm:text-base">
               <ImageIcon className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
               Thumbnail
             </Label>
             
             {thumbnailPreview ? (
-              <div className="space-y-3">
+              <div className="space-y-3 max-w-full overflow-hidden">
                 <div className="relative w-full h-48 sm:h-56 rounded-xl overflow-hidden border-2 border-emerald-200 dark:border-emerald-800 shadow-lg">
                   <img
                     src={thumbnailPreview}
                     alt="Thumbnail preview"
                     className="w-full h-full object-cover"
+                    style={{ maxWidth: '100%', height: 'auto' }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
                 </div>
-                <div className="flex items-center justify-between bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-lg p-3 border border-slate-200 dark:border-slate-700">
-                  <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium truncate mr-2">
+                <div className="flex items-center justify-between bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm rounded-lg p-3 border border-slate-200 dark:border-slate-700 max-w-full overflow-hidden">
+                  <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium truncate mr-2 flex-1 min-w-0">
                     {thumbnail?.name} ({((thumbnail?.size || 0) / 1024 / 1024).toFixed(2)} MB)
                   </p>
                   <Button
@@ -228,7 +229,7 @@ const PublishOverlay: React.FC<PublishOverlayProps> = ({
           </div>
 
           {/* Price */}
-          <div className="space-y-2">
+          <div className="space-y-2 max-w-full">
             <Label htmlFor="price" className="flex items-center gap-2 font-semibold text-sm sm:text-base">
               <DollarSign className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
               Price (ETH)
@@ -254,9 +255,9 @@ const PublishOverlay: React.FC<PublishOverlayProps> = ({
                 }
               }}
               disabled={isPublishing}
-              className="w-full bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border-2 focus:border-emerald-500 dark:focus:border-emerald-500 transition-colors"
+              className="w-full bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border-2 focus:border-emerald-500 dark:focus:border-emerald-500 transition-colors box-border"
             />
-            <p className="text-xs sm:text-sm text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground break-words">
               Set the price in ETH for accessing this post.
             </p>
           </div>

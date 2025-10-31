@@ -12,6 +12,7 @@ interface PublishProgressModalProps {
   txHash?: string;
   error?: string;
   onClose?: () => void;
+  onRetry?: () => void;
   assetAddress?: string;
 }
 
@@ -21,6 +22,7 @@ const PublishProgressModal: React.FC<PublishProgressModalProps> = ({
   txHash,
   error,
   onClose,
+  onRetry,
   assetAddress
 }) => {
   const navigate = useNavigate();
@@ -72,7 +74,7 @@ const PublishProgressModal: React.FC<PublishProgressModalProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={currentStep === 'completed' || currentStep === 'error' ? onClose : undefined}>
       <DialogContent 
-        className="sm:max-w-md"
+        className="sm:max-w-md bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-0 shadow-2xl"
         onPointerDownOutside={(e) => {
           // Prevent closing during active publishing
           if (currentStep !== 'completed' && currentStep !== 'error') {
@@ -80,7 +82,11 @@ const PublishProgressModal: React.FC<PublishProgressModalProps> = ({
           }
         }}
       >
-        <DialogHeader>
+        {/* Animated Background Blobs */}
+        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl animate-pulse pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-40 h-40 bg-gradient-to-br from-purple-400/15 to-pink-400/15 rounded-full blur-3xl animate-pulse delay-1000 pointer-events-none" />
+        
+        <DialogHeader className="relative z-10">
           <DialogTitle className="text-xl font-semibold text-gray-900 dark:text-white">
             {currentStep === 'completed' ? 'Published Successfully!' : 
              currentStep === 'error' ? 'Publishing Failed' : 
@@ -88,7 +94,7 @@ const PublishProgressModal: React.FC<PublishProgressModalProps> = ({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
+        <div className="space-y-6 py-4 relative z-10">
           {/* Progress Steps */}
           {currentStep !== 'completed' && currentStep !== 'error' && (
             <div className="space-y-4">
@@ -97,7 +103,7 @@ const PublishProgressModal: React.FC<PublishProgressModalProps> = ({
                 const Icon = step.icon;
 
                 return (
-                  <div key={step.key} className="flex items-start space-x-3">
+                  <div key={step.key} className="flex items-start space-x-3 p-3 rounded-lg bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
                     <div className="flex-shrink-0 mt-1">
                       {status === 'completed' ? (
                         <CheckCircle2 className="w-5 h-5 text-green-500" />
@@ -131,7 +137,7 @@ const PublishProgressModal: React.FC<PublishProgressModalProps> = ({
           {currentStep === 'completed' && (
             <div className="text-center space-y-4">
               <div className="flex justify-center">
-                <div className="rounded-full bg-green-100 dark:bg-green-500/20 p-4">
+                <div className="rounded-full bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-500/20 dark:to-emerald-500/20 backdrop-blur-sm p-4 shadow-lg">
                   <CheckCircle2 className="w-16 h-16 text-green-600 dark:text-green-400" />
                 </div>
               </div>
@@ -161,7 +167,7 @@ const PublishProgressModal: React.FC<PublishProgressModalProps> = ({
           {currentStep === 'error' && (
             <div className="text-center space-y-4">
               <div className="flex justify-center">
-                <div className="rounded-full bg-red-100 dark:bg-red-500/20 p-4">
+                <div className="rounded-full bg-gradient-to-br from-red-100 to-rose-100 dark:from-red-500/20 dark:to-rose-500/20 backdrop-blur-sm p-4 shadow-lg">
                   <svg className="w-16 h-16 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
@@ -175,15 +181,18 @@ const PublishProgressModal: React.FC<PublishProgressModalProps> = ({
                   {error || 'An error occurred while publishing your post. Please try again.'}
                 </p>
               </div>
-              {onClose && (
-                <Button
-                  variant="outline"
-                  className="w-full border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800"
-                  onClick={onClose}
-                >
-                  Close
-                </Button>
-              )}
+              <Button
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold shadow-lg hover:shadow-xl transition-all"
+                onClick={() => {
+                  if (onRetry) {
+                    onRetry();
+                  } else if (onClose) {
+                    onClose();
+                  }
+                }}
+              >
+                Try Again
+              </Button>
             </div>
           )}
 

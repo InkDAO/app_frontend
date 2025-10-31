@@ -1,6 +1,6 @@
 import "../components/editor/Editor.css";
 import { useState, useCallback, useEffect, useRef } from "react";
-import { Edit3, Eye, BookOpen, ExternalLink } from 'lucide-react';
+import { Edit3, Eye, BookOpen, ExternalLink, AlertTriangle, Save, Trash2, X } from 'lucide-react';
 import Editor from "../components/editor/Editor";
 import EditorTextParser from "../components/editor/EditorTextParser";
 import { useAccount, useSignMessage, usePublicClient } from 'wagmi';
@@ -49,7 +49,9 @@ const EditorPage = () => {
 	const [showProgressModal, setShowProgressModal] = useState(false);
 	const [publishError, setPublishError] = useState<string>('');
 	const [publishedAssetAddress, setPublishedAssetAddress] = useState<string>('');
-	const [isAnimated, setIsAnimated] = useState(false);
+	const [lastPublishData, setLastPublishData] = useState<PublishData | null>(null);
+	const [uploadedThumbnailCid, setUploadedThumbnailCid] = useState<string>('');
+	const [failedStep, setFailedStep] = useState<PublishStep | null>(null);
 	
 	const { address } = useAccount();
 	const { signMessageAsync } = useSignMessage();
@@ -60,14 +62,6 @@ const EditorPage = () => {
 	const { ensureAuthenticated, isAuthenticated } = useAuth();
 	const { setEditorProps } = useEditor();
 	const { addAsset, isPending: isContractPending, isConfirming: isContractConfirming, isConfirmed: isContractConfirmed, isError: isContractError, hash: txHash } = useAddAsset();
-
-	// Trigger scroll animation on mount
-	useEffect(() => {
-		const timer = setTimeout(() => {
-			setIsAnimated(true);
-		}, 100);
-		return () => clearTimeout(timer);
-	}, []);
 
 	// Load existing post content from IPFS when CID is present, or clear editor when no CID
 	useEffect(() => {
@@ -323,27 +317,36 @@ const EditorPage = () => {
 						setPublishStep('completed');
 						setIsPublishing(false);
 					} else {
-						// Fallback: show success without redirect
-						console.warn('Asset address not found in contract');
-						setPublishStep('completed');
-						setIsPublishing(false);
-					}
-				} catch (error) {
-					console.error('Error fetching asset address:', error);
-					// Still show success even if we couldn't get the address
+					// Fallback: show success without redirect
+					console.warn('Asset address not found in contract');
 					setPublishStep('completed');
 					setIsPublishing(false);
+					// Clear stored data on success
+					setUploadedThumbnailCid('');
+					setFailedStep(null);
+					setLastPublishData(null);
 				}
+			} catch (error) {
+				console.error('Error fetching asset address:', error);
+				// Still show success even if we couldn't get the address
+				setPublishStep('completed');
+				setIsPublishing(false);
+				// Clear stored data on success
+				setUploadedThumbnailCid('');
+				setFailedStep(null);
+				setLastPublishData(null);
 			}
-		};
+		}
+	};
 
-		handleConfirmation();
-	}, [isContractConfirmed, isPublishing, cid, publicClient]);
+	handleConfirmation();
+}, [isContractConfirmed, isPublishing, cid, publicClient]);
 
 	// Monitor contract transaction errors
 	useEffect(() => {
 		if (isContractError && isPublishing) {
 			setPublishStep('error');
+			setFailedStep('confirming');
 			setPublishError('The blockchain transaction failed. Please try again.');
 			setIsPublishing(false);
 		}
@@ -379,6 +382,9 @@ const EditorPage = () => {
 			return false;
 		}
 
+		// Store publish data for retry
+		setLastPublishData(publishData);
+
 		// Reset state and show progress modal
 		setIsPublishing(true);
 		setPublishStep('uploading');
@@ -393,20 +399,24 @@ const EditorPage = () => {
 			// Convert price to wei (assuming 18 decimals for ETH)
 			const priceInWei = (parseFloat(publishData.price || '0') * Math.pow(10, 18)).toString();
 			
-			// Step 1: Upload thumbnail image to get thumbnail CID
-			let thumbnailCid = "";
-			if (publishData.thumbnail) {
-				try {
-					const result = await publishFile(publishData.thumbnail, address, signMessageAsync, cid, publishData.hashtags);
-					thumbnailCid = result.thumbnailCid;
-				} catch (uploadError) {
-					console.error('❌ Error uploading thumbnail:', uploadError);
-					setPublishStep('error');
-					setPublishError('Failed to upload thumbnail image. Please try again.');
-					setIsPublishing(false);
-					return false;
-				}
+		// Step 1: Upload thumbnail image to get thumbnail CID
+		// Skip if we already have a thumbnail CID from a previous attempt
+		let thumbnailCid = uploadedThumbnailCid;
+		if (publishData.thumbnail && !thumbnailCid) {
+			try {
+				const result = await publishFile(publishData.thumbnail, address, signMessageAsync, cid, publishData.hashtags);
+				thumbnailCid = result.thumbnailCid;
+				// Store the thumbnail CID for potential retry
+				setUploadedThumbnailCid(thumbnailCid);
+			} catch (uploadError) {
+				console.error('❌ Error uploading thumbnail:', uploadError);
+				setPublishStep('error');
+				setFailedStep('uploading');
+				setPublishError('Failed to upload thumbnail image. Please try again.');
+				setIsPublishing(false);
+				return false;
 			}
+		}
 			
 			// Step 2: Call the smart contract to add the asset to blockchain
 			try {
@@ -424,17 +434,18 @@ const EditorPage = () => {
 				// Transaction submitted - wait for confirmation via useEffect
 				return true;
 				
-			} catch (contractError: any) {
-				console.error('❌ Error calling addAsset contract:', contractError);
-				const errorMsg = contractError.message?.includes('user rejected') 
-					? 'Transaction was rejected by user.'
-					: 'Failed to publish to blockchain. Please try again.';
-				
-				setPublishStep('error');
-				setPublishError(errorMsg);
-				setIsPublishing(false);
-				return false;
-			}
+		} catch (contractError: any) {
+			console.error('❌ Error calling addAsset contract:', contractError);
+			const errorMsg = contractError.message?.includes('user rejected') 
+				? 'Transaction was rejected by user.'
+				: 'Failed to publish to blockchain. Please try again.';
+			
+			setPublishStep('error');
+			setFailedStep('signing');
+			setPublishError(errorMsg);
+			setIsPublishing(false);
+			return false;
+		}
 			
 		} catch (error: any) {
 			console.error('Error publishing:', error);
@@ -462,7 +473,30 @@ const EditorPage = () => {
 		setShowProgressModal(false);
 		setPublishStep('uploading');
 		setPublishError('');
+		setUploadedThumbnailCid('');
+		setFailedStep(null);
+		setLastPublishData(null);
 	}, []);
+
+	// Retry publishing with the last publish data
+	const handleRetryPublish = useCallback(() => {
+		if (lastPublishData) {
+			setShowProgressModal(false);
+			setPublishError('');
+			
+			// If thumbnail upload failed, reset the thumbnail CID to retry upload
+			if (failedStep === 'uploading') {
+				setUploadedThumbnailCid('');
+				setPublishStep('uploading');
+			} else {
+				// If blockchain transaction failed, skip to signing step
+				setPublishStep('signing');
+			}
+			
+			// Retry with the stored publish data
+			publishWithData(lastPublishData);
+		}
+	}, [lastPublishData, failedStep, publishWithData]);
 
 	// Set editor props in context for TopHeader
 	useEffect(() => {
@@ -522,142 +556,152 @@ const EditorPage = () => {
 					</div>
 				</div>
 
-				{/* Scroll Container */}
-				<div className={`scroll-container ${isAnimated ? 'animated' : ''}`}>
-					{/* Top Wooden Handle */}
-					<div className="wooden-handle wooden-handle-top">
-						<div className="handle-rod"></div>
-						<div className="handle-knob handle-knob-left"></div>
-						<div className="handle-knob handle-knob-right"></div>
-					</div>
+			{/* Modern Glassy Editor Container */}
+			<div className="max-w-6xl mx-auto">
+				{/* Glowing border effect */}
+				<div className="relative group">
+					<div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-3xl blur opacity-20 group-hover:opacity-30 transition duration-500"></div>
+					
+					{/* Main Editor Card */}
+					<div className="relative bg-white/80 dark:bg-gray-900/80 backdrop-blur-md rounded-3xl shadow-2xl dark:shadow-primary/10 border-0 overflow-hidden">
+						{/* Subtle animated blobs */}
+						<div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-400/10 to-purple-400/10 rounded-full blur-3xl animate-pulse pointer-events-none"></div>
+						<div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-br from-purple-400/10 to-pink-400/10 rounded-full blur-3xl animate-pulse delay-1000 pointer-events-none"></div>
+						
+						{/* Background Pattern */}
+						<div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(180deg,transparent,white,white,transparent)] dark:bg-grid-slate-400/5 opacity-30 pointer-events-none"></div>
+						
+					{/* Content Container */}
+					<div className="relative z-10 px-6 py-6 sm:px-12 sm:py-8 lg:px-16 lg:py-10 xl:px-20">
+						{/* Title input */}
+						<div className="mb-6">
+							<input
+								type="text"
+								value={documentTitle}
+								onChange={(e) => setDocumentTitle(e.target.value)}
+								className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-transparent border-none outline-none w-full text-foreground placeholder-muted-foreground focus:ring-0"
+								placeholder="Give your post a title..."
+								disabled={isPreviewMode}
+							/>
+						</div>
 
-					{/* Paper Roll - Top */}
-					<div className="paper-roll paper-roll-top"></div>
+						{/* Tab Navigation with glassy background */}
+						<div className="mb-6">
+							<nav className="flex justify-end items-center" aria-label="Tabs">
+								{/* Edit/Preview Toggle */}
+								<div className="flex items-center bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl p-1.5 shadow-lg border border-border/30">
+									<button
+										onClick={() => {
+											if (isPreviewMode) {
+												setIsPreviewMode(false);
+											}
+										}}
+										className={`flex items-center justify-center space-x-1 sm:space-x-2 px-4 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-bold rounded-lg transition-all duration-200 ${
+											!isPreviewMode
+												? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-md scale-105'
+												: 'text-muted-foreground hover:text-foreground hover:bg-white/50 dark:hover:bg-gray-700/50'
+										}`}
+									>
+										<Edit3 className="w-4 h-4" />
+										<span className="hidden sm:inline">Edit</span>
+									</button>
+									<button
+										onClick={togglePreview}
+										className={`flex items-center justify-center space-x-1 sm:space-x-2 px-4 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-bold rounded-lg transition-all duration-200 ${
+											isPreviewMode
+												? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-md scale-105'
+												: 'text-muted-foreground hover:text-foreground hover:bg-white/50 dark:hover:bg-gray-700/50'
+										}`}
+									>
+										<Eye className="w-4 h-4" />
+										<span className="hidden sm:inline">Preview</span>
+									</button>
+								</div>
+							</nav>
+						</div>
 
-					{/* Parchment Paper - Content Area */}
-					<div className="parchment-paper">
-						<div className="parchment-content">
-							{/* Title input */}
-							<div className="mb-6">
-								<input
-									type="text"
-									value={documentTitle}
-									onChange={(e) => setDocumentTitle(e.target.value)}
-									className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-transparent border-none outline-none w-full text-black dark:text-white placeholder-gray-400 focus:ring-0"
-									placeholder="Give your post a title..."
-									disabled={isPreviewMode}
+						{/* Editor/Preview Content */}
+						<div className="min-h-[300px] sm:min-h-[500px] w-full">
+							{isLoadingContent ? (
+								<div className="flex items-center justify-center py-12">
+									<div className="text-center">
+										<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+										<p className="text-muted-foreground font-medium">Loading content...</p>
+									</div>
+								</div>
+							) : isPreviewMode ? (
+								<EditorTextParser data={data} />
+							) : (
+								<Editor 
+									key={cid || `new-${editorKey}`} 
+									data={data} 
+									setData={setData}
+									editorInstanceRef={editorInstanceRef}
 								/>
-							</div>
-
-							{/* Tab Navigation */}
-							<div className="mb-6">
-								<nav className="flex justify-end items-center" aria-label="Tabs">
-									{/* Edit/Preview Toggle */}
-									<div className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg p-1 shadow-sm">
-										<button
-											onClick={() => {
-												if (isPreviewMode) {
-													setIsPreviewMode(false);
-												}
-											}}
-											className={`flex items-center justify-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 ${
-												!isPreviewMode
-													? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm border border-gray-200 dark:border-gray-500'
-													: 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-white/50 dark:hover:bg-gray-600/50'
-											}`}
-										>
-											<Edit3 className="w-4 h-4" />
-											<span className="hidden sm:inline">Edit</span>
-										</button>
-										<button
-											onClick={togglePreview}
-											className={`flex items-center justify-center space-x-1 sm:space-x-2 px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 ${
-												isPreviewMode
-													? 'bg-white dark:bg-gray-600 text-blue-600 dark:text-blue-400 shadow-sm border border-gray-200 dark:border-gray-500'
-													: 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-white/50 dark:hover:bg-gray-600/50'
-											}`}
-										>
-											<Eye className="w-4 h-4" />
-											<span className="hidden sm:inline">Preview</span>
-										</button>
-									</div>
-								</nav>
-							</div>
-
-							{/* Editor/Preview Content */}
-							<div className="min-h-[300px] sm:min-h-[500px] w-full">
-								{isLoadingContent ? (
-									<div className="flex items-center justify-center py-12">
-										<div className="text-center">
-											<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-											<p className="text-gray-600 dark:text-gray-400">Loading content...</p>
-										</div>
-									</div>
-								) : isPreviewMode ? (
-									<EditorTextParser data={data} />
-								) : (
-									<Editor 
-										key={cid || `new-${editorKey}`} 
-										data={data} 
-										setData={setData}
-										editorInstanceRef={editorInstanceRef}
-									/>
-								)}
-							</div>
+							)}
 						</div>
 					</div>
-
-					{/* Paper Roll - Bottom */}
-					<div className="paper-roll paper-roll-bottom"></div>
-
-					{/* Bottom Wooden Handle */}
-					<div className="wooden-handle wooden-handle-bottom">
-						<div className="handle-rod"></div>
-						<div className="handle-knob handle-knob-left"></div>
-						<div className="handle-knob handle-knob-right"></div>
 					</div>
 				</div>
 			</div>
+			</div>
 
-			{/* Unsaved Changes Warning Dialog */}
-			<AlertDialog open={showNavigationDialog} onOpenChange={setShowNavigationDialog}>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle>Unsaved Changes</AlertDialogTitle>
-						<AlertDialogDescription>
-							You have unsaved changes. What would you like to do?
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter className="flex-col sm:flex-row gap-2">
-						<AlertDialogCancel onClick={handleCancelNavigation} className="sm:order-1">
-							Stay on Page
-						</AlertDialogCancel>
-						<AlertDialogAction
-							onClick={handleDiscardAndLeave}
-							className="bg-red-600 hover:bg-red-700 sm:order-2"
-						>
-							Discard Changes
-						</AlertDialogAction>
-						<AlertDialogAction
-							onClick={handleSaveAndLeave}
-							disabled={isSaving}
-							className="bg-blue-600 hover:bg-blue-700 sm:order-3"
-						>
-							{isSaving ? 'Saving...' : 'Save & Leave'}
-						</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
+		{/* Unsaved Changes Warning Dialog */}
+		<AlertDialog open={showNavigationDialog} onOpenChange={setShowNavigationDialog}>
+			<AlertDialogContent className="w-[calc(100vw-2rem)] max-w-[500px] max-h-[90vh] overflow-y-auto">
+				{/* Close button */}
+				<button
+					onClick={handleCancelNavigation}
+					className="absolute right-4 top-4 z-20 rounded-lg p-1.5 bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm hover:bg-white/80 dark:hover:bg-gray-800/80 transition-all shadow-sm hover:shadow-md border border-border/30"
+				>
+					<X className="h-4 w-4 text-foreground" />
+				</button>
 
-			{/* Publish Progress Modal */}
-			<PublishProgressModal
-				isOpen={showProgressModal}
-				currentStep={publishStep}
-				txHash={txHash}
-				error={publishError}
-				onClose={handleCloseProgressModal}
-				assetAddress={publishedAssetAddress}
-			/>
+				{/* Decorative blobs */}
+				<div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-amber-400/20 to-orange-400/20 rounded-full blur-3xl pointer-events-none"></div>
+				<div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-br from-red-400/10 to-pink-400/10 rounded-full blur-3xl pointer-events-none"></div>
+				
+				<AlertDialogHeader className="relative z-10 pr-8">
+					<div className="flex items-center gap-3 mb-2">
+						<div className="p-2 sm:p-2.5 rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/40 dark:to-orange-900/40 backdrop-blur-sm shadow-lg flex-shrink-0">
+							<AlertTriangle className="h-5 w-5 sm:h-6 sm:w-6 text-amber-600 dark:text-amber-400" />
+						</div>
+						<AlertDialogTitle className="text-left text-lg sm:text-xl">Unsaved Changes</AlertDialogTitle>
+					</div>
+					<AlertDialogDescription className="text-left text-sm">
+						You have unsaved changes. What would you like to do?
+					</AlertDialogDescription>
+				</AlertDialogHeader>
+				<AlertDialogFooter className="relative z-10 flex-col sm:flex-row gap-2 pt-4">
+					<AlertDialogAction
+						onClick={handleDiscardAndLeave}
+						className="w-full sm:w-auto bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-bold shadow-lg hover:shadow-xl transition-all px-3 sm:px-4 py-2 text-sm sm:text-base"
+					>
+						<Trash2 className="h-4 w-4 mr-1.5 flex-shrink-0" />
+						<span className="whitespace-nowrap">Discard</span>
+					</AlertDialogAction>
+					<AlertDialogAction
+						onClick={handleSaveAndLeave}
+						disabled={isSaving}
+						className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold shadow-lg hover:shadow-xl transition-all px-3 sm:px-4 py-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+					>
+						<Save className="h-4 w-4 mr-1.5 flex-shrink-0" />
+						<span className="whitespace-nowrap">{isSaving ? 'Saving...' : 'Save & Leave'}</span>
+					</AlertDialogAction>
+				</AlertDialogFooter>
+			</AlertDialogContent>
+		</AlertDialog>
+
+		{/* Publish Progress Modal */}
+		<PublishProgressModal
+			isOpen={showProgressModal}
+			currentStep={publishStep}
+			txHash={txHash}
+			error={publishError}
+			onClose={handleCloseProgressModal}
+			onRetry={handleRetryPublish}
+			assetAddress={publishedAssetAddress}
+		/>
 		</div>
 	);
 };

@@ -516,7 +516,7 @@ export const MePage = () => {
           {/* Tab Bar and Search Bar Container */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-3">
             {/* Horizontal Scrollable Tab Card */}
-            <div className="-mx-4 sm:mx-0 w-[100vw] sm:w-fit bg-muted/50 border-y sm:border sm:border-border sm:rounded-xl h-10">
+            <div className="-mx-4 sm:mx-0 w-[100vw] sm:w-fit bg-white/70 dark:bg-black/30 backdrop-blur-md border-y sm:border border-white/20 dark:border-white/10 sm:rounded-xl h-10 shadow-lg shadow-black/5 dark:shadow-black/20">
               <div className="overflow-x-auto scrollbar-hide px-0 h-full flex items-center">
                 <div className="flex gap-3">
                   {TAB_OPTIONS.map((tab) => {
@@ -530,8 +530,8 @@ export const MePage = () => {
                           flex items-center gap-2 px-4 py-2 font-medium rounded-lg
                           transition-all duration-200 whitespace-nowrap flex-shrink-0
                           ${isActive 
-                            ? 'text-foreground bg-background shadow-md border border-border/50 scale-[1.02]' 
-                            : 'text-muted-foreground hover:text-foreground/80 hover:bg-background/40'
+                            ? 'text-foreground bg-white/80 dark:bg-white/10 backdrop-blur-sm shadow-md border border-white/30 dark:border-white/20 scale-[1.02]' 
+                            : 'text-muted-foreground hover:text-foreground/80 hover:bg-white/40 dark:hover:bg-white/5'
                           }
                         `}
                       >

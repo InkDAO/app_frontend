@@ -1,4 +1,5 @@
 import React from "react";
+import katex from "katex";
 
 type EditorData = {
   time?: number;
@@ -118,6 +119,36 @@ export default function EditorTextParser({ data }: EditorTextParserProps) {
             <code>{block.data.code}</code>
           </pre>
         );
+
+      case 'math':
+        const latexFormula = block.data.text || block.data.math || '';
+        try {
+          // Render LaTeX using KaTeX
+          const renderedMath = katex.renderToString(latexFormula, {
+            throwOnError: false,
+            displayMode: true, // Render as block-level math (centered, with spacing)
+          });
+          return (
+            <div 
+              key={key} 
+              className="math-block"
+              style={{ 
+                textAlign: 'center', 
+                margin: '0.5em 0',
+                overflowX: 'auto',
+                overflowY: 'hidden'
+              }}
+              dangerouslySetInnerHTML={{ __html: renderedMath }}
+            />
+          );
+        } catch (error) {
+          console.error('Error rendering LaTeX:', error);
+          return (
+            <div key={key} style={{ color: 'red', padding: '1em', border: '1px solid red', margin: '1em 0' }}>
+              Error rendering LaTeX: {latexFormula}
+            </div>
+          );
+        }
 
       case 'delimiter':
         return <hr key={key} />;

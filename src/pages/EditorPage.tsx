@@ -572,9 +572,9 @@ const EditorPage = () => {
 						<div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(180deg,transparent,white,white,transparent)] dark:bg-grid-slate-400/5 opacity-30 pointer-events-none"></div>
 						
 					{/* Content Container */}
-					<div className="relative z-10 px-6 py-6 sm:px-12 sm:py-8 lg:px-16 lg:py-10 xl:px-20">
+					<div className="relative z-10 px-6 pt-6 pb-16 sm:px-12 sm:pt-8 sm:pb-20 lg:px-16 lg:pt-10 lg:pb-24 xl:px-20 xl:pb-28">
 						{/* Title input */}
-						<div className="mb-6">
+						<div className="mb-6 mt-8 sm:mt-12 md:mt-16">
 							<input
 								type="text"
 								value={documentTitle}

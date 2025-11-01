@@ -338,9 +338,9 @@ export const PostPreviewPage = () => {
                 <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(180deg,transparent,white,white,transparent)] dark:bg-grid-slate-400/5 opacity-30 pointer-events-none"></div>
                 
                 {/* Content Container */}
-                <div className="relative z-10 px-4 py-6 sm:px-8 md:px-12 lg:px-16 xl:px-20">
+                <div className="relative z-10 px-4 pt-6 pb-16 sm:px-8 sm:pb-20 md:px-12 lg:px-16 lg:pb-24 xl:px-20 xl:pb-28">
                   {/* Loading Title Skeleton */}
-                  <div className="mb-6">
+                  <div className="mb-6 mt-8 sm:mt-12 md:mt-16">
                     <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-lg w-3/4 animate-pulse"></div>
                   </div>
 
@@ -396,9 +396,9 @@ export const PostPreviewPage = () => {
                   <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(180deg,transparent,white,white,transparent)] dark:bg-grid-slate-400/5 opacity-30 pointer-events-none"></div>
                   
                   {/* Content Container */}
-                  <div className="relative z-10 px-4 py-6 sm:px-8 md:px-12 lg:px-16 xl:px-20">
+                  <div className="relative z-10 px-4 pt-6 pb-16 sm:px-8 sm:pb-20 md:px-12 lg:px-16 lg:pb-24 xl:px-20 xl:pb-28">
                     {/* Loading Title Skeleton */}
-                    <div className="mb-6">
+                    <div className="mb-6 mt-8 sm:mt-12 md:mt-16">
                       <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-lg w-3/4 animate-pulse"></div>
                     </div>
 
@@ -897,9 +897,9 @@ export const PostPreviewPage = () => {
                 <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(180deg,transparent,white,white,transparent)] dark:bg-grid-slate-400/5 opacity-30 pointer-events-none"></div>
                 
                 {/* Content Container */}
-                <div className="relative z-10 px-4 py-6 sm:px-8 md:px-12 lg:px-16 xl:px-20">
+                <div className="relative z-10 px-4 pt-6 pb-16 sm:px-8 sm:pb-20 md:px-12 lg:px-16 lg:pb-24 xl:px-20 xl:pb-28">
                   {/* Loading Title Skeleton */}
-                  <div className="mb-6">
+                  <div className="mb-6 mt-8 sm:mt-12 md:mt-16">
                     <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-lg w-3/4 animate-pulse"></div>
                   </div>
 
@@ -989,9 +989,9 @@ export const PostPreviewPage = () => {
               <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(180deg,transparent,white,white,transparent)] dark:bg-grid-slate-400/5 opacity-30 pointer-events-none"></div>
               
               {/* Content Container */}
-              <div className="relative z-10 px-4 py-6 sm:px-8 md:px-12 lg:px-16 xl:px-20">
+              <div className="relative z-10 px-4 pt-6 pb-16 sm:px-8 sm:pb-20 md:px-12 lg:px-16 lg:pb-24 xl:px-20 xl:pb-28">
                 {/* Title */}
-                <div className="mb-6">
+                <div className="mb-6 mt-8 sm:mt-12 md:mt-16">
                   <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground">
                     {postTitle}
                   </h1>

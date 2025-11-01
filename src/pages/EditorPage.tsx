@@ -3,7 +3,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { Edit3, Eye, BookOpen, ExternalLink, AlertTriangle, Save, Trash2, X } from 'lucide-react';
 import Editor from "../components/editor/Editor";
 import EditorTextParser from "../components/editor/EditorTextParser";
-import { useAccount, useSignMessage, usePublicClient } from 'wagmi';
+import { useAccount, useSignTypedData, usePublicClient } from 'wagmi';
 import { createGroupPost, updateFileById, useAddAsset, publishFile } from '@/services/dXService';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -54,7 +54,7 @@ const EditorPage = () => {
 	const [failedStep, setFailedStep] = useState<PublishStep | null>(null);
 	
 	const { address } = useAccount();
-	const { signMessageAsync } = useSignMessage();
+	const { signTypedDataAsync } = useSignTypedData();
 	const publicClient = usePublicClient();
 	const { cid } = useParams();
 	const navigate = useNavigate();
@@ -151,30 +151,23 @@ const EditorPage = () => {
 				}
 			}
 			
-			if (cid) {
-				// Update existing post
-				const result = await updateFileById(cid, currentData, documentTitle, address, signMessageAsync);
-				const newCid = result?.upload?.cid || result?.cid || result?.data?.cid;
-				
-				if (newCid) {
-					navigate(`/app/editor/${newCid}`);
-				}
-			} else {
-				// Create new post
-				const timestamp = Math.floor(Date.now() / 1000);
-				const salt = `I want to create a new file at timestamp - ${timestamp}`;
-				const signature = await signMessageAsync({ 
-					message: salt,
-					account: address as `0x${string}`
-				});
-				
-				const result = await createGroupPost(currentData, documentTitle, address, signature, salt);
-				const newCid = result?.updatedUpload?.cid || result?.cid || result?.data?.cid;
-				
-				if (newCid) {
-					navigate(`/app/editor/${newCid}`);
-				}
+		if (cid) {
+			// Update existing post
+			const result = await updateFileById(cid, currentData, documentTitle, address, signTypedDataAsync);
+			const newCid = result?.upload?.cid || result?.cid || result?.data?.cid;
+			
+			if (newCid) {
+				navigate(`/app/editor/${newCid}`);
 			}
+		} else {
+			// Create new post
+			const result = await createGroupPost(currentData, documentTitle, address, signTypedDataAsync);
+			const newCid = result?.updatedUpload?.cid || result?.cid || result?.data?.cid;
+			
+			if (newCid) {
+				navigate(`/app/editor/${newCid}`);
+			}
+		}
 			
 			setHasUnsavedChanges(false);
 			justSavedOrLoaded.current = true;
@@ -185,7 +178,7 @@ const EditorPage = () => {
 		} finally {
 			setIsSaving(false);
 		}
-	}, [address, signMessageAsync, ensureAuthenticated, cid, data, documentTitle, navigate]);
+	}, [address, signTypedDataAsync, ensureAuthenticated, cid, data, documentTitle, navigate]);
 
 	// Track changes when data updates
 	useEffect(() => {
@@ -404,7 +397,7 @@ const EditorPage = () => {
 		let thumbnailCid = uploadedThumbnailCid;
 		if (publishData.thumbnail && !thumbnailCid) {
 			try {
-				const result = await publishFile(publishData.thumbnail, address, signMessageAsync, cid, publishData.hashtags);
+				const result = await publishFile(publishData.thumbnail, address, signTypedDataAsync, cid, publishData.hashtags);
 				thumbnailCid = result.thumbnailCid;
 				// Store the thumbnail CID for potential retry
 				setUploadedThumbnailCid(thumbnailCid);
@@ -422,8 +415,22 @@ const EditorPage = () => {
 			try {
 				setPublishStep('signing');
 				
+				// Generate unique salt combining timestamp, random value, and address
+				// This prevents collisions even if publishing at the same time
+				const randomValue = Math.floor(Math.random() * 1000000);
+				const uniqueSalt = `${timestamp}${randomValue}${address?.slice(2, 10) || ''}`;
+				
+				console.log('📝 Publishing with params:', {
+					salt: uniqueSalt,
+					assetTitle: documentTitle,
+					assetCid: cid,
+					thumbnailCid: thumbnailCid,
+					description: publishData.description || "",
+					costInNative: priceInWei
+				});
+				
 				await addAsset({
-					salt: timestamp.toString(16),
+					salt: uniqueSalt,
 					assetTitle: documentTitle,
 					assetCid: cid,
 					thumbnailCid: thumbnailCid,
@@ -436,9 +443,29 @@ const EditorPage = () => {
 				
 		} catch (contractError: any) {
 			console.error('❌ Error calling addAsset contract:', contractError);
-			const errorMsg = contractError.message?.includes('user rejected') 
-				? 'Transaction was rejected by user.'
-				: 'Failed to publish to blockchain. Please try again.';
+			
+			// Parse specific contract errors for better user feedback
+			let errorMsg = 'Failed to publish to blockchain. Please try again.';
+			
+			if (contractError.message?.includes('user rejected')) {
+				errorMsg = 'Transaction was rejected by user.';
+			} else if (contractError.message?.includes('AssetAlreadyAdded')) {
+				errorMsg = 'This content has already been published. Please try with different content.';
+			} else if (contractError.message?.includes('EmptyAssetTitle')) {
+				errorMsg = 'Asset title cannot be empty. Please add a title.';
+			} else if (contractError.message?.includes('AssetTitleLengthTooBig')) {
+				errorMsg = 'Asset title is too long. Please shorten your title.';
+			} else if (contractError.message?.includes('DescriptionTooBig')) {
+				errorMsg = 'Description is too long. Please shorten your description.';
+			} else if (contractError.message?.includes('InvalidAssetCid')) {
+				errorMsg = 'Invalid content CID. Please save your content first.';
+			} else if (contractError.message?.includes('InvalidThumbnailCid')) {
+				errorMsg = 'Invalid thumbnail CID. Please select a valid thumbnail image.';
+			} else if (contractError.message?.includes('EnforcedPause')) {
+				errorMsg = 'The contract is currently paused. Please try again later.';
+			} else if (contractError.message?.includes('insufficient funds')) {
+				errorMsg = 'Insufficient funds to pay for gas. Please add ETH to your wallet.';
+			}
 			
 			setPublishStep('error');
 			setFailedStep('signing');
@@ -455,7 +482,7 @@ const EditorPage = () => {
 			setIsPublishing(false);
 			return false;
 		}
-	}, [address, ensureAuthenticated, cid, documentTitle, addAsset, signMessageAsync]);
+	}, [address, ensureAuthenticated, cid, documentTitle, addAsset, signTypedDataAsync, uploadedThumbnailCid]);
 
 	// Simple publish without overlay (no thumbnail/price/description) - kept for backward compatibility
 	const publishToAPI = useCallback(async () => {

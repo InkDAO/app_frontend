@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Trash2, Loader2, Edit, FileImage, AlertTriangle } from "lucide-react";
 import { useState } from "react";
-import { useAccount, useSignMessage } from "wagmi";
+import { useAccount, useSignMessage, useSignTypedData } from "wagmi";
 import { useNavigate } from "react-router-dom";
 import { deleteFileById } from "@/services/dXService";
 import {
@@ -36,6 +36,7 @@ export const SavedPostCard = ({ savedPost, onDelete }: SavedPostCardProps) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { address } = useAccount();
   const { signMessageAsync } = useSignMessage();
+  const { signTypedDataAsync } = useSignTypedData();
   const navigate = useNavigate();
 
   // Parse content and extract title, image, and preview
@@ -168,7 +169,7 @@ export const SavedPostCard = ({ savedPost, onDelete }: SavedPostCardProps) => {
     setIsDeleting(true);
 
     try {
-      await deleteFileById(cid, address, signMessageAsync);
+      await deleteFileById(cid, address, signTypedDataAsync);
       
       // Call the onDelete callback to update the parent component
       if (onDelete) {

@@ -5,20 +5,69 @@ import { apiService, authenticatedFetch } from "./httpClient";
 import { authService } from "./authService";
 import { dXassetContract } from "@/contracts/dXasset";
 
-// API Service for posting to group endpoint with proper content upload
-export const createGroupPost = async (content: any, title: string, address: string, signature: string, salt: string) => {
+// API Service for posting to group endpoint with proper content upload using EIP-712 typed data
+export const createGroupPost = async (content: any, title: string, address: string, signTypedData: any) => {
   try {    
+    // Generate timestamp (current timestamp in seconds)
+    const timestamp = Math.floor(Date.now() / 1000);
+    
+    // Generate random nonce for uniqueness
+    const nonce = crypto.randomUUID();
+    
+    // Define EIP-712 domain
+    const domain = {
+      name: 'InkDAO',
+      version: '1',
+      chainId: sepolia.id,
+    } as const;
+    
+    // Define EIP-712 types
+    const types = {
+      CreateFile: [
+        { name: 'title', type: 'string' },
+        { name: 'nonce', type: 'string' },
+        { name: 'address', type: 'address' },
+        { name: 'timestamp', type: 'uint256' },
+      ],
+    };
+    
+    // Define message data
+    const message = {
+      title: title,
+      nonce: nonce,
+      address: address as `0x${string}`,
+      timestamp: BigInt(timestamp),
+    } as const;
+    
+    // Sign the typed data with wallet
+    const signature = await signTypedData({
+      domain,
+      types,
+      primaryType: 'CreateFile',
+      message,
+      account: address as `0x${string}`
+    });
+    
     const contentJson = JSON.stringify({
       title,
       content,
     }, null, 2);
 
-
     const payload = {
-      salt,
       address,
       signature,
-      content: contentJson
+      content: contentJson,
+      // Include EIP-712 data for server verification
+      salt: {
+        domain,
+        types,
+        message: {
+          title: message.title,
+          nonce: message.nonce,
+          address: message.address,
+          timestamp: timestamp,
+        }
+      }
     };
 
     const response = await authenticatedFetch(`${import.meta.env.VITE_SERVER_URL}/create/group`, {
@@ -46,23 +95,65 @@ export const createGroupPost = async (content: any, title: string, address: stri
   }
 };
 
-// API function to publish file (upload thumbnail image) with wallet signature
-export const publishFile = async (file: File, address: string, signMessage: any, cid: string, hashtags?: string): Promise<{ thumbnailCid: string }> => {
+// API function to publish file (upload thumbnail image) with wallet signature using EIP-712 typed data
+export const publishFile = async (file: File, address: string, signTypedData: any, cid: string, hashtags?: string): Promise<{ thumbnailCid: string }> => {
   try {
-    // Generate salt (current timestamp in seconds)
+    // Generate timestamp (current timestamp in seconds)
     const timestamp = Math.floor(Date.now() / 1000);
-    const salt = `I want to publish ${cid} at timestamp - ${timestamp}`;
     
-    // Sign the salt with wallet
-    const signature = await signMessage({ 
-      message: salt,
+    // Generate random nonce for uniqueness
+    const nonce = crypto.randomUUID();
+    
+    // Define EIP-712 domain
+    const domain = {
+      name: 'InkDAO',
+      version: '1',
+      chainId: sepolia.id,
+    } as const;
+    
+    // Define EIP-712 types
+    const types = {
+      PublishFile: [
+        { name: 'cid', type: 'string' },
+        { name: 'nonce', type: 'string' },
+        { name: 'address', type: 'address' },
+        { name: 'timestamp', type: 'uint256' },
+      ],
+    };
+    
+    // Define message data
+    const message = {
+      cid: cid,
+      nonce: nonce,
+      address: address as `0x${string}`,
+      timestamp: BigInt(timestamp),
+    } as const;
+    
+    // Sign the typed data with wallet
+    const signature = await signTypedData({
+      domain,
+      types,
+      primaryType: 'PublishFile',
+      message,
       account: address as `0x${string}`
     });
+    
+    // Create salt object for server verification
+    const saltObject = {
+      domain,
+      types,
+      message: {
+        cid: message.cid,
+        nonce: message.nonce,
+        address: message.address,
+        timestamp: timestamp,
+      }
+    };
     
     // Create FormData for file upload
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('salt', salt);
+    formData.append('salt', JSON.stringify(saltObject));
     formData.append('address', address);
     formData.append('signature', signature);
     
@@ -365,24 +456,65 @@ export const fetchFileContentByAssetAddress = async (assetAddress: string, userA
   }
 };
 
-// API function to delete a file by CID (with authentication)
-export const deleteFileById = async (cid: string, address: string, signMessage: any): Promise<any> => {
+// API function to delete a file by CID (with authentication) using EIP-712 typed data
+export const deleteFileById = async (cid: string, address: string, signTypedData: any): Promise<any> => {
   try {
     
-    // Generate salt (current timestamp in seconds)
+    // Generate timestamp (current timestamp in seconds)
     const timestamp = Math.floor(Date.now() / 1000);
-    const salt = `I want to delete my file ${cid} at timestamp - ${timestamp}`;
     
-    const signature = await signMessage({ 
-      message: salt,
+    // Generate random nonce for uniqueness
+    const nonce = crypto.randomUUID();
+    
+    // Define EIP-712 domain
+    const domain = {
+      name: 'InkDAO',
+      version: '1',
+      chainId: sepolia.id,
+    } as const;
+    
+    // Define EIP-712 types
+    const types = {
+      DeleteFile: [
+        { name: 'cid', type: 'string' },
+        { name: 'nonce', type: 'string' },
+        { name: 'address', type: 'address' },
+        { name: 'timestamp', type: 'uint256' },
+      ],
+    };
+    
+    // Define message data
+    const message = {
+      cid: cid,
+      nonce: nonce,
+      address: address as `0x${string}`,
+      timestamp: BigInt(timestamp),
+    } as const;
+    
+    // Sign the typed data with wallet
+    const signature = await signTypedData({
+      domain,
+      types,
+      primaryType: 'DeleteFile',
+      message,
       account: address as `0x${string}`
     });
         
     // Prepare the deletion payload
     const payload = {
-      salt,
       address,
-      signature
+      signature,
+      // Include EIP-712 data for server verification
+      salt: {
+        domain,
+        types,
+        message: {
+          cid: message.cid,
+          nonce: message.nonce,
+          address: message.address,
+          timestamp: timestamp,
+        }
+      }
     };
     
     // Make authenticated API call to delete the file
@@ -410,31 +542,68 @@ export const deleteFileById = async (cid: string, address: string, signMessage: 
   }
 };
 
-// API function to update a file by CID (with authentication)
-export const updateFileById = async (cid: string, content: any, title: string, address: string, signMessage: any): Promise<any> => {
+// API function to update a file by CID (with authentication) using EIP-712 typed data
+export const updateFileById = async (cid: string, content: any, title: string, address: string, signTypedData: any): Promise<any> => {
   try {
     
-    // Generate salt (current timestamp in seconds)
+    // Generate timestamp (current timestamp in seconds)
     const timestamp = Math.floor(Date.now() / 1000);
-    const salt = `I want to update file ${cid} at timestamp - ${timestamp}`;
     
+    // Generate random nonce for uniqueness
+    const nonce = crypto.randomUUID();
     
-    // Sign the salt with wallet
-    const signature = await signMessage({ 
-      message: salt,
+    // Define EIP-712 domain
+    const domain = {
+      name: 'InkDAO',
+      version: '1',
+      chainId: sepolia.id,
+    } as const;
+    
+    // Define EIP-712 types
+    const types = {
+      UpdateFile: [
+        { name: 'cid', type: 'string' },
+        { name: 'nonce', type: 'string' },
+        { name: 'address', type: 'address' },
+        { name: 'timestamp', type: 'uint256' },
+      ],
+    };
+    
+    // Define message data
+    const message = {
+      cid: cid,
+      nonce: nonce,
+      address: address as `0x${string}`,
+      timestamp: BigInt(timestamp),
+    } as const;
+    
+    // Sign the typed data with wallet
+    const signature = await signTypedData({
+      domain,
+      types,
+      primaryType: 'UpdateFile',
+      message,
       account: address as `0x${string}`
     });
-    
-    
     // Prepare the update payload with content
     const payload = {
-      salt,
       address,
       signature,
       content: JSON.stringify({
         title,
         content
-      }, null, 2)
+      }, null, 2),
+      // Include EIP-712 data for server verification
+      salt: {
+        domain,
+        types,
+        message: {
+          cid: message.cid,
+          nonce: message.nonce,
+          address: message.address,
+          timestamp: timestamp,
+        }
+      }
     };
     
     

@@ -424,7 +424,7 @@ const Landing = () => {
                   <FaGithub className="h-6 w-6" />
                 </a>
                 <a 
-                  href="https://x.com/0xAakibAlam" 
+                  href="https://x.com/inkdao_tech" 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="p-3 rounded-lg bg-muted/50 text-muted-foreground hover:text-primary hover:bg-muted transition-all"

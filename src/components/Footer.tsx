@@ -27,7 +27,7 @@ const Footer = () => {
     {
       icon: <FaXTwitter className="h-4 w-4" />,
       text: "Twitter",
-      href: "https://x.com/0xAakibAlam",
+      href: "https://x.com/inkdao_tech",
       label: "X (Twitter) Profile"
     }
   ];

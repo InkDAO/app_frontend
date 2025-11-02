@@ -294,37 +294,110 @@ const EditorPage = () => {
 	// Monitor contract transaction confirmation and extract asset address
 	useEffect(() => {
 		const handleConfirmation = async () => {
+			
 			if (isContractConfirmed && isPublishing && cid) {
 				try {
-					// Use the contract's assetData mapping to get asset address by CID
-					// This is more reliable than trying to decode event logs
-					const postInfo = await publicClient?.readContract({
+					// Get the token ID from the postCidToTokenId mapping
+					const tokenId = await publicClient?.readContract({
 						address: marketPlaceContract.address as `0x${string}`,
 						abi: marketPlaceContract.abi,
-						functionName: 'getPostInfoByCid',
+						functionName: 'postCidToTokenId',
 						args: [cid],
-					}) as any;
+					}) as bigint;
 
-					if (postInfo && postInfo.postId) {
-						setPublishedAssetAddress(postInfo.postId.toString());
+					if (tokenId && tokenId > 0n) {
+						setPublishedAssetAddress(tokenId.toString());
 						setPublishStep('completed');
 						setIsPublishing(false);
+						// Clear stored data on success
+						setUploadedThumbnailCid('');
+						setFailedStep(null);
+						setLastPublishData(null);
+					} else {
+						setPublishStep('completed');
+						setIsPublishing(false);
+						setUploadedThumbnailCid('');
+						setFailedStep(null);
+						setLastPublishData(null);
 					}
-			} catch (error) {
-				console.error('Error fetching post info:', error);
-				// Still show success even if we couldn't get the address
-				setPublishStep('completed');
-				setIsPublishing(false);
-				// Clear stored data on success
-				setUploadedThumbnailCid('');
-				setFailedStep(null);
-				setLastPublishData(null);
+				} catch (error) {
+					// Still show success even if we couldn't get the address
+					setPublishStep('completed');
+					setIsPublishing(false);
+					// Clear stored data on success
+					setUploadedThumbnailCid('');
+					setFailedStep(null);
+					setLastPublishData(null);
+				}
 			}
-		}
-	};
+		};
 
-	handleConfirmation();
-}, [isContractConfirmed, isPublishing, cid, publicClient]);
+		handleConfirmation();
+	}, [isContractConfirmed, isPublishing, cid, publicClient, publishStep, txHash]);
+
+	// Fallback: Manually check transaction receipt if stuck on confirming for too long
+	useEffect(() => {
+		if (!txHash || !isPublishing || publishStep !== 'confirming' || !publicClient) {
+			return;
+		}
+
+		const checkReceipt = async () => {
+			const receipt = await publicClient.getTransactionReceipt({ hash: txHash as `0x${string}` });
+			
+			if (receipt) {
+				
+				if (receipt.status === 'success') {
+					
+					if (cid) {
+						try {
+							const tokenId = await publicClient.readContract({
+								address: marketPlaceContract.address as `0x${string}`,
+								abi: marketPlaceContract.abi,
+								functionName: 'postCidToTokenId',
+								args: [cid],
+							}) as bigint;
+
+							if (tokenId && tokenId > 0n) {
+								setPublishedAssetAddress(tokenId.toString());
+							} else {
+								console.warn('⚠️ Fallback: Token ID is 0 or undefined');
+							}
+						} catch (error) {
+							console.warn('⚠️ Fallback: Could not fetch token ID:', error);
+						}
+					}
+
+					setPublishStep('completed');
+					setIsPublishing(false);
+					setUploadedThumbnailCid('');
+					setFailedStep(null);
+					setLastPublishData(null);
+				} else {
+					console.error('❌ Fallback: Transaction failed on blockchain');
+					setPublishStep('error');
+					setFailedStep('confirming');
+					setPublishError('Transaction failed on the blockchain.');
+					setIsPublishing(false);
+				}
+			}
+		};
+
+		// Check immediately
+		checkReceipt();
+
+		// Then check every 3 seconds
+		const interval = setInterval(checkReceipt, 3000);
+
+		// Clean up after 5 minutes
+		const timeout = setTimeout(() => {
+			clearInterval(interval);
+		}, 5 * 60 * 1000);
+
+		return () => {
+			clearInterval(interval);
+			clearTimeout(timeout);
+		};
+	}, [txHash, isPublishing, publishStep, publicClient, cid]);
 
 	// Monitor contract transaction errors
 	useEffect(() => {
@@ -340,7 +413,6 @@ const EditorPage = () => {
 	useEffect(() => {
 		if (isPublishing) {
 			const timeout = setTimeout(() => {
-				console.warn('Publishing timeout - resetting state');
 				setPublishStep('error');
 				setPublishError('Publishing took too long. Please check your transaction and try again if needed.');
 				setIsPublishing(false);
@@ -419,7 +491,6 @@ const EditorPage = () => {
 				description: publishData.description || "",
 				priceInNative: priceInWei
 			});
-				
 				// Transaction submitted - wait for confirmation via useEffect
 				return true;
 				

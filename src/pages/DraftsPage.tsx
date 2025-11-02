@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { SavedPostCard } from "@/components/SavedPostCard";
 import { SavedPostCardSkeleton } from "@/components/SavedPostCardSkeleton";
+import { EmptyState } from "@/components/EmptyState";
 import { AuthGuard } from "@/components/AuthGuard";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Bookmark, RefreshCw, ChevronLeft, ChevronRight, ArrowRight, FileText } from "lucide-react";
+import { RefreshCw, ChevronLeft, ChevronRight, FileText } from "lucide-react";
 import { fetchSavedPosts, fetchSavedPostsByNextPageToken } from "@/services/dXService";
 import { useAccount } from "wagmi";
 import { useNavigate } from "react-router-dom";
@@ -249,22 +250,16 @@ export const DraftsPage = () => {
               </div>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-16 text-center animate-in fade-in-50 slide-in-from-bottom-4 duration-500">
-              <div className="flex items-center gap-3 mb-2 animate-in fade-in-50 zoom-in-50 duration-700">
-                <Bookmark className="h-8 w-8 animate-[float_3s_ease-in-out_infinite]" />
-                <h2 className="text-2xl font-semibold">No Drafts</h2>
-              </div>
-              <p className="text-muted-foreground mb-6 max-w-md animate-in fade-in-50 slide-in-from-bottom-2 duration-1000">
-                Your saved posts will appear here when you have any
-              </p>
-              <div 
-                onClick={() => navigate('/app/editor')}
-                className="flex items-center gap-2 text-muted-foreground mb-6 max-w-md animate-in fade-in-50 slide-in-from-bottom-2 duration-1000 cursor-pointer hover:text-foreground transition-colors"
-              >
-                <p>Start writing your first post</p>
-                <ArrowRight className="h-4 w-4" />
-              </div>
-            </div>
+            <EmptyState
+              icon={FileText}
+              title="No Drafts Yet"
+              description="Your drafts and saved posts will appear here. Start writing and save your work to continue later!"
+              actionLabel="Start Writing"
+              onAction={() => navigate('/app/editor')}
+              gradient="from-amber-50 via-orange-50 to-red-50 dark:from-amber-950/20 dark:via-orange-950/20 dark:to-red-950/20"
+              iconGradient="from-amber-500 via-orange-600 to-red-600"
+              iconShadow="shadow-amber-500/50"
+            />
           )}
         </div>
       </div>

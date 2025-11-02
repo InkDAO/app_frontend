@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { HomeCard } from "@/components/HomeCard";
 import { HomeCardSkeleton } from "@/components/HomeCardSkeleton";
+import { EmptyState } from "@/components/EmptyState";
 import { AuthGuard } from "@/components/AuthGuard";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, ArrowRight, RefreshCw, ChevronLeft, ChevronRight, Edit3, Sparkles } from "lucide-react";
+import { RefreshCw, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAssets } from "@/hooks/useAssets";
 import { useAccount } from "wagmi";
@@ -29,7 +30,7 @@ export const MyPostsPage = () => {
     if (!searchTerm.trim()) return myAssets;
     
     return myAssets.filter(asset => 
-      asset.assetTitle.toLowerCase().includes(searchTerm.toLowerCase())
+      asset.postTitle.toLowerCase().includes(searchTerm.toLowerCase())
     );
   };
 
@@ -67,7 +68,7 @@ export const MyPostsPage = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
                 {filteredAssets.map((asset, index) => (
                   <HomeCard 
-                    key={asset.assetCid || index} 
+                    key={asset.postCid || index} 
                     asset={asset}
                   />
                 ))}
@@ -106,22 +107,16 @@ export const MyPostsPage = () => {
               )}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-16 text-center animate-in fade-in-50 slide-in-from-bottom-4 duration-500">
-              <div className="flex items-center gap-3 mb-2 animate-in fade-in-50 zoom-in-50 duration-700">
-                <MessageSquare className="h-8 w-8 animate-[float_3s_ease-in-out_infinite]" />
-                <h2 className="text-2xl font-semibold">No Posts Yet</h2>
-              </div>
-              <p className="text-muted-foreground mb-6 max-w-md animate-in fade-in-50 slide-in-from-bottom-2 duration-1000">
-                Your published posts will appear here when you have any
-              </p>
-              <div 
-                onClick={() => navigate('/app/editor')}
-                className="flex items-center gap-2 text-muted-foreground mb-6 max-w-md animate-in fade-in-50 slide-in-from-bottom-2 duration-1000 cursor-pointer hover:text-foreground transition-colors"
-              >
-                <p>Create your first post to get started</p>
-                <ArrowRight className="h-4 w-4" />
-              </div>
-            </div>
+            <EmptyState
+              icon={Sparkles}
+              title="No Posts Yet"
+              description={searchTerm ? `No published posts found matching "${searchTerm}"` : "Your published posts will appear here. Start creating and share your expertise with the world!"}
+              actionLabel={!searchTerm ? "Create Your First Post" : undefined}
+              onAction={!searchTerm ? () => navigate('/app/editor') : undefined}
+              gradient="from-violet-50 via-purple-50 to-fuchsia-50 dark:from-violet-950/20 dark:via-purple-950/20 dark:to-fuchsia-950/20"
+              iconGradient="from-violet-500 via-purple-600 to-fuchsia-600"
+              iconShadow="shadow-violet-500/50"
+            />
           )}
         </div>
       </div>

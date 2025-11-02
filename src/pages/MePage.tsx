@@ -3,9 +3,10 @@ import { HomeCard } from "@/components/HomeCard";
 import { HomeCardSkeleton } from "@/components/HomeCardSkeleton";
 import { SavedPostCard } from "@/components/SavedPostCard";
 import { SavedPostCardSkeleton } from "@/components/SavedPostCardSkeleton";
+import { EmptyState } from "@/components/EmptyState";
 import { AuthGuard } from "@/components/AuthGuard";
 import { Input } from "@/components/ui/input";
-import { MessageSquare, ArrowRight, Sparkles, BookOpen, FileText, Search, Loader2 } from "lucide-react";
+import { Sparkles, BookOpen, FileText, Search, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAssets } from "@/hooks/useAssets";
 import { useUserAssets } from "@/hooks/useUserAssets";
@@ -294,22 +295,16 @@ export const MePage = () => {
       }
 
       return (
-        <div className="flex flex-col items-center justify-center py-16 text-center animate-in fade-in-50 slide-in-from-bottom-4 duration-500">
-          <div className="flex items-center gap-3 mb-2 animate-in fade-in-50 zoom-in-50 duration-700">
-            <MessageSquare className="h-8 w-8 animate-[float_3s_ease-in-out_infinite]" />
-            <h2 className="text-2xl font-semibold">No Posts Yet</h2>
-          </div>
-          <p className="text-muted-foreground mb-6 max-w-md animate-in fade-in-50 slide-in-from-bottom-2 duration-1000">
-            Your published posts will appear here when you have any
-          </p>
-          <div 
-            onClick={() => navigate('/app/editor')}
-            className="flex items-center gap-2 text-muted-foreground mb-6 max-w-md animate-in fade-in-50 slide-in-from-bottom-2 duration-1000 cursor-pointer hover:text-foreground transition-colors"
-          >
-            <p>Create your first post to get started</p>
-            <ArrowRight className="h-4 w-4" />
-          </div>
-        </div>
+        <EmptyState
+          icon={Sparkles}
+          title="No Posts Yet"
+          description={searchTerm ? `No published posts found matching "${searchTerm}"` : "Your published posts will appear here. Start creating and share your expertise with the world!"}
+          actionLabel={!searchTerm ? "Create Your First Post" : undefined}
+          onAction={!searchTerm ? () => navigate('/app/editor') : undefined}
+          gradient="from-violet-50 via-purple-50 to-fuchsia-50 dark:from-violet-950/20 dark:via-purple-950/20 dark:to-fuchsia-950/20"
+          iconGradient="from-violet-500 via-purple-600 to-fuchsia-600"
+          iconShadow="shadow-violet-500/50"
+        />
       );
     }
 
@@ -355,24 +350,18 @@ export const MePage = () => {
       }
 
       return (
-        <div className="flex flex-col items-center justify-center py-16 text-center animate-in fade-in-50 slide-in-from-bottom-4 duration-500">
-          <div className="flex items-center gap-3 mb-2 animate-in fade-in-50 zoom-in-50 duration-700">
-            <BookOpen className="h-8 w-8 animate-[float_3s_ease-in-out_infinite]" />
-            <h2 className="text-2xl font-semibold">No Assets in Library</h2>
-          </div>
-          <p className="text-muted-foreground mb-6 max-w-md animate-in fade-in-50 slide-in-from-bottom-2 duration-1000">
-            {searchTerm ? `No assets found matching "${searchTerm}"` : "Your library is empty. Start by purchasing assets."}
-          </p>
-          {!searchTerm && (
-            <div 
-              onClick={() => navigate('/app')}
-              className="flex items-center gap-2 text-muted-foreground mb-6 max-w-md animate-in fade-in-50 slide-in-from-bottom-2 duration-1000 cursor-pointer hover:text-foreground transition-colors"
-            >
-              <p>Purchase your first asset</p>
-              <ArrowRight className="h-4 w-4" />
-            </div>
-          )}
-        </div>
+        <EmptyState
+          icon={BookOpen}
+          title="Library is Empty"
+          description={searchTerm ? `No assets found matching "${searchTerm}"` : "Build your knowledge collection! Browse and purchase posts to add them to your library."}
+          actionLabel={!searchTerm ? "Explore Posts" : undefined}
+          onAction={!searchTerm ? () => navigate('/app') : undefined}
+          secondaryActionLabel={!searchTerm ? "Create Your Own" : undefined}
+          onSecondaryAction={!searchTerm ? () => navigate('/app/editor') : undefined}
+          gradient="from-emerald-50 via-teal-50 to-cyan-50 dark:from-emerald-950/20 dark:via-teal-950/20 dark:to-cyan-950/20"
+          iconGradient="from-emerald-500 via-teal-600 to-cyan-600"
+          iconShadow="shadow-emerald-500/50"
+        />
       );
     }
 
@@ -420,24 +409,16 @@ export const MePage = () => {
       }
 
       return (
-        <div className="flex flex-col items-center justify-center py-16 text-center animate-in fade-in-50 slide-in-from-bottom-4 duration-500">
-          <div className="flex items-center gap-3 mb-2 animate-in fade-in-50 zoom-in-50 duration-700">
-            <FileText className="h-8 w-8 animate-[float_3s_ease-in-out_infinite]" />
-            <h2 className="text-2xl font-semibold">No Drafts</h2>
-          </div>
-          <p className="text-muted-foreground mb-6 max-w-md animate-in fade-in-50 slide-in-from-bottom-2 duration-1000">
-            {searchTerm ? `No drafts found matching "${searchTerm}"` : "Your saved posts will appear here when you have any"}
-          </p>
-          {!searchTerm && (
-            <div 
-              onClick={() => navigate('/app/editor')}
-              className="flex items-center gap-2 text-muted-foreground mb-6 max-w-md animate-in fade-in-50 slide-in-from-bottom-2 duration-1000 cursor-pointer hover:text-foreground transition-colors"
-            >
-              <p>Start writing your first post</p>
-              <ArrowRight className="h-4 w-4" />
-            </div>
-          )}
-        </div>
+        <EmptyState
+          icon={FileText}
+          title="No Drafts Yet"
+          description={searchTerm ? `No drafts found matching "${searchTerm}"` : "Your drafts and saved posts will appear here. Start writing and save your work to continue later!"}
+          actionLabel={!searchTerm ? "Start Writing" : undefined}
+          onAction={!searchTerm ? () => navigate('/app/editor') : undefined}
+          gradient="from-amber-50 via-orange-50 to-red-50 dark:from-amber-950/20 dark:via-orange-950/20 dark:to-red-950/20"
+          iconGradient="from-amber-500 via-orange-600 to-red-600"
+          iconShadow="shadow-amber-500/50"
+        />
       );
     }
   };

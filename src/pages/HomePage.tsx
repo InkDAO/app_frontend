@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { HomeCard } from "@/components/HomeCard";
 import { HomeCardSkeleton } from "@/components/HomeCardSkeleton";
+import { EmptyState } from "@/components/EmptyState";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useSearch } from "@/context/SearchContext";
 import { useAssets } from "@/hooks/useAssets";
 import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import { handleGetFilesByTags } from "@/services/pinataService";
-import { MessageSquare, ArrowRight, Clock, Search, Megaphone, Gift, Star, Loader2, X } from "lucide-react";
+import { Clock, Search, Megaphone, Gift, Star, Loader2, X, Edit3, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { admin } from "@/contracts/marketPlace";
 import { useReadContracts } from "wagmi";
@@ -220,6 +221,69 @@ const HomePage = () => {
   const heroContent = getHeroContent();
   const HeroIcon = heroContent.icon;
 
+  // Get empty state icon based on active filter
+  const getEmptyStateIcon = () => {
+    switch (activeFilter) {
+      case "just-created":
+        return Clock;
+      case "top-reads":
+        return Star;
+      case "announcements":
+        return Megaphone;
+      case "free":
+        return Gift;
+      default:
+        return Sparkles;
+    }
+  };
+
+  // Get empty state title
+  const getEmptyStateTitle = () => {
+    if (selectedTags.length > 0) {
+      return "No Posts Found";
+    }
+    if (searchTerm) {
+      return "No Results Found";
+    }
+    switch (activeFilter) {
+      case "just-created":
+        return "No Posts Yet";
+      case "top-reads":
+        return "No Popular Posts";
+      case "announcements":
+        return "No Announcements";
+      case "free":
+        return "No Free Posts";
+      default:
+        return "No Posts Yet";
+    }
+  };
+
+  // Get empty state description
+  const getEmptyStateDescription = () => {
+    if (selectedTags.length > 0) {
+      return "No posts found with the selected tags. Try different tags or clear the filter.";
+    }
+    if (searchTerm && activeFilter === "free") {
+      return `No free posts found matching "${searchTerm}". Try a different search term or explore other filters.`;
+    }
+    if (searchTerm) {
+      return `No posts found matching "${searchTerm}". Try a different search term or browse all posts.`;
+    }
+    switch (activeFilter) {
+      case "just-created":
+        return "Be the first to share your knowledge! Create a post and start earning from your content.";
+      case "top-reads":
+        return "No popular posts available yet. Check back soon or be the first to create trending content!";
+      case "announcements":
+        return "No official announcements at this time. Stay tuned for platform updates and news!";
+      case "free":
+        return "No free posts available yet. Explore paid posts or create your own free content!";
+      default:
+        return "No posts have been published yet. Be the first to share your expertise!";
+    }
+  };
+
   return (
     <div className="px-4 sm:px-8 py-6 lg:px-12 xl:px-16 max-w-7xl mx-auto w-full">
       <div className="mb-8 sm:mb-10">
@@ -358,32 +422,16 @@ const HomePage = () => {
             )}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-16 text-center animate-in fade-in-50 slide-in-from-bottom-4 duration-500">
-            <div className="flex items-center gap-3 mb-2 animate-in fade-in-50 zoom-in-50 duration-700">
-              <MessageSquare className="h-8 w-8 animate-[float_3s_ease-in-out_infinite]" />
-              <h2 className="text-2xl font-semibold">No Posts Yet</h2>
-            </div>
-            <p className="text-muted-foreground mb-6 max-w-md animate-in fade-in-50 slide-in-from-bottom-2 duration-1000">
-              {selectedTags.length > 0
-                ? `No posts found with the selected tags`
-                : searchTerm && activeFilter === "free" 
-                ? `No free posts found matching "${searchTerm}"` 
-                : searchTerm 
-                ? `No posts found matching "${searchTerm}"` 
-                : activeFilter === "free"
-                ? "No free posts available yet"
-                : "No posts have been published yet"}
-            </p>
-            {!searchTerm && activeFilter === "just-created" && (
-              <div 
-                onClick={() => navigate('/app')}
-                className="flex items-center gap-2 text-muted-foreground mb-6 max-w-md animate-in fade-in-50 slide-in-from-bottom-2 duration-1000 cursor-pointer hover:text-foreground transition-colors"
-              >
-                <p>Be the first to create a post</p>
-                <ArrowRight className="h-4 w-4" />
-              </div>
-            )}
-          </div>
+          <EmptyState
+            icon={getEmptyStateIcon()}
+            title={getEmptyStateTitle()}
+            description={getEmptyStateDescription()}
+            actionLabel={!searchTerm && !selectedTags.length ? "Create First Post" : undefined}
+            onAction={!searchTerm && !selectedTags.length ? () => navigate('/app/editor') : undefined}
+            gradient={heroContent.gradient}
+            iconGradient={heroContent.iconGradient}
+            iconShadow={heroContent.iconShadow}
+          />
         )}
       </div>
     </div>

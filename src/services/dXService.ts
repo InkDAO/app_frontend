@@ -191,7 +191,13 @@ export const publishFile = async (file: File, address: string, signTypedData: an
 export const useAddAsset = () => {
   const { address } = useAccount();
   const { writeContract, isPending, isSuccess, isError, data: hash } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({hash});
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+    hash,
+    query: {
+      enabled: !!hash,
+      refetchInterval: 2000,
+    },
+  });
 
   const addAsset = async (assetData: { salt: string, postTitle: string, postCid: string, thumbnailCid: string, description: string, priceInNative: string }) => {
     if (!address) {
@@ -233,7 +239,7 @@ export const useAddAsset = () => {
     isError,
     isConfirming,
     isConfirmed,
-    hash
+    hash,
   };
 };
 

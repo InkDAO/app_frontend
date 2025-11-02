@@ -1,5 +1,4 @@
 import React from "react";
-import katex from "katex";
 
 type EditorData = {
   time?: number;
@@ -13,6 +12,24 @@ interface EditorTextParserProps {
 
 export default function EditorTextParser({ data }: EditorTextParserProps) {
   if (!data || !data.blocks) return null;
+
+  // Helper function to render LaTeX using KaTeX
+  const renderLatex = (latex: string, displayMode: boolean = false): string => {
+    try {
+      // @ts-ignore - katex is loaded from CDN
+      if (typeof window !== 'undefined' && window.katex) {
+        // @ts-ignore
+        return window.katex.renderToString(latex, {
+          displayMode: displayMode,
+          throwOnError: false,
+          output: 'html'
+        });
+      }
+    } catch (err) {
+      console.error('Error rendering LaTeX:', err);
+    }
+    return latex;
+  };
 
   // Function to convert plain text URLs to anchor tags
   const linkifyText = (text: string): string => {
@@ -119,36 +136,6 @@ export default function EditorTextParser({ data }: EditorTextParserProps) {
             <code>{block.data.code}</code>
           </pre>
         );
-
-      case 'math':
-        const latexFormula = block.data.text || block.data.math || '';
-        try {
-          // Render LaTeX using KaTeX
-          const renderedMath = katex.renderToString(latexFormula, {
-            throwOnError: false,
-            displayMode: true, // Render as block-level math (centered, with spacing)
-          });
-          return (
-            <div 
-              key={key} 
-              className="math-block"
-              style={{ 
-                textAlign: 'center', 
-                margin: '0.5em 0',
-                overflowX: 'auto',
-                overflowY: 'hidden'
-              }}
-              dangerouslySetInnerHTML={{ __html: renderedMath }}
-            />
-          );
-        } catch (error) {
-          console.error('Error rendering LaTeX:', error);
-          return (
-            <div key={key} style={{ color: 'red', padding: '1em', border: '1px solid red', margin: '1em 0' }}>
-              Error rendering LaTeX: {latexFormula}
-            </div>
-          );
-        }
 
       case 'delimiter':
         return <hr key={key} />;
@@ -283,6 +270,25 @@ export default function EditorTextParser({ data }: EditorTextParserProps) {
               </div>
             )}
           </div>
+        );
+
+      case 'Math':
+        // Handle LaTeX rendering
+        const latexText = block.data.text || block.data.latex || block.data.math || '';
+        let renderedLatex = block.data.html || '';
+        
+        // If we have LaTeX text but no HTML, try to render it
+        if (latexText && !renderedLatex) {
+          renderedLatex = renderLatex(latexText, true);
+        }
+        
+        // If still no content, don't render anything
+        if (!renderedLatex && !latexText) {
+          return null;
+        }
+        
+        return (
+          <div key={key} className="latex-block" dangerouslySetInnerHTML={{ __html: renderedLatex }} />
         );
 
       default:

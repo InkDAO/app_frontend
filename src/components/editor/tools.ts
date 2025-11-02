@@ -12,7 +12,7 @@ import Delimiter from "@editorjs/delimiter";
 import InlineCode from "@editorjs/inline-code";
 import Embed from "@editorjs/embed";
 import Paragraph from "@editorjs/paragraph";
-import MathTex from "editorjs-math";
+import EJLaTeX from 'editorjs-latex';
 
 export const EDITOR_JS_TOOLS = {
   // Configure paragraph tool to preserve line breaks (Shift+Enter)
@@ -62,5 +62,8 @@ export const EDITOR_JS_TOOLS = {
   delimiter: Delimiter,
   embed: Embed,
   inlineCode: InlineCode,
-  math: MathTex,
+  Math: {
+    class: EJLaTeX,
+    shortcut: 'CMD+SHIFT+M'
+  }
 };

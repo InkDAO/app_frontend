@@ -35,6 +35,11 @@ body {
 
 .ce-block {
 	max-width: 100% !important;
+	overflow: visible !important;
+}
+
+.ce-block__content {
+	overflow: hidden !important;
 }
 
 .ce-block__content * {
@@ -847,31 +852,71 @@ body.dark .ce-popover__item--focused {
 	margin-top: 0.3em;
 }
 
-/* Math blocks */
-.text-container .math-block {
-	text-align: center;
-	margin: 0.5em 0;
-	padding: 0.25em 0;
-	overflow-x: auto;
-	overflow-y: hidden;
-	max-width: 100%;
-	box-sizing: border-box;
+/* LaTeX Block Styles */
+.latex-block {
+  margin: 1em 0;
+  padding: 0;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  max-width: 100%;
 }
 
-.text-container .math-block .katex {
-	font-size: 1.1em;
+.latex-block .katex-display {
+  margin: 0;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  max-width: 100%;
 }
 
-.text-container .math-block .katex-display {
-	margin: 0.25em 0;
+.latex-block .katex {
+  font-size: 1.1em;
+  color: inherit;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
 }
 
-/* Dark mode support for KaTeX */
-.dark .text-container .math-block .katex {
-	color: hsl(var(--foreground));
+.latex-block .katex .katex-html {
+  color: inherit;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
 }
 
-.dark .text-container .math-block .katex .mord {
-	color: hsl(var(--foreground));
+.latex-block .katex-display > .katex {
+  white-space: normal;
 }
 
+/* Theme compatibility for LaTeX */
+.dark .latex-block .katex {
+  color: inherit;
+}
+
+.dark .latex-block .katex-html {
+  color: inherit;
+}
+
+/* Editor LaTeX Tool Styles */
+.ce-block__content .editorjs-latex {
+  margin: 0.5em 0;
+}
+
+.ce-block__content .editorjs-latex .editorjs-latex__input {
+  width: 100%;
+  padding: 0.5em;
+  border: 1px solid var(--color-border, #e0e0e0);
+  border-radius: 4px;
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-size: 0.9em;
+  background: var(--color-background, #ffffff);
+  color: var(--color-text, #000000);
+}
+
+.ce-block__content .editorjs-latex .editorjs-latex__output {
+  margin-top: 0.5em;
+  padding: 1em;
+  background: var(--color-background-secondary, #f8f9fa);
+  border-radius: 4px;
+  min-height: 40px;
+  overflow-x: auto;
+}

@@ -1,55 +1,67 @@
 import { BarChart3, Users, DollarSign, TrendingUp, Loader2, Sparkles, BookOpen, Copy, Check } from "lucide-react";
-import { useAssets } from "@/hooks/useAssets";
-import { useUserAssets } from "@/hooks/useUserAssets";
 import { useAccount } from "wagmi";
-import { fetchSavedPosts } from "@/services/dXService";
-import { useAuth } from "@/hooks/useAuth";
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
+interface UserMetrics {
+  creator: {
+    totalAssets: number;
+    totalEarnings: number;
+    totalSubscribers: number;
+    totalAssetWorth: number;
+  };
+  holder: {
+    totalPurchases: string;
+    totalSpent: string;
+  };
+}
+
 export const DashboardPage = () => {
   const { address: urlAddress } = useParams<{ address: string }>();
   const { address: connectedAddress } = useAccount();
-  const { isAuthenticated } = useAuth();
-  const { allAssets, isAllAssetLoading } = useAssets();
-  const { allUserAssets, isAllUserAssetLoading } = useUserAssets();
   
   // Use URL address if provided, otherwise use connected address
   const dashboardAddress = urlAddress || connectedAddress;
   const isOwnDashboard = connectedAddress && dashboardAddress?.toLowerCase() === connectedAddress.toLowerCase();
   
-  const [savedPosts, setSavedPosts] = useState<any[]>([]);
-  const [isSavedPostsLoading, setIsSavedPostsLoading] = useState(false);
+  const [userMetrics, setUserMetrics] = useState<UserMetrics | null>(null);
+  const [isLoadingMetrics, setIsLoadingMetrics] = useState(false);
+  const [metricsError, setMetricsError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  // Filter assets for the dashboard address
-  const filterMyAssets = () => {
-    if (!dashboardAddress) return [];
-    return allAssets.filter((asset) => {
-      return asset.author.toLowerCase() === dashboardAddress?.toLowerCase();
-    });
-  };
-
-  // Fetch saved posts when component mounts (only for own dashboard)
+  // Fetch user metrics from API
   useEffect(() => {
-    const handleFetchSavedPosts = async () => {
-      if (!isOwnDashboard || !isAuthenticated || !dashboardAddress) return;
+    const fetchUserMetrics = async () => {
+      if (!dashboardAddress) return;
       
-      setIsSavedPostsLoading(true);
+      setIsLoadingMetrics(true);
+      setMetricsError(null);
       
       try {
-        const result = await fetchSavedPosts(dashboardAddress);
-        setSavedPosts(result.posts);
+        const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/userMetrics?userAddress=${dashboardAddress}`);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch metrics: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.statusCode === 200 && result.data) {
+          setUserMetrics(result.data);
+        } else {
+          throw new Error('Invalid response format');
+        }
       } catch (error) {
-        console.error('Failed to fetch saved posts:', error);
+        console.error('Error fetching user metrics:', error);
+        setMetricsError(error instanceof Error ? error.message : 'Failed to load metrics');
       } finally {
-        setIsSavedPostsLoading(false);
+        setIsLoadingMetrics(false);
       }
     };
 
-    handleFetchSavedPosts();
-  }, [dashboardAddress, isAuthenticated, isOwnDashboard]);
+    fetchUserMetrics();
+  }, [dashboardAddress]);
 
   // Copy dashboard URL to clipboard
   const copyDashboardUrl = () => {
@@ -59,41 +71,14 @@ export const DashboardPage = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Calculate user metrics
-  const myAssets = filterMyAssets();
-  const myPostsCount = myAssets.length;
-  const libraryCount = allUserAssets.length;
-  const draftsCount = savedPosts.length;
-  
-  // Calculate total copies sold across all user's posts
-  const totalCopiesSold = myAssets.reduce((sum, asset) => {
-    return sum + (asset.totalSupply ? parseInt(asset.totalSupply.toString()) : 0);
-  }, 0);
-
-  // Calculate total market value created (sum of all post prices * copies sold)
-  const totalMarketValue = myAssets.reduce((sum, asset) => {
-    const price = asset.costInNative ? parseFloat(asset.costInNative) / 1e18 : 0;
-    const copies = asset.totalSupply ? parseInt(asset.totalSupply.toString()) : 0;
-    return sum + (price * copies);
-  }, 0);
-
-  // Calculate total earned (same as market value since creator gets payment per sale)
-  const totalEarned = totalMarketValue;
-
-  // Calculate collection value
-  const collectionValue = allUserAssets.reduce((sum, asset) => {
-    const price = asset.costInNative ? parseFloat(asset.costInNative) / 1e18 : 0;
-    return sum + price;
-  }, 0);
-
-  // Calculate additional meaningful metrics
-  const averageCopiesPerPost = myPostsCount > 0 ? (totalCopiesSold / myPostsCount) : 0;
-  const averageRevenuePerPost = myPostsCount > 0 ? (totalEarned / myPostsCount) : 0;
-  const postsWithSales = myAssets.filter(asset => {
-    const copies = asset.totalSupply ? parseInt(asset.totalSupply.toString()) : 0;
-    return copies > 0;
-  }).length;
-  const engagementRate = myPostsCount > 0 ? ((postsWithSales / myPostsCount) * 100) : 0;
+  // Extract metrics with defaults and ensure proper number types
+  // Convert wei to ETH by dividing by 10^18
+  const myPostsCount = Number(userMetrics?.creator.totalAssets) || 0;
+  const totalCopiesSold = Number(userMetrics?.creator.totalSubscribers) || 0;
+  const totalEarned = (Number(userMetrics?.creator.totalEarnings) || 0) / 1e18;
+  const totalMarketValue = (Number(userMetrics?.creator.totalAssetWorth) || 0) / 1e18;
+  const libraryCount = parseInt(userMetrics?.holder.totalPurchases || "0", 10);
+  const collectionValue = (parseFloat(userMetrics?.holder.totalSpent || "0")) / 1e18;
 
   // Format address for display
   const formatAddress = (addr: string) => {
@@ -202,7 +187,7 @@ export const DashboardPage = () => {
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Posts Created</p>
                     <div className="flex items-baseline gap-1.5 flex-wrap">
                       <span className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
-                        {isAllAssetLoading ? (
+                        {isLoadingMetrics ? (
                           <Loader2 className="h-10 w-10 animate-spin text-violet-600" />
                         ) : (
                           myPostsCount
@@ -230,7 +215,7 @@ export const DashboardPage = () => {
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Copies Sold</p>
                     <div className="flex items-baseline gap-1.5 flex-wrap">
                       <span className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
-                        {isAllAssetLoading ? (
+                        {isLoadingMetrics ? (
                           <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
                         ) : (
                           totalCopiesSold
@@ -258,7 +243,7 @@ export const DashboardPage = () => {
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Earned</p>
                     <div className="flex items-baseline gap-1.5 flex-wrap">
                       <span className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent break-all">
-                        {isAllAssetLoading ? (
+                        {isLoadingMetrics ? (
                           <Loader2 className="h-10 w-10 animate-spin text-emerald-600" />
                         ) : (
                           totalEarned.toFixed(4)
@@ -286,7 +271,7 @@ export const DashboardPage = () => {
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Market Value</p>
                     <div className="flex items-baseline gap-1.5 flex-wrap">
                       <span className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent break-all">
-                        {isAllAssetLoading ? (
+                        {isLoadingMetrics ? (
                           <Loader2 className="h-10 w-10 animate-spin text-orange-600" />
                         ) : (
                           totalMarketValue.toFixed(4)
@@ -300,17 +285,16 @@ export const DashboardPage = () => {
             </div>
           </div>
 
-          {/* Collection - Only show if own dashboard or there's collection data */}
-          {(isOwnDashboard || libraryCount > 0) && (
-            <div>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600">
-                  <BookOpen className="h-5 w-5 text-white" />
-                </div>
-                <h3 className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent">
-                  Content Collection
-                </h3>
+          {/* Collection */}
+          <div>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600">
+                <BookOpen className="h-5 w-5 text-white" />
               </div>
+              <h3 className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent">
+                Content Collection
+              </h3>
+            </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 {/* Library Size Card */}
                 <div className="group relative">
@@ -328,7 +312,7 @@ export const DashboardPage = () => {
                       <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Library Size</p>
                       <div className="flex items-baseline gap-1.5 flex-wrap">
                         <span className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
-                          {isAllUserAssetLoading ? (
+                          {isLoadingMetrics ? (
                             <Loader2 className="h-10 w-10 animate-spin text-teal-600" />
                           ) : (
                             libraryCount
@@ -356,7 +340,7 @@ export const DashboardPage = () => {
                       <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Collection Value</p>
                       <div className="flex items-baseline gap-1.5 flex-wrap">
                         <span className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent break-all">
-                          {isAllUserAssetLoading ? (
+                          {isLoadingMetrics ? (
                             <Loader2 className="h-10 w-10 animate-spin text-indigo-600" />
                           ) : (
                             collectionValue.toFixed(4)
@@ -369,7 +353,6 @@ export const DashboardPage = () => {
                 </div>
               </div>
             </div>
-          )}
         </div>
       </div>
   );

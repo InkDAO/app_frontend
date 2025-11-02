@@ -32,7 +32,7 @@ export const usePlatformMetrics = (): PlatformMetrics => {
       try {
         setMetrics(prev => ({ ...prev, isLoading: true }));
         
-        const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/landingPage`);
+        const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/globalMetrics`);
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);

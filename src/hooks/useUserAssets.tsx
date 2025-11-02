@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Asset } from "@/types";
 import { useAccount, useReadContract } from "wagmi";
-import { dXmasterContract } from "@/contracts/dXmaster";
+import { marketPlaceContract } from "@/contracts/marketPlace";
 import { useAssets } from "./useAssets";
 
 export const useUserAssets = () => {
@@ -11,31 +11,39 @@ export const useUserAssets = () => {
   const { allAssets, isAllAssetLoading, refetchAssets: refetchAllAssets } = useAssets();
   
   const { data: allUserAssetInfo, isLoading: isAllUserAssetInfoLoading, refetch: refetchTotalUserAssets } = useReadContract({
-    address: dXmasterContract.address as `0x${string}`,
-    abi: dXmasterContract.abi,
-    functionName: "getUserAssetData",
+    address: marketPlaceContract.address as `0x${string}`,
+    abi: marketPlaceContract.abi,
+    functionName: "getUserPosts",
     args: [address],
   });
 
   useEffect(() => {
     if (!isAllUserAssetInfoLoading && !isAllAssetLoading && allAssets.length > 0 && allUserAssetInfo) {
-      const userAssets = allAssets.filter((asset) => allUserAssetInfo.some((userAsset) => userAsset.assetAddress === asset.assetAddress));
-      
-      if (userAssets) {
-        const convertedUserAssets: Asset[] = userAssets.map(asset => ({
-          assetTitle: asset.assetTitle,
-          assetCid: asset.assetCid,
-          assetAddress: asset.assetAddress,
-          author: asset.author,
-          thumbnailCid: asset.thumbnailCid,
-          description: asset.description,
-          costInNative: asset.costInNative,
-        }));
-        setAllUserAssets(convertedUserAssets);
+      try {
+        const userPostIds = allUserAssetInfo as any[];
+        
+        if (!Array.isArray(userPostIds)) {
+          setAllUserAssets([]);
+          setIsAllUserAssetLoading(false);
+          return;
+        }
+        
+        // Filter assets where user has ownership
+        const userAssets = allAssets.filter((asset) => 
+          userPostIds.some((postId: any) => postId?.toString() === asset.postId)
+        );
+        
+        setAllUserAssets(userAssets);
+      } catch (error) {
+        console.error('❌ Error processing user assets:', error);
+        setAllUserAssets([]);
       }
       setIsAllUserAssetLoading(false);
     } else if (isAllUserAssetInfoLoading || isAllAssetLoading) {
       setIsAllUserAssetLoading(true);
+    } else if (!isAllUserAssetInfoLoading && !isAllAssetLoading) {
+      setAllUserAssets([]);
+      setIsAllUserAssetLoading(false);
     }
   }, [isAllUserAssetInfoLoading, isAllAssetLoading, allAssets, allUserAssetInfo]);
 

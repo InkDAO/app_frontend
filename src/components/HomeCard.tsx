@@ -5,31 +5,23 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { FileImage, ShoppingCart, Loader2, Eye, Users, UserPlus } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
-import { useBuyAsset, getAssetCost, fetchFileContentByAssetAddress } from "@/services/dXService";
+import { useBuyAsset, getPostPrice, fetchFileContentByPostId } from "@/services/dXService";
 import { useAccount, useReadContract } from "wagmi";
 import { useState, useEffect } from "react";
 import { useAssetOwnership } from "@/hooks/useAssetOwnership";
-import { dXassetContract } from "@/contracts/dXasset";
+
+import { Asset } from "@/types";
+import { marketPlaceContract } from "@/contracts/marketPlace";
 
 interface HomeCardProps {
-  asset: {
-    assetTitle: string;
-    assetCid: string;
-    assetAddress: string;
-    author: string;
-    thumbnailCid?: string;
-    description?: string;
-    costInNative?: string;
-    hashtags?: string;
-    publishedAt?: string;
-  };
+  asset: Asset;
 }
 
 export const HomeCard = ({ asset }: HomeCardProps) => {
   const navigate = useNavigate();
   const { address } = useAccount();
   const { buyAsset, isPending, isConfirmed, isError } = useBuyAsset();
-  const { isOwned, isLoading: isOwnershipLoading } = useAssetOwnership(asset.assetAddress, asset);
+  const { isOwned, isLoading: isOwnershipLoading } = useAssetOwnership(asset.postId, asset);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isBuying, setIsBuying] = useState(false);
   const [thumbnailImage, setThumbnailImage] = useState<string>("");
@@ -47,9 +39,10 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
 
   // Fetch total supply for the asset
   const { data: totalSupply } = useReadContract({
-    address: asset.assetAddress as `0x${string}`,
-    abi: dXassetContract.abi,
+    address: marketPlaceContract.address as `0x${string}`,
+    abi: marketPlaceContract.abi,
     functionName: "totalSupply",
+    args: [BigInt(asset.postId)],
   });
 
   // Monitor transaction confirmation
@@ -103,12 +96,12 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
 
   // Fetch file content when user clicks on card (only for owned assets)
   const fetchContent = async () => {
-    if (asset.assetAddress && address && !fileContent && !isLoadingContent && isOwned && !isOwnershipLoading) {
+    if (asset.postId && address && !fileContent && !isLoadingContent && isOwned && !isOwnershipLoading) {
       setIsLoadingContent(true);
       setContentError(null);
       
       try {
-        const content = await fetchFileContentByAssetAddress(asset.assetAddress, address);
+        const content = await fetchFileContentByPostId(asset.postId, address);
         setFileContent(content);
       } catch (error) {
         console.error('❌ HomeCard - Error loading file content:', error);
@@ -120,11 +113,11 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
   };
   
   // Get asset cost from asset data or smart contract
-  const costInWei = asset.costInNative || getAssetCost(asset.assetAddress);
-  const pricePerAsset = costInWei ? parseFloat(costInWei.toString()) / 1e18 : 0; // Convert from wei to ETH with decimals
+  const priceInNative = asset.priceInNative || getPostPrice(asset.postId);
+  const pricePerAsset = priceInNative ? parseFloat(priceInNative.toString()) / 1e18 : 0; // Convert from wei to ETH with decimals
 
   // Use asset data from contract
-  const postTitle = asset.assetTitle || 'Untitled';
+  const postTitle = asset.postTitle || 'Untitled';
   const postDescription = asset.description || '';
   
   // Format published date
@@ -148,10 +141,10 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
   const formattedDate = formatPublishedDate(asset.publishedAt);
 
   const handleCardClick = async () => {
-    if (!asset.assetAddress) return;
+    if (!asset.postId) return;
     
     // Navigate directly to the post page - let PostPreviewPage handle access control
-    navigate(`/app/post/${asset.assetAddress}`);
+    navigate(`/app/post/${asset.postId}`);
   };
 
   const handleBuyClick = (e: React.MouseEvent) => {
@@ -160,16 +153,16 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
   };
 
   const handleConfirmBuy = async () => {
-    if (!asset.assetCid) {
+    if (!asset.postCid) {
       return;
     }
 
     setIsBuying(true);
     try {
       await buyAsset({
-        assetAddress: asset.assetAddress,
+        postId: asset.postId,
         amount: "1",
-        costInNativeInWei: costInWei.toString()
+        priceInNativeInWei: priceInNative.toString()
       });
       
       // Don't set isBuying to false here - let the useEffect handle it when transaction is confirmed

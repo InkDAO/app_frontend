@@ -20,7 +20,7 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { dXmasterContract } from "@/contracts/dXmaster";
+import { marketPlaceContract } from "@/contracts/marketPlace";
 
 type EditorData = {
 	time?: number;
@@ -298,29 +298,20 @@ const EditorPage = () => {
 				try {
 					// Use the contract's assetData mapping to get asset address by CID
 					// This is more reliable than trying to decode event logs
-					const assetAddress = await publicClient?.readContract({
-						address: dXmasterContract.address as `0x${string}`,
-						abi: dXmasterContract.abi,
-						functionName: 'assetData',
+					const postInfo = await publicClient?.readContract({
+						address: marketPlaceContract.address as `0x${string}`,
+						abi: marketPlaceContract.abi,
+						functionName: 'getPostInfoByCid',
 						args: [cid],
-					}) as string;
+					}) as any;
 
-					if (assetAddress && assetAddress !== '0x0000000000000000000000000000000000000000') {
-						setPublishedAssetAddress(assetAddress);
+					if (postInfo && postInfo.postId) {
+						setPublishedAssetAddress(postInfo.postId.toString());
 						setPublishStep('completed');
 						setIsPublishing(false);
-					} else {
-					// Fallback: show success without redirect
-					console.warn('Asset address not found in contract');
-					setPublishStep('completed');
-					setIsPublishing(false);
-					// Clear stored data on success
-					setUploadedThumbnailCid('');
-					setFailedStep(null);
-					setLastPublishData(null);
-				}
+					}
 			} catch (error) {
-				console.error('Error fetching asset address:', error);
+				console.error('Error fetching post info:', error);
 				// Still show success even if we couldn't get the address
 				setPublishStep('completed');
 				setIsPublishing(false);
@@ -415,28 +406,19 @@ const EditorPage = () => {
 			try {
 				setPublishStep('signing');
 				
-				// Generate unique salt combining timestamp, random value, and address
-				// This prevents collisions even if publishing at the same time
-				const randomValue = Math.floor(Math.random() * 1000000);
-				const uniqueSalt = `${timestamp}${randomValue}${address?.slice(2, 10) || ''}`;
-				
-				console.log('📝 Publishing with params:', {
-					salt: uniqueSalt,
-					assetTitle: documentTitle,
-					assetCid: cid,
-					thumbnailCid: thumbnailCid,
-					description: publishData.description || "",
-					costInNative: priceInWei
-				});
-				
-				await addAsset({
-					salt: uniqueSalt,
-					assetTitle: documentTitle,
-					assetCid: cid,
-					thumbnailCid: thumbnailCid,
-					description: publishData.description || "",
-					costInNative: priceInWei
-				});
+			// Generate unique salt combining timestamp, random value, and address
+			// This prevents collisions even if publishing at the same time
+			const randomValue = Math.floor(Math.random() * 1000000);
+			const uniqueSalt = `${timestamp}${randomValue}${address?.slice(2, 10) || ''}`;
+			
+			await addAsset({
+				salt: uniqueSalt,
+				postTitle: documentTitle,
+				postCid: cid,
+				thumbnailCid: thumbnailCid,
+				description: publishData.description || "",
+				priceInNative: priceInWei
+			});
 				
 				// Transaction submitted - wait for confirmation via useEffect
 				return true;

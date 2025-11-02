@@ -49,7 +49,7 @@ const App = () => (
                     <DashboardPage />
                   </AppLayout>
                 } />
-                <Route path="/app/post/:assetAddress" element={
+                <Route path="/app/post/:postId" element={
                   <AppLayout>
                     <PostPreviewPage />
                   </AppLayout>

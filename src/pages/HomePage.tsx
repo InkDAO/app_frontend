@@ -9,9 +9,9 @@ import { useInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import { handleGetFilesByTags } from "@/services/pinataService";
 import { MessageSquare, ArrowRight, Clock, Search, Megaphone, Gift, Star, Loader2, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { admin } from "@/contracts/dXmaster";
+import { admin } from "@/contracts/marketPlace";
 import { useReadContracts } from "wagmi";
-import { dXassetContract } from "@/contracts/dXasset";
+import { marketPlaceContract } from "@/contracts/marketPlace";
 
 const POSTS_PER_PAGE = 9;
 
@@ -38,9 +38,10 @@ const HomePage = () => {
   // @ts-ignore - Type instantiation depth issue with dynamic contract array
   const { data: totalSupplyData } = useReadContracts({
     contracts: allAssets.map((asset) => ({
-      address: asset.assetAddress as `0x${string}`,
-      abi: dXassetContract.abi,
+      address: marketPlaceContract.address as `0x${string}`,
+      abi: marketPlaceContract.abi,
       functionName: 'totalSupply',
+      args: [asset.postId],
     })),
   });
 
@@ -51,9 +52,9 @@ const HomePage = () => {
       allAssets.forEach((asset, index) => {
         const result = totalSupplyData[index];
         if (result && result.status === 'success' && result.result !== undefined) {
-          supplies[asset.assetAddress] = Number(result.result);
+          supplies[asset.postId] = Number(result.result);
         } else {
-          supplies[asset.assetAddress] = 0;
+          supplies[asset.postId] = 0;
         }
       });
       setAssetSupplies(supplies);
@@ -86,20 +87,20 @@ const HomePage = () => {
     
     // Apply tag filter first (if any tags selected)
     if (selectedTags.length > 0 && tagFilteredCids.length > 0) {
-      posts = posts.filter(asset => tagFilteredCids.includes(asset.assetCid));
+      posts = posts.filter(asset => tagFilteredCids.includes(asset.postCid));
     }
     
     // Apply search filter
     if (searchTerm.trim()) {
       posts = posts.filter(asset => 
-        asset.assetTitle.toLowerCase().includes(searchTerm.toLowerCase())
+        asset.postTitle.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
     
     // Apply filter
     if (activeFilter === "free") {
       posts = posts.filter(asset => {
-        const cost = asset.costInNative || "0";
+        const cost = asset.priceInNative || "0";
         const costInEth = parseFloat(cost) / 1e18;
         return costInEth === 0;
       });
@@ -112,8 +113,8 @@ const HomePage = () => {
     } else if (activeFilter === "top-reads") {
       // Sort by totalSupply (number of mints) in descending order
       return [...posts].sort((a, b) => {
-        const supplyA = assetSupplies[a.assetAddress] || 0;
-        const supplyB = assetSupplies[b.assetAddress] || 0;
+        const supplyA = assetSupplies[a.postId] || 0;
+        const supplyB = assetSupplies[b.postId] || 0;
         return supplyB - supplyA; // Descending order
       });
     } else if (activeFilter === "announcements") {
@@ -334,10 +335,10 @@ const HomePage = () => {
           <div className="space-y-6">
             {/* Posts Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
-              {visiblePosts.map((asset, index) => (
+              {visiblePosts.map((post, index) => (
                 <HomeCard 
-                  key={asset.assetCid || index} 
-                  asset={asset}
+                  key={post.postCid || index} 
+                  asset={post}
                 />
               ))}
             </div>

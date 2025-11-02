@@ -1,20 +1,20 @@
 import { useState, useEffect, useCallback } from "react";
 import { Asset } from "@/types";
 import { useReadContract } from "wagmi";
-import { dXmasterContract } from "@/contracts/dXmaster";
 import { fetchAllFileMetadata } from "@/services/dXService";
+import { marketPlaceContract } from "@/contracts/marketPlace";
 
-interface AssetInfo {
+interface PostInfo {
   author: `0x${string}`;
-  assetCid: string;
-  assetTitle: string;
+  postCid: string;
+  postTitle: string;
   thumbnailCid: string;
   description: string;
-  costInNativeInWei: string;
+  priceInNative: string;
 }
 
-// The function returns a tuple: [addresses[], assetInfos[]]
-type GetAllAssetInfosResult = [`0x${string}`[], AssetInfo[]];
+// The function returns just the post infos array
+type GetAllPostsResult = PostInfo[];
 
 export const useAssets = () => {
   const [allAssets, setAllAssets] = useState<Asset[]>([]);
@@ -22,9 +22,9 @@ export const useAssets = () => {
   const [isEnrichmentInProgress, setIsEnrichmentInProgress] = useState(false);
 
   const { data: allAssetInfo, isLoading: isAllAssetInfoLoading, refetch: refetchTotalAssets } = useReadContract({
-    address: dXmasterContract.address as `0x${string}`,
-    abi: dXmasterContract.abi,
-    functionName: "getAllAssetInfos",
+    address: marketPlaceContract.address as `0x${string}`,
+    abi: marketPlaceContract.abi,
+    functionName: "getAllPosts",
   });
 
   // Function to fetch all pages of file metadata from API
@@ -80,7 +80,7 @@ export const useAssets = () => {
       let enrichedCount = 0;
       let missingMetadataCount = 0;
       const enrichedAssets = contractAssets.map((asset, index) => {
-        const metadata = metadataMap.get(asset.assetCid);
+        const metadata = metadataMap.get(asset.postCid);
         
         if (!metadata) {
           missingMetadataCount++;
@@ -136,34 +136,27 @@ export const useAssets = () => {
     if (!isAllAssetInfoLoading) {
       if (allAssetInfo) {
         try {
-          // The function returns a tuple: [addresses[], assetInfos[]]
-          const result = allAssetInfo as unknown as GetAllAssetInfosResult;
-          const [assetAddresses, assetInfos] = result;
+          const postInfos = allAssetInfo as unknown as GetAllPostsResult;
           
-          // Check if both arrays exist and are valid
-          if (assetInfos && Array.isArray(assetInfos) && assetAddresses && Array.isArray(assetAddresses)) {
-            // Map asset infos with their corresponding addresses
-            const convertedPosts: Asset[] = assetInfos.map((asset, index) => ({
-              assetTitle: asset.assetTitle,
-              assetCid: asset.assetCid,
-              assetAddress: assetAddresses[index] || '0x0000000000000000000000000000000000000000',
-              author: asset.author,
-              thumbnailCid: asset.thumbnailCid,
-              description: asset.description,
-              costInNative: asset.costInNativeInWei,
+          if (postInfos && Array.isArray(postInfos)) {
+            const convertedPosts: Asset[] = postInfos.map((post, index) => ({
+              postTitle: post.postTitle,
+              postCid: post.postCid,
+              postId: (index + 1).toString(),
+              author: post.author,
+              thumbnailCid: post.thumbnailCid,
+              description: post.description,
+              priceInNative: post.priceInNative,
             }));
             
-            // Set initial contract data immediately
             setAllAssets(convertedPosts);
-            
-            // Start background enrichment with API metadata
             enrichAssetsWithMetadata(convertedPosts);
           } else {
-            console.error('❌ Invalid data structure:', { assetAddresses, assetInfos });
+            console.error('❌ Invalid data structure');
             setAllAssets([]);
           }
         } catch (error) {
-          console.error('❌ Error processing asset data:', error);
+          console.error('❌ Error processing post data:', error);
           setAllAssets([]);
         }
       }

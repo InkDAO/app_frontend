@@ -63,7 +63,7 @@ export const MePage = () => {
     
     if (searchTerm.trim()) {
       posts = posts.filter(asset => 
-        asset.assetTitle.toLowerCase().includes(searchTerm.toLowerCase())
+        asset.postTitle.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
     
@@ -77,7 +77,7 @@ export const MePage = () => {
     
     if (searchTerm.trim()) {
       posts = posts.filter(asset => 
-        asset.assetTitle.toLowerCase().includes(searchTerm.toLowerCase())
+        asset.postTitle.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
     
@@ -270,7 +270,7 @@ export const MePage = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
               {visibleMyPosts.map((asset, index) => (
                 <HomeCard 
-                  key={asset.assetCid || index} 
+                  key={asset.postCid || index} 
                   asset={asset}
                 />
               ))}
@@ -331,7 +331,7 @@ export const MePage = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
               {visibleLibraryPosts.map((asset, index) => (
                 <HomeCard 
-                  key={asset.assetCid || index} 
+                  key={asset.postCid || index} 
                   asset={asset}
                 />
               ))}

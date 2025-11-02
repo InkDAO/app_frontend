@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, User, FileImage, Lock, Eye, ExternalLink, Users, Copy, Check, UserPlus, ChevronDown, ChevronUp, Shield, Wallet, Sparkles, Info, Calendar } from "lucide-react";
 import EditorTextParser from "@/components/editor/EditorTextParser";
-import { fetchFileContentByAssetAddress, useAssetCidByAddress, useAssetData, useBuyAsset } from "@/services/dXService";
+import { fetchFileContentByPostId, useBuyAsset } from "@/services/dXService";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -12,24 +12,41 @@ import "@/components/editor/Editor.css";
 import { useAccount, useReadContract } from "wagmi";
 import { useAssetOwnership } from "@/hooks/useAssetOwnership";
 import { AuthGuard } from "@/components/AuthGuard";
-import { dXassetContract } from "@/contracts/dXasset";
+import { marketPlaceContract } from "@/contracts/marketPlace";
 import { handleGetFileMetadataByCid } from "@/services/pinataService";
 import { useAuth } from "@/hooks/useAuth";
 
 export const PostPreviewPage = () => {
-  const { assetAddress } = useParams<{ assetAddress: string }>();
+  const { postId } = useParams<{ postId: string }>();
   const { address, isConnected } = useAccount();
   const { isAuthenticated } = useAuth();
-  const { cid: assetCid, isLoading: isCidLoading, isError: isCidError } = useAssetCidByAddress(assetAddress || '');
-  const { assetData, isLoading: isAssetDataLoading, isError: isAssetDataError } = useAssetData(assetCid || '');
+  
+  // Get post info directly from postId
+  const { data: postInfoRaw, isLoading: isPostInfoLoading, isError: isPostInfoError } = useReadContract({
+    address: marketPlaceContract.address as `0x${string}`,
+    abi: marketPlaceContract.abi,
+    functionName: 'getPostInfo',
+    args: postId ? [BigInt(postId)] : undefined,
+    query: {
+      enabled: !!postId,
+    }
+  });
+  
+  const postInfo = postInfoRaw as any;
+  const postCid = postInfo?.postCid;
+  
   const { buyAsset, isPending: isBuying, isConfirmed: isBuyConfirmed, isError: isBuyError } = useBuyAsset();
-  const { isOwned, isLoading: isOwnershipLoading } = useAssetOwnership(assetAddress || '', assetData);
+  const { isOwned, isLoading: isOwnershipLoading } = useAssetOwnership(postId || '', postInfo);
   
   // Fetch total supply (number of subscribers)
   const { data: totalSupply } = useReadContract({
-    address: assetAddress as `0x${string}`,
-    abi: dXassetContract.abi,
+    address: marketPlaceContract.address as `0x${string}`,
+    abi: marketPlaceContract.abi,
     functionName: 'totalSupply',
+    args: postId ? [BigInt(postId)] : undefined,
+    query: {
+      enabled: !!postId,
+    }
   });
   
   const [isLoading, setIsLoading] = useState(true);
@@ -50,20 +67,20 @@ export const PostPreviewPage = () => {
 
   // Update post title when asset data is loaded
   useEffect(() => {
-    if (assetData) {
-      if (assetData.assetTitle) {
-        setPostTitle(assetData.assetTitle);
+    if (postInfo) {
+      if (postInfo.postTitle) {
+        setPostTitle(postInfo.postTitle);
       }
     }
-  }, [assetData]);
+  }, [postInfo]);
 
   // Fetch metadata to get hashtags and publish date
   useEffect(() => {
     const fetchMetadata = async () => {
-      if (!assetCid) return;
+      if (!postCid) return;
       
       try {
-        const metadata = await handleGetFileMetadataByCid(assetCid);
+        const metadata = await handleGetFileMetadataByCid(postCid);
         
         // Extract publish date
         if (metadata?.created_at) {
@@ -90,14 +107,14 @@ export const PostPreviewPage = () => {
     };
     
     fetchMetadata();
-  }, [assetCid]);
+  }, [postCid]);
 
   // Set access denied when user doesn't own the asset (but not for free posts)
   useEffect(() => {
-    if (!isOwnershipLoading && !isOwned && assetData) {
+    if (!isOwnershipLoading && !isOwned && postInfo) {
       // Check if the post is free
       // Note: costInNativeInWei can be 0n (BigInt 0), which is falsy, so we need to check !== undefined
-      const isFreePost = assetData?.costInNativeInWei !== undefined ? parseFloat(assetData.costInNativeInWei.toString()) === 0 : false;
+      const isFreePost = postInfo?.priceInNative !== undefined ? parseFloat(postInfo.priceInNative.toString()) === 0 : false;
       
       // Only deny access if it's not a free post
       if (!isFreePost) {
@@ -109,7 +126,7 @@ export const PostPreviewPage = () => {
     } else if (isOwned) {
       setIsAccessDenied(false);
     }
-  }, [isOwned, isOwnershipLoading, assetData]);
+  }, [isOwned, isOwnershipLoading, postInfo]);
 
   // Fetch content when asset CID is available
   useEffect(() => {
@@ -120,35 +137,34 @@ export const PostPreviewPage = () => {
         return;
       }
 
-      if (!assetCid) {
-        if (isCidError) {
-          setContentError("Failed to load asset CID");
+      if (!postCid) {
+        if (isPostInfoError) {
+          setContentError("Failed to load post information");
           setIsLoading(false);
         }
         return;
       }
 
       // Wait for asset data to load to check if post is free
-      if (!assetData || isAssetDataLoading) {
+      if (!postInfo || isPostInfoLoading) {
         return;
       }
 
       // Check if the post is free (cost is 0)
-      // Note: costInNativeInWei can be 0n (BigInt 0), which is falsy, so we need to check !== undefined
-      const isFreePost = assetData?.costInNativeInWei !== undefined ? parseFloat(assetData.costInNativeInWei.toString()) === 0 : false;
+      const isFreePost = postInfo?.priceInNative !== undefined ? parseFloat(postInfo.priceInNative.toString()) === 0 : false;
 
       // For paid posts, only fetch content if user owns the asset
       if (!isFreePost && (!isOwned || isOwnershipLoading)) {
         setIsLoading(false);
         return;
       }
-
+      
       try {
         setIsLoading(true);
         setContentError(null);
         
         // For free posts, we can fetch without user address; for paid posts, we need it
-        const contentData = await fetchFileContentByAssetAddress(assetAddress || '', address || '');
+        const contentData = await fetchFileContentByPostId(postId || '', address || '');
         
         if (contentData) {
           try {
@@ -201,27 +217,27 @@ export const PostPreviewPage = () => {
     };
 
     fetchContent();
-  }, [assetCid, isCidError, isOwned, isOwnershipLoading, assetData, assetAddress, address, isAssetDataLoading, isAuthenticated]);
+  }, [postCid, isPostInfoError, isOwned, isOwnershipLoading, postInfo, postId, address, isPostInfoLoading, isAuthenticated]);
 
   const handleCopyAsset = async () => {
-    if (assetAddress) {
-      await navigator.clipboard.writeText(assetAddress);
+    if (postId) {
+      await navigator.clipboard.writeText(postId);
       setCopiedAsset(true);
       setTimeout(() => setCopiedAsset(false), 2000);
     }
   };
 
   const handleCopyAuthor = async () => {
-    if (assetData?.author) {
-      await navigator.clipboard.writeText(assetData.author);
+    if (postInfo?.author) {
+      await navigator.clipboard.writeText(postInfo.author);
       setCopiedAuthor(true);
       setTimeout(() => setCopiedAuthor(false), 2000);
     }
   };
 
   const handleCopyCid = async () => {
-    if (assetCid) {
-      await navigator.clipboard.writeText(assetCid);
+    if (postCid) {
+      await navigator.clipboard.writeText(postCid);
       setCopiedCid(true);
       setTimeout(() => setCopiedCid(false), 2000);
     }
@@ -235,15 +251,15 @@ export const PostPreviewPage = () => {
   };
 
   const handlePurchase = async () => {
-    if (!assetAddress || !assetData) return;
+    if (!postId || !postInfo) return;
 
     try {
       setIsTransactionPending(true);
-      const costInWei = assetData.costInNativeInWei ? assetData.costInNativeInWei.toString() : "0";
+      const priceInNative = postInfo.priceInNative ? postInfo.priceInNative.toString() : "0";
       await buyAsset({
-        assetAddress,
+        postId: postId,
         amount: "1",
-        costInNativeInWei: costInWei
+        priceInNativeInWei: priceInNative
       });
       
       setIsPurchaseDialogOpen(false);
@@ -272,7 +288,7 @@ export const PostPreviewPage = () => {
   }, [isBuyError]);
 
   // Loading state - show while fetching initial data
-  if (isCidLoading || isAssetDataLoading || isOwnershipLoading) {
+  if (isPostInfoLoading || isOwnershipLoading) {
     return (
       <div className="bg-transparent py-8 px-2 sm:px-4 md:px-6 lg:px-8 min-h-screen overflow-x-hidden">
         <div className="w-full max-w-7xl mx-auto">
@@ -366,13 +382,13 @@ export const PostPreviewPage = () => {
   }
 
   // Check if post is free or user owns it
-  const isFreePost = assetData?.costInNativeInWei !== undefined ? parseFloat(assetData.costInNativeInWei.toString()) === 0 : false;
+  const isFreePost = postInfo?.priceInNative !== undefined ? parseFloat(postInfo.priceInNative.toString()) === 0 : false;
   const hasAccess = isFreePost || isOwned;
 
   // If user doesn't have access (paid post they don't own), show access denied/purchase card
   // Don't require authentication to see the purchase card
   if (isAccessDenied && !hasAccess) {
-    const pricePerAsset = assetData?.costInNativeInWei !== undefined ? parseFloat(assetData.costInNativeInWei.toString()) / 1e18 : 0;
+    const pricePerAsset = postInfo?.priceInNative !== undefined ? parseFloat(postInfo.priceInNative.toString()) / 1e18 : 0;
     
     // Don't show purchase card for free posts
     if (pricePerAsset === 0) {
@@ -471,11 +487,11 @@ export const PostPreviewPage = () => {
               <div className="flex items-start gap-4">
                 {/* Thumbnail image with trust badge */}
                 <div className="flex-shrink-0 relative">
-                  {(postImage || assetData?.thumbnailCid) ? (
+                  {(postImage || postInfo?.thumbnailCid) ? (
                     <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden shadow-lg bg-slate-100 dark:bg-slate-800 ring-2 ring-slate-200/50 dark:ring-slate-700/50">
                       <img 
-                        src={postImage || `https://${import.meta.env.VITE_GATEWAY_URL}/ipfs/${assetData?.thumbnailCid}`}
-                        alt={assetData?.assetTitle || 'Post thumbnail'}
+                        src={postImage || `https://${import.meta.env.VITE_GATEWAY_URL}/ipfs/${postInfo?.thumbnailCid}`}
+                        alt={postInfo?.postTitle || 'Post thumbnail'}
                         className="w-full h-full object-cover"
                       />
                     </div>
@@ -496,7 +512,7 @@ export const PostPreviewPage = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start gap-2 mb-2">
                         <h3 className="text-xl sm:text-2xl font-extrabold text-slate-800 dark:text-slate-200 flex-1">
-                          {assetData?.assetTitle || 'Untitled'}
+                          {postInfo?.postTitle || 'Untitled'}
                         </h3>
                         {/* Premium badge - Glassy */}
                         <span className="flex-shrink-0 inline-flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-amber-100 to-yellow-100 dark:from-amber-900/40 dark:to-yellow-900/40 backdrop-blur-sm text-amber-700 dark:text-amber-400 rounded-full text-xs font-bold shadow-sm">
@@ -524,9 +540,9 @@ export const PostPreviewPage = () => {
                         </div>
                       )}
                       
-                      {assetData?.description && (
+                      {postInfo?.description && (
                         <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 leading-relaxed mb-3 font-medium">
-                          {assetData.description}
+                          {postInfo.description}
                         </p>
                       )}
                       {/* Date and Author info */}
@@ -546,11 +562,11 @@ export const PostPreviewPage = () => {
                         )}
                         {/* Author */}
                         <Link 
-                          to={`/dashboard/${assetData?.author}`}
+                          to={`/dashboard/${postInfo?.author}`}
                           className="flex items-center gap-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                         >
                           <User className="h-4 w-4" />
-                          <span className="font-semibold">{assetData?.author?.slice(0, 6)}...{assetData?.author?.slice(-4)}</span>
+                          <span className="font-semibold">{postInfo?.author?.slice(0, 6)}...{postInfo?.author?.slice(-4)}</span>
                         </Link>
                       </div>
                     </div>
@@ -701,7 +717,7 @@ export const PostPreviewPage = () => {
                         <span className="text-slate-600 dark:text-slate-400 font-bold text-xs">Asset Contract</span>
                         <div className="flex items-center gap-2">
                           <span className="font-mono text-xs bg-slate-200/60 dark:bg-slate-700/60 backdrop-blur-sm px-2 py-1 rounded flex-1 truncate font-medium">
-                            {assetAddress?.slice(0, 10)}...{assetAddress?.slice(-8)}
+                            {postId?.slice(0, 10)}...{postId?.slice(-8)}
                           </span>
                           <button 
                             onClick={handleCopyAsset}
@@ -723,7 +739,7 @@ export const PostPreviewPage = () => {
                         <span className="text-slate-600 dark:text-slate-400 font-bold text-xs">Content CID</span>
                         <div className="flex items-center gap-2">
                           <span className="font-mono text-xs bg-slate-200/60 dark:bg-slate-700/60 backdrop-blur-sm px-2 py-1 rounded flex-1 truncate font-medium">
-                            {assetCid ? `${assetCid.slice(0, 10)}...${assetCid.slice(-8)}` : 'Loading...'}
+                            {postCid ? `${postCid.slice(0, 10)}...${postCid.slice(-8)}` : 'Loading...'}
                           </span>
                           <button 
                             onClick={handleCopyCid}
@@ -1034,12 +1050,12 @@ export const PostPreviewPage = () => {
                     )}
                     
                     <Link 
-                      to={`/dashboard/${assetData?.author}`}
+                      to={`/dashboard/${postInfo?.author}`}
                       className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline transition-colors font-medium"
                     >
                       <User className="h-4 w-4" />
                       <span className="text-xs font-semibold">
-                        {assetData?.author?.slice(0, 6)}...{assetData?.author?.slice(-4)}
+                        {postInfo?.author?.slice(0, 6)}...{postInfo?.author?.slice(-4)}
                       </span>
                     </Link>
                   </div>

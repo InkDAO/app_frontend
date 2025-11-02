@@ -1,9 +1,8 @@
-import { dXmasterContract } from "@/contracts/dXmaster";
+import { marketPlaceContract } from "@/contracts/marketPlace";
 import { useWriteContract, useAccount, useWaitForTransactionReceipt, useReadContract } from "wagmi";
 import { sepolia } from "wagmi/chains";
 import { apiService, authenticatedFetch } from "./httpClient";
 import { authService } from "./authService";
-import { dXassetContract } from "@/contracts/dXasset";
 
 // API Service for posting to group endpoint with proper content upload using EIP-712 typed data
 export const createGroupPost = async (content: any, title: string, address: string, signTypedData: any) => {
@@ -194,25 +193,22 @@ export const useAddAsset = () => {
   const { writeContract, isPending, isSuccess, isError, data: hash } = useWriteContract();
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({hash});
 
-  const addAsset = async (assetData: { salt: string, assetTitle: string, assetCid: string, thumbnailCid: string, description: string, costInNative: string }) => {
+  const addAsset = async (assetData: { salt: string, postTitle: string, postCid: string, thumbnailCid: string, description: string, priceInNative: string }) => {
     if (!address) {
       throw new Error("No account connected");
     }
 
-    // Convert salt to bytes32 format (32 bytes, padded with zeros)
-    const saltBytes32 = `0x${assetData.salt.padStart(64, '0')}` as `0x${string}`;
-
     try {
       await writeContract({
-        address: dXmasterContract.address as `0x${string}`,
-        abi: dXmasterContract.abi,
-        functionName: 'addAsset',
-        args: [saltBytes32, {
-          assetCid: assetData.assetCid,
-          assetTitle: assetData.assetTitle,
+        address: marketPlaceContract.address as `0x${string}`,
+        abi: marketPlaceContract.abi,
+        functionName: 'createPost',
+        args: [{
+          postCid: assetData.postCid,
+          postTitle: assetData.postTitle,
           thumbnailCid: assetData.thumbnailCid,
           description: assetData.description,
-          costInNativeInWei: BigInt(assetData.costInNative)
+          priceInNative: BigInt(assetData.priceInNative)
         }],
         account: address,
         chain: sepolia,
@@ -241,68 +237,28 @@ export const useAddAsset = () => {
   };
 };
 
-export const useAddComment = () => {
-  const { address } = useAccount();
-  const { writeContract, isPending, isSuccess, isError, data: hash } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({hash});
-
-  const addComment = async (commentData: { assetCid: string, comment: string }) => {
-    if (!address) {
-      throw new Error("No account connected");
-    }
-
-    try {
-      await writeContract({
-        address: dXmasterContract.address as `0x${string}`,
-        abi: dXmasterContract.abi,
-        functionName: 'addComment',
-        args: [commentData.assetCid as `0x${string}`, commentData.comment],
-        account: address,
-        chain: sepolia,
-      });
-
-    } catch (error: any) {
-      console.error("Error in addComment:", error);
-      if (error.message?.includes("user rejected")) {
-        throw new Error("Transaction was rejected by user");
-      }
-      throw error;
-    }
-  };
-
-  return {
-    addComment,
-    isPending,
-    isSuccess,
-    isError,
-    isConfirming,
-    isConfirmed,
-    hash
-  };
-};
-
 export const useBuyAsset = () => {
   const { address } = useAccount();
   const { writeContract, isPending, isSuccess, isError, data: hash } = useWriteContract();
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({hash});
   
   
-  const buyAsset = async (assetData: { assetAddress: string, amount: string, costInNativeInWei: string }) => {
+  const buyAsset = async (assetData: { postId: string, amount: string, priceInNativeInWei: string }) => {
     if (!address) {
       throw new Error("No account connected");
     }
 
-    const amountInWei = BigInt(assetData.amount) * BigInt(assetData.costInNativeInWei);
+    const amountInWei = BigInt(assetData.amount) * BigInt(assetData.priceInNativeInWei);
 
     try {
       await writeContract({
-        address: dXmasterContract.address as `0x${string}`,
-        abi: dXmasterContract.abi,
-        functionName: 'buyAsset',
-        args: [assetData.assetAddress as `0x${string}`, BigInt(assetData.amount)],
+        address: marketPlaceContract.address as `0x${string}`,
+        abi: marketPlaceContract.abi,
+        functionName: 'subscribePost',
+        args: [BigInt(assetData.postId)],
         account: address,
         chain: sepolia,
-        value: amountInWei,
+        value: BigInt(assetData.priceInNativeInWei),
       });
 
       return true;
@@ -327,36 +283,36 @@ export const useBuyAsset = () => {
   };
 };
 
-export const getAssetCost = (assetAddress: string) => {
-  const { data: cost } = useReadContract({
-    address: assetAddress as `0x${string}`,
-    abi: dXassetContract.abi,
-    functionName: 'costInNativeInWei',
-    args: []
+export const getPostPrice = (postId: string) => {
+  const { data: postInfo } = useReadContract({
+    address: marketPlaceContract.address as `0x${string}`,
+    abi: marketPlaceContract.abi,
+    functionName: 'getPostInfo',
+    args: [BigInt(postId)]
   });
 
-  return cost;
+  return postInfo?.priceInNative;
 };
 
-export const useAssetCidByAddress = (assetAddress: string) => {
-  const { data: cid, isLoading, isError } = useReadContract({
-    address: assetAddress as `0x${string}`,
-    abi: dXassetContract.abi,
-    functionName: 'assetCid',
-    args: []
+export const usePostCidById = (postId: string) => {
+  const { data: postInfo, isLoading, isError } = useReadContract({
+    address: marketPlaceContract.address as `0x${string}`,
+    abi: marketPlaceContract.abi,
+    functionName: 'getPostInfo',
+    args: [BigInt(postId)]
   });
 
-  return { cid, isLoading, isError };
+  return { postCid: postInfo?.postCid, isLoading, isError };
 };
 
-export const useAssetData = (assetCid: string) => {
-  const { data: assetData, isLoading, isError } = useReadContract({
-    address: dXmasterContract.address as `0x${string}`,
-    abi: dXmasterContract.abi,
-    functionName: 'getAssetInfo',
-    args: [assetCid]
+export const usePostInfoByCid = (postCid: string) => {
+  const { data: postInfo, isLoading, isError } = useReadContract({
+    address: marketPlaceContract.address as `0x${string}`,
+    abi: marketPlaceContract.abi,
+    functionName: 'getPostInfoByCid',
+    args: [postCid]
   });
-  return { assetData, isLoading, isError };
+  return { postInfo, isLoading, isError };
 };
 
 // API function to fetch file content by CID (with JWT authentication)
@@ -384,13 +340,13 @@ export const fetchFileContentByCid = async (cid: string): Promise<any> => {
   }
 };
 
-// API function to fetch file content by asset address (checks if free first, then uses authentication if needed)
-export const fetchFileContentByAssetAddress = async (assetAddress: string, userAddress: string): Promise<any> => {
+// API function to fetch file content by post ID (checks if free first, then uses authentication if needed)
+export const fetchFileContentByPostId = async (postId: string, userAddress: string): Promise<any> => {
   try {
     // First, try the public free endpoint to check if the post is free
     try {
       const baseUrl = import.meta.env.VITE_SERVER_URL;
-      const freeResponse = await fetch(`${baseUrl}/freeFileByAddress?assetAddress=${assetAddress}`, {
+      const freeResponse = await fetch(`${baseUrl}/freeFileByPostId?postId=${postId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -431,9 +387,8 @@ export const fetchFileContentByAssetAddress = async (assetAddress: string, userA
       // If free endpoint fails for any reason other than "not free", fall through to authenticated endpoint
     }
     
-    // Make authenticated API call to get file content by asset address
-    // The endpoint requires both user and assetAddress parameters
-    const data = await apiService.get(`/fileByAssetAddress?user=${userAddress}&assetAddress=${assetAddress}`);
+    // Make authenticated API call to get file content by post ID
+    const data = await apiService.get(`/fileByPostId?user=${userAddress}&postId=${postId}`);
     
     // Check if the response has the content nested under a specific key
     if (data && typeof data === 'object') {
@@ -451,9 +406,14 @@ export const fetchFileContentByAssetAddress = async (assetAddress: string, userA
     
     return data;
   } catch (error) {
-    console.error('❌ Error fetching file content for asset address:', assetAddress, error);
+    console.error('❌ Error fetching file content for post ID:', postId, error);
     throw error;
   }
+};
+
+// Legacy function for backward compatibility - redirects to fetchFileContentByPostId
+export const fetchFileContentByAssetAddress = async (postId: string, userAddress: string): Promise<any> => {
+  return fetchFileContentByPostId(postId, userAddress);
 };
 
 // API function to delete a file by CID (with authentication) using EIP-712 typed data

@@ -1,36 +1,36 @@
 import { useState, useEffect } from "react";
 import { useAccount, useReadContract } from "wagmi";
-import { dXmasterContract } from "@/contracts/dXmaster";
+import { marketPlaceContract } from "@/contracts/marketPlace";
 
-export const useAssetOwnership = (assetAddress: string, assetData?: any) => {
+export const useAssetOwnership = (postId: string, assetData?: any) => {
   const { address } = useAccount();
   const [isOwned, setIsOwned] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   const { data: userAssetInfo, isLoading: isUserAssetInfoLoading } = useReadContract({
-    address: dXmasterContract.address as `0x${string}`,
-    abi: dXmasterContract.abi,
-    functionName: "getUserAssetData",
+    address: marketPlaceContract.address as `0x${string}`,
+    abi: marketPlaceContract.abi,
+    functionName: "getUserPosts",
     args: [address],
     query: {
-      enabled: !!address && !!assetAddress,
+      enabled: !!address && !!postId,
     }
   });
 
   useEffect(() => {
-    if (!isUserAssetInfoLoading && userAssetInfo && assetAddress) {
-      // Check if the current asset address is in the user's owned assets
-      const purchased = userAssetInfo.some((userAsset: any) => 
-        userAsset.assetAddress?.toLowerCase() === assetAddress.toLowerCase()
+    if (!isUserAssetInfoLoading && userAssetInfo && postId) {
+      const userPostIds = userAssetInfo as any[];
+      
+      // Check if the current postId is in the user's owned posts
+      const purchased = userPostIds.some((userPostId: any) => 
+        userPostId?.toString() === postId
       );
       
       // Check if the current user is the creator of the asset
       const isCreator = assetData?.author?.toLowerCase() === address?.toLowerCase();
       
       // User owns the asset if they either purchased it OR created it
-      const owned = purchased || isCreator;
-      
-      setIsOwned(owned);
+      setIsOwned(purchased || isCreator);
       setIsLoading(false);
     } else if (isUserAssetInfoLoading) {
       setIsLoading(true);
@@ -40,7 +40,7 @@ export const useAssetOwnership = (assetAddress: string, assetData?: any) => {
       setIsOwned(isCreator);
       setIsLoading(false);
     }
-  }, [isUserAssetInfoLoading, userAssetInfo, assetAddress, assetData, address]);
+  }, [isUserAssetInfoLoading, userAssetInfo, postId, assetData, address]);
 
   return { isOwned, isLoading };
 };

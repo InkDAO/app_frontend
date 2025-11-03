@@ -346,11 +346,11 @@ export const fetchFileContentByCid = async (cid: string): Promise<any> => {
   }
 };
 
-// API function to fetch file content by post ID (checks if free first, then uses authentication if needed)
-export const fetchFileContentByPostId = async (postId: string, userAddress: string): Promise<any> => {
+// API function to fetch file content by post ID (uses free or authenticated endpoint based on post price)
+export const fetchFileContentByPostId = async (postId: string, userAddress: string, isFreePost?: boolean): Promise<any> => {
   try {
-    // First, try the public free endpoint to check if the post is free
-    try {
+    // If we know the post is free, use the public free endpoint
+    if (isFreePost === true) {
       const baseUrl = import.meta.env.VITE_SERVER_URL;
       const freeResponse = await fetch(`${baseUrl}/freeFileByPostId?postId=${postId}`, {
         method: 'GET',
@@ -359,40 +359,30 @@ export const fetchFileContentByPostId = async (postId: string, userAddress: stri
         },
       });
       
-      // If the post is free (status 200), return the data
-      if (freeResponse.ok) {
-        const freeData = await freeResponse.json();
-        
-        // Apply same extraction logic as authenticated endpoint
-        if (freeData && typeof freeData === 'object') {
-          if (freeData.files && freeData.files.length > 0) {
-            return freeData.files[0];
-          } else if (freeData.content) {
-            return freeData.content;
-          } else if (freeData.file) {
-            return freeData.file;
-          } else if (freeData.data) {
-            return freeData.data;
-          }
-        }
-        
-        return freeData;
+      if (!freeResponse.ok) {
+        const errorText = await freeResponse.text();
+        throw new Error(`Failed to fetch free file: ${freeResponse.status} - ${errorText}`);
       }
       
-      // If status is 400 and error is "File is not free", fall through to authenticated endpoint
-      if (freeResponse.status === 400) {
-        const errorData = await freeResponse.json();
-        if (errorData.error === 'File is not free') {
-          // Fall through to authenticated flow below
-        } else {
-          // Other 400 error, throw it
-          throw new Error(errorData.error || 'Failed to fetch file');
+      const freeData = await freeResponse.json();
+      
+      // Apply same extraction logic as authenticated endpoint
+      if (freeData && typeof freeData === 'object') {
+        if (freeData.files && freeData.files.length > 0) {
+          return freeData.files[0];
+        } else if (freeData.content) {
+          return freeData.content;
+        } else if (freeData.file) {
+          return freeData.file;
+        } else if (freeData.data) {
+          return freeData.data;
         }
       }
-    } catch (freeEndpointError) {
-      // If free endpoint fails for any reason other than "not free", fall through to authenticated endpoint
+      
+      return freeData;
     }
     
+    // For paid posts or when price is unknown, use authenticated endpoint
     // Make authenticated API call to get file content by post ID
     const data = await apiService.get(`/fileByPostId?user=${userAddress}&postId=${postId}`);
     

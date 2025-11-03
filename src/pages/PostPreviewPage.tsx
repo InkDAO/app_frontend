@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, User, FileImage, Lock, Eye, ExternalLink, Users, Copy, Check, UserPlus, ChevronDown, ChevronUp, Shield, Wallet, Sparkles, Info, Calendar } from "lucide-react";
+import { Loader2, User, FileImage, Lock, Eye, ExternalLink, Users, Copy, Check, UserPlus, ChevronDown, ChevronUp, Shield, Sparkles, Info, Calendar } from "lucide-react";
 import EditorTextParser from "@/components/editor/EditorTextParser";
 import { fetchFileContentByPostId, useBuyAsset } from "@/services/dXService";
 import { Button } from "@/components/ui/button";
@@ -131,12 +131,6 @@ export const PostPreviewPage = () => {
   // Fetch content when asset CID is available
   useEffect(() => {
     const fetchContent = async () => {
-      // Don't fetch content if user is not authenticated
-      if (!isAuthenticated) {
-        setIsLoading(false);
-        return;
-      }
-
       if (!postCid) {
         if (isPostInfoError) {
           setContentError("Failed to load post information");
@@ -153,10 +147,20 @@ export const PostPreviewPage = () => {
       // Check if the post is free (cost is 0)
       const isFreePost = postInfo?.priceInNative !== undefined ? parseFloat(postInfo.priceInNative.toString()) === 0 : false;
 
-      // For paid posts, only fetch content if user owns the asset
-      if (!isFreePost && (!isOwned || isOwnershipLoading)) {
-        setIsLoading(false);
-        return;
+      // For free posts, allow access without authentication
+      // For paid posts, require authentication and ownership
+      if (!isFreePost) {
+        // For paid posts, require authentication
+        if (!isAuthenticated) {
+          setIsLoading(false);
+          return;
+        }
+        
+        // For paid posts, only fetch content if user owns the asset
+        if (!isOwned || isOwnershipLoading) {
+          setIsLoading(false);
+          return;
+        }
       }
       
       try {
@@ -164,7 +168,7 @@ export const PostPreviewPage = () => {
         setContentError(null);
         
         // For free posts, we can fetch without user address; for paid posts, we need it
-        const contentData = await fetchFileContentByPostId(postId || '', address || '');
+        const contentData = await fetchFileContentByPostId(postId || '', address || '', isFreePost);
         
         if (contentData) {
           try {
@@ -837,12 +841,13 @@ export const PostPreviewPage = () => {
     );
   }
 
-  // If user has access (free or owned) but is not authenticated, show sign-in card
-  if (hasAccess && !isAuthenticated) {
+  // If user has access (paid post they own) but is not authenticated, show sign-in card
+  // Free posts don't require authentication
+  if (hasAccess && !isAuthenticated && !isFreePost) {
     return <AuthGuard>{null}</AuthGuard>;
   }
 
-  if (contentError) {
+  if (contentError && !isFreePost) {
     return <AuthGuard>{null}</AuthGuard>;
   }
 

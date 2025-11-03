@@ -94,6 +94,11 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
     fetchThumbnail();
   }, [asset.thumbnailCid, thumbnailImage]);
 
+  // Get asset cost from asset data or smart contract
+  const priceInNative = asset.priceInNative || getPostPrice(asset.postId);
+  const pricePerAsset = priceInNative ? parseFloat(priceInNative.toString()) / 1e18 : 0; // Convert from wei to ETH with decimals
+  const isFreePost = pricePerAsset === 0;
+
   // Fetch file content when user clicks on card (only for owned assets)
   const fetchContent = async () => {
     if (asset.postId && address && !fileContent && !isLoadingContent && isOwned && !isOwnershipLoading) {
@@ -101,7 +106,7 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
       setContentError(null);
       
       try {
-        const content = await fetchFileContentByPostId(asset.postId, address);
+        const content = await fetchFileContentByPostId(asset.postId, address, isFreePost);
         setFileContent(content);
       } catch (error) {
         console.error('❌ HomeCard - Error loading file content:', error);
@@ -111,10 +116,6 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
       }
     }
   };
-  
-  // Get asset cost from asset data or smart contract
-  const priceInNative = asset.priceInNative || getPostPrice(asset.postId);
-  const pricePerAsset = priceInNative ? parseFloat(priceInNative.toString()) / 1e18 : 0; // Convert from wei to ETH with decimals
 
   // Use asset data from contract
   const postTitle = asset.postTitle || 'Untitled';

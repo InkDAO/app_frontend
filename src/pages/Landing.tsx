@@ -15,7 +15,10 @@ import {
   Coins,
   Infinity,
   Network,
-  MessageSquare
+  MessageSquare,
+  FileSignature,
+  Lock,
+  Layers
 } from "lucide-react";
 import { FaXTwitter, FaGithub, FaTelegram } from 'react-icons/fa6';
 import { SiGitbook } from 'react-icons/si';
@@ -247,6 +250,80 @@ const Landing = () => {
             </div>
           </div>
 
+          {/* Blockchain Standards Section */}
+          <div className="mb-24 md:mb-32">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold mb-3">
+                Built on Best-in-Class Standards
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Leveraging cutting-edge Ethereum standards for security, efficiency, and user experience
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+              {/* EIP-4361 SIWE Card */}
+              <div className="group relative h-full">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-600 via-purple-500 to-violet-500 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
+                <div className="relative h-full p-8 md:p-10 rounded-2xl bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-0 shadow-2xl dark:shadow-purple-500/10 transition-all duration-300 overflow-hidden flex flex-col">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-500/20 to-purple-500/5 rounded-full blur-2xl animate-pulse"></div>
+                  <div className="relative z-10 flex flex-col h-full">
+                    <div className="bg-gradient-to-br from-purple-500/20 to-purple-500/10 p-4 rounded-xl w-fit mb-6 backdrop-blur-sm shadow-md">
+                      <Lock className="h-8 w-8 text-purple-500" />
+                    </div>
+                    <div className="mb-3">
+                      <span className="text-xs font-semibold text-purple-500 tracking-wider uppercase">EIP-4361</span>
+                      <h3 className="text-2xl font-extrabold mt-1">Sign-In with Ethereum</h3>
+                    </div>
+                    <p className="text-base text-muted-foreground leading-relaxed font-medium flex-grow">
+                      Passwordless authentication using your Ethereum wallet. Secure, self-sovereign identity that eliminates credential theft and provides seamless access across Web3 applications.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* EIP-712 Card */}
+              <div className="group relative h-full">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
+                <div className="relative h-full p-8 md:p-10 rounded-2xl bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-0 shadow-2xl dark:shadow-orange-500/10 transition-all duration-300 overflow-hidden flex flex-col">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-500/20 to-orange-500/5 rounded-full blur-2xl animate-pulse"></div>
+                  <div className="relative z-10 flex flex-col h-full">
+                    <div className="bg-gradient-to-br from-orange-500/20 to-orange-500/10 p-4 rounded-xl w-fit mb-6 backdrop-blur-sm shadow-md">
+                      <FileSignature className="h-8 w-8 text-orange-500" />
+                    </div>
+                    <div className="mb-3">
+                      <span className="text-xs font-semibold text-orange-500 tracking-wider uppercase">EIP-712</span>
+                      <h3 className="text-2xl font-extrabold mt-1">Typed Structured Data</h3>
+                    </div>
+                    <p className="text-base text-muted-foreground leading-relaxed font-medium flex-grow">
+                      Human-readable message signing that lets you see exactly what you're approving. Enhanced security and transparency for transactions, preventing phishing and unauthorized actions.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* ERC-6909 Card */}
+              <div className="group relative h-full">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-600 via-pink-500 to-rose-500 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
+                <div className="relative h-full p-8 md:p-10 rounded-2xl bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-0 shadow-2xl dark:shadow-pink-500/10 transition-all duration-300 overflow-hidden flex flex-col">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-pink-500/20 to-pink-500/5 rounded-full blur-2xl animate-pulse"></div>
+                  <div className="relative z-10 flex flex-col h-full">
+                    <div className="bg-gradient-to-br from-pink-500/20 to-pink-500/10 p-4 rounded-xl w-fit mb-6 backdrop-blur-sm shadow-md">
+                      <Layers className="h-8 w-8 text-pink-500" />
+                    </div>
+                    <div className="mb-3">
+                      <span className="text-xs font-semibold text-pink-500 tracking-wider uppercase">ERC-6909</span>
+                      <h3 className="text-2xl font-extrabold mt-1">Multi-Token Standard</h3>
+                    </div>
+                    <p className="text-base text-muted-foreground leading-relaxed font-medium flex-grow">
+                      Manage unlimited tokens within a single contract using unique IDs. Massive gas savings with no per-token contract deployment, plus flexible permission controls for efficient asset management.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Technology Stack Section */}
           <div className="mb-16">
             <div className="text-center mb-12">
@@ -256,14 +333,14 @@ const Landing = () => {
             </div>
             
             {/* Grid Layout */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 md:gap-8 lg:gap-10 px-4 md:px-0">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6 md:gap-8 lg:gap-10 px-4 md:px-0">
               {/* IPFS - Glassy */}
               <div className="group relative">
                 <div className="absolute -inset-0.5 bg-gradient-to-r from-slate-600 to-slate-400 rounded-xl blur opacity-10 group-hover:opacity-30 transition duration-500"></div>
-                <div className="relative flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
-                  <div className="flex items-center gap-2 md:gap-3">
-                    <Database className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/70" />
-                    <span className="font-bold text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground break-words text-center">IPFS</span>
+                <div className="relative flex items-center justify-center p-4 md:p-5 lg:p-6 rounded-xl bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
+                  <div className="flex items-center gap-2">
+                    <Database className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 lg:h-8 lg:w-8 flex-shrink-0 text-muted-foreground/70" />
+                    <span className="font-bold text-xs sm:text-sm md:text-base lg:text-base text-muted-foreground break-words text-center">IPFS</span>
                   </div>
                 </div>
               </div>
@@ -271,10 +348,10 @@ const Landing = () => {
               {/* Pinata - Glassy */}
               <div className="group relative">
                 <div className="absolute -inset-0.5 bg-gradient-to-r from-slate-600 to-slate-400 rounded-xl blur opacity-10 group-hover:opacity-30 transition duration-500"></div>
-                <div className="relative flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
-                  <div className="flex items-center gap-2 md:gap-3">
-                    <Cloud className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/70" />
-                    <span className="font-bold text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground break-words text-center">Pinata</span>
+                <div className="relative flex items-center justify-center p-4 md:p-5 lg:p-6 rounded-xl bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
+                  <div className="flex items-center gap-2">
+                    <Cloud className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 lg:h-8 lg:w-8 flex-shrink-0 text-muted-foreground/70" />
+                    <span className="font-bold text-xs sm:text-sm md:text-base lg:text-base text-muted-foreground break-words text-center">Pinata</span>
                   </div>
                 </div>
               </div>
@@ -282,10 +359,10 @@ const Landing = () => {
               {/* Sepolia - Glassy */}
               <div className="group relative">
                 <div className="absolute -inset-0.5 bg-gradient-to-r from-slate-600 to-slate-400 rounded-xl blur opacity-10 group-hover:opacity-30 transition duration-500"></div>
-                <div className="relative flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
-                  <div className="flex items-center gap-2 md:gap-3">
-                    <Zap className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/70" />
-                    <span className="font-bold text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground break-words text-center">Sepolia</span>
+                <div className="relative flex items-center justify-center p-4 md:p-5 lg:p-6 rounded-xl bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
+                  <div className="flex items-center gap-2">
+                    <Zap className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 lg:h-8 lg:w-8 flex-shrink-0 text-muted-foreground/70" />
+                    <span className="font-bold text-xs sm:text-sm md:text-base lg:text-base text-muted-foreground break-words text-center">Sepolia</span>
                   </div>
                 </div>
               </div>
@@ -293,10 +370,10 @@ const Landing = () => {
               {/* Netlify - Glassy */}
               <div className="group relative">
                 <div className="absolute -inset-0.5 bg-gradient-to-r from-slate-600 to-slate-400 rounded-xl blur opacity-10 group-hover:opacity-30 transition duration-500"></div>
-                <div className="relative flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
-                  <div className="flex items-center gap-2 md:gap-3">
-                    <Globe className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/70" />
-                    <span className="font-bold text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground break-words text-center">Netlify</span>
+                <div className="relative flex items-center justify-center p-4 md:p-5 lg:p-6 rounded-xl bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
+                  <div className="flex items-center gap-2">
+                    <Globe className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 lg:h-8 lg:w-8 flex-shrink-0 text-muted-foreground/70" />
+                    <span className="font-bold text-xs sm:text-sm md:text-base lg:text-base text-muted-foreground break-words text-center">Netlify</span>
                   </div>
                 </div>
               </div>
@@ -304,10 +381,10 @@ const Landing = () => {
               {/* Alchemy - Glassy */}
               <div className="group relative">
                 <div className="absolute -inset-0.5 bg-gradient-to-r from-slate-600 to-slate-400 rounded-xl blur opacity-10 group-hover:opacity-30 transition duration-500"></div>
-                <div className="relative flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
-                  <div className="flex items-center gap-2 md:gap-3">
-                    <Webhook className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/70" />
-                    <span className="font-bold text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground break-words text-center">Alchemy</span>
+                <div className="relative flex items-center justify-center p-4 md:p-5 lg:p-6 rounded-xl bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
+                  <div className="flex items-center gap-2">
+                    <Webhook className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 lg:h-8 lg:w-8 flex-shrink-0 text-muted-foreground/70" />
+                    <span className="font-bold text-xs sm:text-sm md:text-base lg:text-base text-muted-foreground break-words text-center">Alchemy</span>
                   </div>
                 </div>
               </div>
@@ -315,10 +392,10 @@ const Landing = () => {
               {/* QuickNode - Glassy */}
               <div className="group relative">
                 <div className="absolute -inset-0.5 bg-gradient-to-r from-slate-600 to-slate-400 rounded-xl blur opacity-10 group-hover:opacity-30 transition duration-500"></div>
-                <div className="relative flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
-                  <div className="flex items-center gap-2 md:gap-3">
-                    <Webhook className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/70" />
-                    <span className="font-bold text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground break-words text-center">QuickNode</span>
+                <div className="relative flex items-center justify-center p-4 md:p-5 lg:p-6 rounded-xl bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
+                  <div className="flex items-center gap-2">
+                    <Webhook className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 lg:h-8 lg:w-8 flex-shrink-0 text-muted-foreground/70" />
+                    <span className="font-bold text-xs sm:text-sm md:text-base lg:text-base text-muted-foreground break-words text-center">QuickNode</span>
                   </div>
                 </div>
               </div>
@@ -326,21 +403,21 @@ const Landing = () => {
               {/* Chainstack - Glassy */}
               <div className="group relative">
                 <div className="absolute -inset-0.5 bg-gradient-to-r from-slate-600 to-slate-400 rounded-xl blur opacity-10 group-hover:opacity-30 transition duration-500"></div>
-                <div className="relative flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
-                  <div className="flex items-center gap-2 md:gap-3">
-                    <Server className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/70" />
-                    <span className="font-bold text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground break-words text-center">Chainstack</span>
+                <div className="relative flex items-center justify-center p-4 md:p-5 lg:p-6 rounded-xl bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
+                  <div className="flex items-center gap-2">
+                    <Server className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 lg:h-8 lg:w-8 flex-shrink-0 text-muted-foreground/70" />
+                    <span className="font-bold text-xs sm:text-sm md:text-base lg:text-base text-muted-foreground break-words text-center">Chainstack</span>
                   </div>
                 </div>
               </div>
 
-              {/* The Graph - Glassy */}
+              {/* TheGraph - Glassy */}
               <div className="group relative">
                 <div className="absolute -inset-0.5 bg-gradient-to-r from-slate-600 to-slate-400 rounded-xl blur opacity-10 group-hover:opacity-30 transition duration-500"></div>
-                <div className="relative flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
-                  <div className="flex items-center gap-2 md:gap-3">
-                    <Network className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/70" />
-                    <span className="font-bold text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground break-words text-center">The Graph</span>
+                <div className="relative flex items-center justify-center p-4 md:p-5 lg:p-6 rounded-xl bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
+                  <div className="flex items-center gap-2">
+                    <Network className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 lg:h-8 lg:w-8 flex-shrink-0 text-muted-foreground/70" />
+                    <span className="font-bold text-xs sm:text-sm md:text-base lg:text-base text-muted-foreground break-words text-center">TheGraph</span>
                   </div>
                 </div>
               </div>
@@ -348,10 +425,10 @@ const Landing = () => {
               {/* Chatbase - Glassy */}
               <div className="group relative">
                 <div className="absolute -inset-0.5 bg-gradient-to-r from-slate-600 to-slate-400 rounded-xl blur opacity-10 group-hover:opacity-30 transition duration-500"></div>
-                <div className="relative flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
-                  <div className="flex items-center gap-2 md:gap-3">
-                    <MessageSquare className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/70" />
-                    <span className="font-bold text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground break-words text-center">Chatbase</span>
+                <div className="relative flex items-center justify-center p-4 md:p-5 lg:p-6 rounded-xl bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
+                  <div className="flex items-center gap-2">
+                    <MessageSquare className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 lg:h-8 lg:w-8 flex-shrink-0 text-muted-foreground/70" />
+                    <span className="font-bold text-xs sm:text-sm md:text-base lg:text-base text-muted-foreground break-words text-center">Chatbase</span>
                   </div>
                 </div>
               </div>
@@ -359,10 +436,10 @@ const Landing = () => {
               {/* Wagmi - Glassy */}
               <div className="group relative">
                 <div className="absolute -inset-0.5 bg-gradient-to-r from-slate-600 to-slate-400 rounded-xl blur opacity-10 group-hover:opacity-30 transition duration-500"></div>
-                <div className="relative flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
-                  <div className="flex items-center gap-2 md:gap-3">
-                    <Zap className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/70" />
-                    <span className="font-bold text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground break-words text-center">Wagmi</span>
+                <div className="relative flex items-center justify-center p-4 md:p-5 lg:p-6 rounded-xl bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
+                  <div className="flex items-center gap-2">
+                    <Zap className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 lg:h-8 lg:w-8 flex-shrink-0 text-muted-foreground/70" />
+                    <span className="font-bold text-xs sm:text-sm md:text-base lg:text-base text-muted-foreground break-words text-center">Wagmi</span>
                   </div>
                 </div>
               </div>
@@ -370,10 +447,10 @@ const Landing = () => {
               {/* EditorJS - Glassy */}
               <div className="group relative">
                 <div className="absolute -inset-0.5 bg-gradient-to-r from-slate-600 to-slate-400 rounded-xl blur opacity-10 group-hover:opacity-30 transition duration-500"></div>
-                <div className="relative flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
-                  <div className="flex items-center gap-2 md:gap-3">
-                    <Edit className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/70" />
-                    <span className="font-bold text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground break-words text-center">EditorJS</span>
+                <div className="relative flex items-center justify-center p-4 md:p-5 lg:p-6 rounded-xl bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
+                  <div className="flex items-center gap-2">
+                    <Edit className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 lg:h-8 lg:w-8 flex-shrink-0 text-muted-foreground/70" />
+                    <span className="font-bold text-xs sm:text-sm md:text-base lg:text-base text-muted-foreground break-words text-center">EditorJS</span>
                   </div>
                 </div>
               </div>
@@ -381,10 +458,10 @@ const Landing = () => {
               {/* RainbowKit - Glassy */}
               <div className="group relative">
                 <div className="absolute -inset-0.5 bg-gradient-to-r from-slate-600 to-slate-400 rounded-xl blur opacity-10 group-hover:opacity-30 transition duration-500"></div>
-                <div className="relative flex items-center justify-center p-6 md:p-8 lg:p-10 rounded-xl bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
-                  <div className="flex items-center gap-2 md:gap-3">
-                    <Wallet className="h-8 w-8 sm:h-9 sm:w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 flex-shrink-0 text-muted-foreground/70" />
-                    <span className="font-bold text-sm sm:text-base md:text-lg lg:text-xl text-muted-foreground break-words text-center">RainbowKit</span>
+                <div className="relative flex items-center justify-center p-4 md:p-5 lg:p-6 rounded-xl bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
+                  <div className="flex items-center gap-2">
+                    <Wallet className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 lg:h-8 lg:w-8 flex-shrink-0 text-muted-foreground/70" />
+                    <span className="font-bold text-xs sm:text-sm md:text-base lg:text-base text-muted-foreground break-words text-center">RainbowKit</span>
                   </div>
                 </div>
               </div>

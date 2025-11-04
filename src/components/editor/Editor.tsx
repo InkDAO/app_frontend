@@ -23,7 +23,7 @@ export default function Editor({ data, setData, editorInstanceRef }: EditorProps
   const pasteHandlerRef = useRef<((event: Event) => void) | null>(null);
   const ReactEditorJS = createReactEditorJS();
 
-  const handlePaste = useCallback((event: Event) => {
+  const handlePaste = useCallback(async (event: Event) => {
     const clipboardEvent = event as ClipboardEvent;
     const clipboardData = clipboardEvent.clipboardData;
     if (!clipboardData) return;
@@ -32,23 +32,30 @@ export default function Editor({ data, setData, editorInstanceRef }: EditorProps
     
     // Check if the pasted text contains newlines
     if (pastedText && pastedText.includes('\n')) {
-      event.preventDefault();
-      event.stopPropagation();
-
-      // Split text by newlines
-      const lines = pastedText.split('\n');
-      
       // Get the current editor instance
       const editor = editorCore.current;
       if (!editor || !editor._editorJS) return;
 
-      // Insert blocks for each line
-      editor._editorJS.isReady.then(async () => {
+      try {
+        await editor._editorJS.isReady;
+        
         const blocks = editor._editorJS.blocks;
         const currentIndex = blocks.getCurrentBlockIndex();
+        const currentBlock = blocks.getBlockByIndex(currentIndex);
         
-        // Save current state before making changes (for undo/redo)
-        const currentData = await editor._editorJS.save();
+        // Don't intercept paste for blocks that handle multiline content natively
+        const blockTypesToSkip = ['code', 'raw', 'quote', 'table', 'warning', 'embed'];
+        if (currentBlock && blockTypesToSkip.includes(currentBlock.name)) {
+          // Let the block handle its own paste event
+          return;
+        }
+        
+        // Only intercept for paragraph blocks
+        event.preventDefault();
+        event.stopPropagation();
+
+        // Split text by newlines
+        const lines = pastedText.split('\n');
         
         // Delete the current block
         blocks.delete(currentIndex);
@@ -66,7 +73,9 @@ export default function Editor({ data, setData, editorInstanceRef }: EditorProps
         
         // Trigger a save to update the undo history
         await editor._editorJS.save();
-      });
+      } catch (error) {
+        console.error('Error handling paste:', error);
+      }
     }
   }, []);
 
@@ -87,6 +96,41 @@ export default function Editor({ data, setData, editorInstanceRef }: EditorProps
           pasteHandlerRef.current = handlePaste;
           editorElement.addEventListener('paste', handlePaste as EventListener);
         }
+
+        // Auto-expand code block textareas
+        const autoExpandTextarea = (textarea: HTMLTextAreaElement) => {
+          textarea.style.height = 'auto';
+          textarea.style.height = textarea.scrollHeight + 'px';
+        };
+
+        // Setup auto-expand for existing and new code blocks
+        const setupCodeBlockAutoExpand = () => {
+          const codeTextareas = document.querySelectorAll('.ce-code__textarea');
+          codeTextareas.forEach((textarea) => {
+            const textareaElement = textarea as HTMLTextAreaElement;
+            // Set initial height
+            autoExpandTextarea(textareaElement);
+            
+            // Add input event listener
+            textareaElement.addEventListener('input', () => autoExpandTextarea(textareaElement));
+          });
+        };
+
+        // Initial setup
+        setupCodeBlockAutoExpand();
+
+        // Watch for new code blocks being added
+        const observer = new MutationObserver(() => {
+          setupCodeBlockAutoExpand();
+        });
+
+        observer.observe(editorElement, {
+          childList: true,
+          subtree: true,
+        });
+
+        // Store observer for cleanup
+        (instance as any)._codeBlockObserver = observer;
       })
       .catch((err: Error) => console.log("An error occured", err));
   }, [editorInstanceRef, handlePaste]);
@@ -98,6 +142,11 @@ export default function Editor({ data, setData, editorInstanceRef }: EditorProps
       const editorElement = document.querySelector('.codex-editor');
       if (editorElement && pasteHandlerRef.current) {
         editorElement.removeEventListener('paste', pasteHandlerRef.current as EventListener);
+      }
+      
+      // Disconnect mutation observer
+      if (editorCore.current && (editorCore.current as any)._codeBlockObserver) {
+        (editorCore.current as any)._codeBlockObserver.disconnect();
       }
     };
   }, []);

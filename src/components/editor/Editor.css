@@ -160,6 +160,69 @@ body {
 	color: hsl(var(--foreground));
 }
 
+/* EditorJS Header Styles in Editor View */
+.ce-header {
+	font-weight: 700;
+	color: hsl(var(--foreground));
+}
+
+.ce-header[contenteditable="true"][data-placeholder]::before {
+	color: hsl(var(--muted-foreground));
+}
+
+/* H1 in editor */
+h1.ce-header {
+	font-size: 2.5em;
+	line-height: 1.2;
+	margin: 0.5em 0;
+	font-weight: 700;
+}
+
+/* H2 in editor */
+h2.ce-header {
+	font-size: 2em;
+	line-height: 1.3;
+	margin: 0.5em 0;
+	font-weight: 700;
+}
+
+/* H3 in editor */
+h3.ce-header {
+	font-size: 1.5em;
+	line-height: 1.4;
+	margin: 0.5em 0;
+	font-weight: 700;
+}
+
+/* H4 in editor */
+h4.ce-header {
+	font-size: 1.25em;
+	line-height: 1.4;
+	margin: 0.5em 0;
+	font-weight: 700;
+}
+
+/* H5 in editor */
+h5.ce-header {
+	font-size: 1.1em;
+	line-height: 1.4;
+	margin: 0.5em 0;
+	font-weight: 700;
+}
+
+/* H6 in editor */
+h6.ce-header {
+	font-size: 1em;
+	line-height: 1.4;
+	margin: 0.5em 0;
+	font-weight: 700;
+}
+
+/* Dark mode for editor headers */
+.dark .ce-header {
+	color: hsl(var(--foreground));
+}
+
 /* Paragraphs */
 .text-container p {
 	margin: 1em 0;
@@ -183,6 +246,36 @@ body {
 .text-container ol li {
 	list-style-type: decimal;
 	margin: 0.5em 0;
+}
+
+/* Text formatting - Bold, Italic, Underline */
+.text-container b,
+.text-container strong {
+	font-weight: 700;
+}
+
+.text-container i,
+.text-container em {
+	font-style: italic;
+}
+
+.text-container u {
+	text-decoration: underline;
+}
+
+/* Support text formatting in lists */
+.text-container li b,
+.text-container li strong {
+	font-weight: 700;
+}
+
+.text-container li i,
+.text-container li em {
+	font-style: italic;
+}
+
+.text-container li u {
+	text-decoration: underline;
 }
 
 /* Links */

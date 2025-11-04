@@ -74,7 +74,9 @@ export default function EditorTextParser({ data }: EditorTextParserProps) {
         // Replace \n with <br /> tags
         paragraphText = paragraphText.replace(/\n/g, '<br />');
         const linkedText = linkifyText(paragraphText);
-        return <p key={key} dangerouslySetInnerHTML={{ __html: linkedText }} />;
+        // If paragraph is empty, add a non-breaking space to preserve the block
+        const finalText = linkedText.trim() === '' ? '&nbsp;' : linkedText;
+        return <p key={key} dangerouslySetInnerHTML={{ __html: finalText }} style={linkedText.trim() === '' ? { minHeight: '1.5em' } : undefined} />;
 
       case 'list':
         const ListTag = block.data.style === 'ordered' ? 'ol' : 'ul';

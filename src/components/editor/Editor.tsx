@@ -47,6 +47,9 @@ export default function Editor({ data, setData, editorInstanceRef }: EditorProps
         const blocks = editor._editorJS.blocks;
         const currentIndex = blocks.getCurrentBlockIndex();
         
+        // Save current state before making changes (for undo/redo)
+        const currentData = await editor._editorJS.save();
+        
         // Delete the current block
         blocks.delete(currentIndex);
         
@@ -60,6 +63,9 @@ export default function Editor({ data, setData, editorInstanceRef }: EditorProps
             i === lines.length - 1 // focus on the last block
           );
         }
+        
+        // Trigger a save to update the undo history
+        await editor._editorJS.save();
       });
     }
   }, []);
@@ -111,6 +117,7 @@ export default function Editor({ data, setData, editorInstanceRef }: EditorProps
         tools={EDITOR_JS_TOOLS}
         onChange={handleSave}
         defaultValue={data || { blocks: [] }}
+        enableReInitialize={true}
       />
     </div>
   );

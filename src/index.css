@@ -28,6 +28,21 @@
     }
   }
 
+  /* Horizontal gradient animation for navbar */
+  .animate-gradient-x {
+    background-size: 200% 100%;
+    animation: gradient-x 3s ease infinite;
+  }
+
+  @keyframes gradient-x {
+    0%, 100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+
   /* Fade in animation */
   .animate-fade-in {
     animation: fade-in 0.6s ease-out;

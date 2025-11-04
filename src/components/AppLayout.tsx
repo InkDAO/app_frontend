@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { SearchProvider } from "@/context/SearchContext";
 import { EditorProvider } from "@/context/EditorContext";
+import { SidebarProvider } from "@/context/SidebarContext";
 import Sidebar from "@/components/Sidebar";
 import TopHeader from "@/components/TopHeader";
 import { Button } from "@/components/ui/button";
@@ -86,6 +87,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
     <ThemeProvider>
       <SearchProvider>
         <EditorProvider>
+          <SidebarProvider sidebarOpen={sidebarOpen} showSidebar={showSidebar}>
           <div className={`h-screen max-h-screen bg-background flex flex-col`}>
           {/* Top Header - only show for app routes */}
           {showSidebar && (
@@ -134,6 +136,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
             </div>
           </div>
           </div>
+          </SidebarProvider>
         </EditorProvider>
       </SearchProvider>
     </ThemeProvider>

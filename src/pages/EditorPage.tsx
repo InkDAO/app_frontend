@@ -8,6 +8,7 @@ import { createGroupPost, updateFileById, useAddAsset, publishFile } from '@/ser
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useEditor } from '@/context/EditorContext';
+import { useSidebar } from '@/context/SidebarContext';
 import { PublishData } from '@/components/PublishOverlay';
 import PublishProgressModal, { PublishStep } from '@/components/PublishProgressModal';
 import {
@@ -40,9 +41,13 @@ const EditorPage = () => {
 	const [showNavigationDialog, setShowNavigationDialog] = useState(false);
 	const [editorKey, setEditorKey] = useState(0);
 	const editorInstanceRef = useRef<any>(null);
+	const titleTextareaRef = useRef<HTMLTextAreaElement>(null);
 	const justSavedOrLoaded = useRef(false);
 	const pendingNavigationRef = useRef<string | null>(null);
 	const allowNavigationRef = useRef(false);
+	
+	// Get sidebar state for navbar positioning
+	const { sidebarOpen, showSidebar } = useSidebar();
 	
 	// Publishing progress state
 	const [publishStep, setPublishStep] = useState<PublishStep>('uploading');
@@ -114,6 +119,14 @@ const EditorPage = () => {
 
 		loadExistingPost();
 	}, [cid, navigate]);
+
+	// Auto-adjust title textarea height when content changes
+	useEffect(() => {
+		if (titleTextareaRef.current) {
+			titleTextareaRef.current.style.height = 'auto';
+			titleTextareaRef.current.style.height = titleTextareaRef.current.scrollHeight + 'px';
+		}
+	}, [documentTitle]);
 
 	async function togglePreview() {
 		// If switching to preview mode, save the current editor state first
@@ -651,56 +664,26 @@ const EditorPage = () => {
 						{/* Background Pattern */}
 						<div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(180deg,transparent,white,white,transparent)] dark:bg-grid-slate-400/5 opacity-30 pointer-events-none"></div>
 						
-					{/* Content Container */}
-					<div className="relative z-10 px-6 pt-6 pb-16 sm:px-12 sm:pt-8 sm:pb-20 lg:px-16 lg:pt-10 lg:pb-24 xl:px-20 xl:pb-28">
-						{/* Title input */}
-						<div className="mb-6 mt-8 sm:mt-12 md:mt-16">
-							<input
-								type="text"
-								value={documentTitle}
-								onChange={(e) => setDocumentTitle(e.target.value)}
-								className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-transparent border-none outline-none w-full text-foreground placeholder-muted-foreground focus:ring-0"
-								placeholder="Give your post a title..."
-								disabled={isPreviewMode}
-							/>
-						</div>
+			{/* Content Container */}
+			<div className="relative z-10 px-6 pt-6 pb-16 sm:px-12 sm:pt-8 sm:pb-20 lg:px-16 lg:pt-10 lg:pb-24 xl:px-20 xl:pb-28">
+					{/* Title input */}
+					<div className="mb-6 mt-8 sm:mt-12 md:mt-16">
+						<textarea
+							ref={titleTextareaRef}
+							value={documentTitle}
+							onChange={(e) => setDocumentTitle(e.target.value)}
+							onInput={(e) => {
+								e.currentTarget.style.height = 'auto';
+								e.currentTarget.style.height = e.currentTarget.scrollHeight + 'px';
+							}}
+							rows={1}
+							className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold bg-transparent border-none outline-none w-full text-foreground placeholder-muted-foreground focus:ring-0 resize-none overflow-hidden"
+							placeholder="Give your post a title..."
+							disabled={isPreviewMode}
+						/>
+				</div>
 
-						{/* Tab Navigation with glassy background */}
-						<div className="mb-6">
-							<nav className="flex justify-end items-center" aria-label="Tabs">
-								{/* Edit/Preview Toggle */}
-								<div className="flex items-center bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl p-1.5 shadow-lg border border-border/30">
-									<button
-										onClick={() => {
-											if (isPreviewMode) {
-												setIsPreviewMode(false);
-											}
-										}}
-										className={`flex items-center justify-center space-x-1 sm:space-x-2 px-4 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-bold rounded-lg transition-all duration-200 ${
-											!isPreviewMode
-												? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-md scale-105'
-												: 'text-muted-foreground hover:text-foreground hover:bg-white/50 dark:hover:bg-gray-700/50'
-										}`}
-									>
-										<Edit3 className="w-4 h-4" />
-										<span className="hidden sm:inline">Edit</span>
-									</button>
-									<button
-										onClick={togglePreview}
-										className={`flex items-center justify-center space-x-1 sm:space-x-2 px-4 sm:px-5 py-2.5 sm:py-3 text-xs sm:text-sm font-bold rounded-lg transition-all duration-200 ${
-											isPreviewMode
-												? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-md scale-105'
-												: 'text-muted-foreground hover:text-foreground hover:bg-white/50 dark:hover:bg-gray-700/50'
-										}`}
-									>
-										<Eye className="w-4 h-4" />
-										<span className="hidden sm:inline">Preview</span>
-									</button>
-								</div>
-							</nav>
-						</div>
-
-						{/* Editor/Preview Content */}
+					{/* Editor/Preview Content */}
 						<div className="min-h-[300px] sm:min-h-[500px] w-full">
 							{isLoadingContent ? (
 								<div className="flex items-center justify-center py-12">
@@ -718,15 +701,60 @@ const EditorPage = () => {
 									setData={setData}
 									editorInstanceRef={editorInstanceRef}
 								/>
-							)}
-						</div>
-					</div>
+						)}
 					</div>
 				</div>
+				</div>
+				</div>
 			</div>
-			</div>
+		</div>
 
-		{/* Unsaved Changes Warning Dialog */}
+	{/* Floating Navigation Bar - Modern Design */}
+	<div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999] transition-all duration-300 ${showSidebar && sidebarOpen ? 'lg:left-[calc(50%+9rem)]' : ''}`}>
+		<div className="relative">
+			{/* Glow effect */}
+			<div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 blur-xl rounded-full animate-pulse"></div>
+			
+			{/* Main navbar container */}
+			<div className="relative flex items-center gap-1 bg-gradient-to-r from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 backdrop-blur-2xl rounded-full p-1 shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] border border-gray-200/50 dark:border-gray-700/50">
+				<button
+					onClick={() => {
+						if (isPreviewMode) {
+							setIsPreviewMode(false);
+						}
+					}}
+					className={`relative flex items-center justify-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-full font-medium text-sm transition-all duration-300 ${
+						!isPreviewMode
+							? 'text-white'
+							: 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+					}`}
+				>
+					{!isPreviewMode && (
+						<span className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 rounded-full shadow-lg shadow-blue-500/50 dark:shadow-blue-500/30 animate-gradient-x"></span>
+					)}
+					<Edit3 className={`relative z-10 w-4 h-4 transition-transform duration-200 ${!isPreviewMode ? 'scale-110' : ''}`} />
+					<span className="relative z-10 hidden sm:inline">Edit</span>
+				</button>
+				
+				<button
+					onClick={togglePreview}
+					className={`relative flex items-center justify-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-full font-medium text-sm transition-all duration-300 ${
+						isPreviewMode
+							? 'text-white'
+							: 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+					}`}
+				>
+					{isPreviewMode && (
+						<span className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 rounded-full shadow-lg shadow-purple-500/50 dark:shadow-purple-500/30 animate-gradient-x"></span>
+					)}
+					<Eye className={`relative z-10 w-4 h-4 transition-transform duration-200 ${isPreviewMode ? 'scale-110' : ''}`} />
+					<span className="relative z-10 hidden sm:inline">Preview</span>
+				</button>
+			</div>
+		</div>
+	</div>
+
+	{/* Unsaved Changes Warning Dialog */}
 		<AlertDialog open={showNavigationDialog} onOpenChange={setShowNavigationDialog}>
 			<AlertDialogContent className="w-[calc(100vw-2rem)] max-w-[500px] max-h-[90vh] overflow-y-auto">
 				{/* Close button */}

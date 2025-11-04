@@ -4,7 +4,6 @@ import Warning from "@editorjs/warning";
 import Code from "@editorjs/code";
 import LinkTool from "@editorjs/link";
 import CustomImageTool from "../CustomImageTool";
-import Raw from "@editorjs/raw";
 import Header from "@editorjs/header";
 import Quote from "@editorjs/quote";
 import Marker from "@editorjs/marker";
@@ -54,10 +53,16 @@ export const EDITOR_JS_TOOLS = {
   },
   code: Code,
   list: List,
-  table: Table,
+  table: {
+    class: Table,
+    inlineToolbar: true,
+    config: {
+      rows: 2,
+      cols: 3,
+    },
+  },
   warning: Warning,
   linkTool: LinkTool,
-  raw: Raw,
   quote: Quote,
   marker: Marker,
   delimiter: Delimiter,

@@ -620,7 +620,7 @@ const EditorPage = () => {
 		<div className="bg-white dark:bg-gray-950 py-6 sm:py-8 px-4 sm:px-6 lg:px-8">
 			<div className="max-w-7xl mx-auto w-full">
 				{/* Tutorial Banner */}
-				<div className="mb-6 sm:mb-8 max-w-6xl mx-auto">
+				<div className="mb-6 sm:mb-8 max-w-5xl mx-auto">
 					<div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-indigo-50 via-blue-50 to-cyan-50 dark:from-indigo-950/40 dark:via-blue-950/40 dark:to-cyan-950/40 p-4 sm:p-6 lg:p-8 border-0 shadow-2xl dark:shadow-primary/10">
 						{/* Animated Background Blobs */}
 						<div className="absolute top-0 left-0 w-48 h-48 sm:w-72 sm:h-72 bg-gradient-to-br from-indigo-400/30 to-blue-400/30 rounded-full blur-3xl animate-pulse" />
@@ -659,7 +659,7 @@ const EditorPage = () => {
 				</div>
 
 			{/* Modern Glassy Editor Container */}
-			<div className="max-w-6xl mx-auto">
+			<div className="max-w-5xl mx-auto">
 				{/* Glowing border effect */}
 				<div className="relative group">
 					<div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-3xl blur opacity-20 group-hover:opacity-30 transition duration-500"></div>
@@ -675,6 +675,8 @@ const EditorPage = () => {
 						
 			{/* Content Container */}
 			<div className="relative z-10 px-6 pt-6 pb-16 sm:px-12 sm:pt-8 sm:pb-20 lg:px-16 lg:pt-10 lg:pb-24 xl:px-20 xl:pb-28">
+				{/* Max-width content wrapper for large screens - improves readability */}
+				<div className="w-full lg:max-w-3xl lg:mx-auto">
 					{/* Title input */}
 					<div className="mb-6 mt-8 sm:mt-12 md:mt-16">
 						<textarea
@@ -690,29 +692,30 @@ const EditorPage = () => {
 							placeholder="Give your post a title..."
 							disabled={isPreviewMode}
 						/>
-				</div>
+					</div>
 
 					{/* Editor/Preview Content */}
-						<div className="min-h-[300px] sm:min-h-[500px] w-full">
-							{isLoadingContent ? (
-								<div className="flex items-center justify-center py-12">
-									<div className="text-center">
-										<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-										<p className="text-muted-foreground font-medium">Loading content...</p>
-									</div>
+					<div className="min-h-[300px] sm:min-h-[500px] w-full">
+						{isLoadingContent ? (
+							<div className="flex items-center justify-center py-12">
+								<div className="text-center">
+									<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+									<p className="text-muted-foreground font-medium">Loading content...</p>
 								</div>
-							) : isPreviewMode ? (
-								<EditorTextParser data={data} />
-							) : (
-								<Editor 
-									key={cid || `new-${editorKey}`} 
-									data={data} 
-									setData={setData}
-									editorInstanceRef={editorInstanceRef}
-								/>
+							</div>
+						) : isPreviewMode ? (
+							<EditorTextParser data={data} />
+						) : (
+							<Editor 
+								key={cid || `new-${editorKey}`} 
+								data={data} 
+								setData={setData}
+								editorInstanceRef={editorInstanceRef}
+							/>
 						)}
 					</div>
 				</div>
+			</div>
 				</div>
 				</div>
 			</div>

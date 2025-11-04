@@ -147,21 +147,23 @@ export default function EditorTextParser({ data }: EditorTextParserProps) {
 
       case 'table':
         return (
-          <table key={key}>
-            <tbody>
-              {block.data.content?.map((row: string[], rowIndex: number) => (
-                <tr key={rowIndex}>
-                  {row.map((cell: string, cellIndex: number) => {
-                    let cellContent = cell || '';
-                    // Convert newline characters to <br /> tags
-                    cellContent = cellContent.replace(/\n/g, '<br />');
-                    const linkedCell = linkifyText(cellContent);
-                    return <td key={cellIndex} dangerouslySetInnerHTML={{ __html: linkedCell }} />;
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div key={key} style={{ width: '100%', overflowX: 'auto', display: 'block', boxSizing: 'border-box' }}>
+            <table style={{ width: '100%', tableLayout: 'fixed' }}>
+              <tbody>
+                {block.data.content?.map((row: string[], rowIndex: number) => (
+                  <tr key={rowIndex}>
+                    {row.map((cell: string, cellIndex: number) => {
+                      let cellContent = cell || '';
+                      // Convert newline characters to <br /> tags
+                      cellContent = cellContent.replace(/\n/g, '<br />');
+                      const linkedCell = linkifyText(cellContent);
+                      return <td key={cellIndex} dangerouslySetInnerHTML={{ __html: linkedCell }} />;
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         );
 
       case 'warning':

@@ -32,6 +32,18 @@ export default function Editor({ data, setData, editorInstanceRef }: EditorProps
     
     // Check if the pasted text contains newlines
     if (pastedText && pastedText.includes('\n')) {
+      // Check if we're pasting into a textarea or input element
+      const target = event.target as HTMLElement;
+      if (target && (
+        target.tagName === 'TEXTAREA' || 
+        target.tagName === 'INPUT' ||
+        target.closest('.editorjs-latex') ||
+        target.closest('.ce-code')
+      )) {
+        // Let the native element or block handle the paste
+        return;
+      }
+
       // Get the current editor instance
       const editor = editorCore.current;
       if (!editor || !editor._editorJS) return;
@@ -44,7 +56,7 @@ export default function Editor({ data, setData, editorInstanceRef }: EditorProps
         const currentBlock = blocks.getBlockByIndex(currentIndex);
         
         // Don't intercept paste for blocks that handle multiline content natively
-        const blockTypesToSkip = ['code', 'raw', 'quote', 'table', 'warning', 'embed'];
+        const blockTypesToSkip = ['code', 'raw', 'quote', 'table', 'warning', 'embed', 'Math', 'math'];
         if (currentBlock && blockTypesToSkip.includes(currentBlock.name)) {
           // Let the block handle its own paste event
           return;

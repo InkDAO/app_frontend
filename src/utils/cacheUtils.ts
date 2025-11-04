@@ -56,7 +56,6 @@ export const clearAssetsCache = (): void => {
   try {
     clearCache(CACHE_KEY_ASSETS);
     clearCache(CACHE_KEY_PINATA_METADATA);
-    console.log('✅ Assets cache cleared');
   } catch (error) {
     console.error('Error clearing assets cache:', error);
   }

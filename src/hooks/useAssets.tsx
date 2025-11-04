@@ -35,7 +35,6 @@ export const useAssets = () => {
     if (useCache) {
       const cachedMetadata = getCache<any[]>(CACHE_KEYS.PINATA_METADATA);
       if (cachedMetadata && cachedMetadata.length > 0) {
-        console.log(`✅ Using cached Pinata metadata (${cachedMetadata.length} files)`);
         return cachedMetadata;
       }
     }
@@ -45,7 +44,6 @@ export const useAssets = () => {
     let pageCount = 0;
     
     try {
-      console.log('🔄 Fetching fresh Pinata metadata...');
       // Keep fetching until there's no next_page_token
       do {
         pageCount++;
@@ -57,7 +55,6 @@ export const useAssets = () => {
       // Cache the fetched metadata
       if (allFiles.length > 0) {
         setCache(CACHE_KEYS.PINATA_METADATA, allFiles);
-        console.log(`✅ Cached ${allFiles.length} Pinata metadata files`);
       }
       
       return allFiles;
@@ -93,7 +90,6 @@ export const useAssets = () => {
         }
       });
 
-      console.log(`📊 Contract posts: ${contractAssets.length}, Pinata files: ${apiFiles.length}`);
 
       // Filter and enrich assets - only keep posts that exist in Pinata
       let enrichedCount = 0;
@@ -103,7 +99,6 @@ export const useAssets = () => {
           const exists = metadataMap.has(asset.postCid);
           if (!exists) {
             filteredOutCount++;
-            console.log(`🚫 Filtering out post with CID not in Pinata: ${asset.postCid} (${asset.postTitle})`);
           }
           return exists;
         })
@@ -145,12 +140,10 @@ export const useAssets = () => {
           };
         });
 
-      console.log(`✅ Filtered posts: ${enrichedAssets.length}, Removed: ${filteredOutCount}, Enriched with hashtags: ${enrichedCount}`);
 
       // Cache the enriched and filtered assets
       if (enrichedAssets.length > 0) {
         setCache(CACHE_KEYS.ASSETS, enrichedAssets);
-        console.log(`💾 Cached ${enrichedAssets.length} enriched assets`);
       }
 
       // Update state with filtered and enriched data
@@ -169,7 +162,6 @@ export const useAssets = () => {
     const cachedAssets = getCache<Asset[]>(CACHE_KEYS.ASSETS);
     
     if (cachedAssets && cachedAssets.length > 0 && isAllAssetInfoLoading) {
-      console.log(`✅ Using cached assets (${cachedAssets.length} posts)`);
       setAllAssets(cachedAssets);
       setIsAllAssetLoading(false);
       setIsUsingCache(true);

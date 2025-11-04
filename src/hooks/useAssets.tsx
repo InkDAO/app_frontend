@@ -3,6 +3,7 @@ import { Asset } from "@/types";
 import { useReadContract } from "wagmi";
 import { fetchAllFileMetadata } from "@/services/dXService";
 import { marketPlaceContract } from "@/contracts/marketPlace";
+import { setCache, getCache, clearCache, clearAssetsCache, CACHE_KEYS } from "@/utils/cacheUtils";
 
 interface PostInfo {
   author: `0x${string}`;
@@ -15,57 +16,6 @@ interface PostInfo {
 
 // The function returns just the post infos array
 type GetAllPostsResult = PostInfo[];
-
-// Cache configuration
-const CACHE_KEY_ASSETS = 'dx_cached_assets';
-const CACHE_KEY_PINATA_METADATA = 'dx_cached_pinata_metadata';
-const CACHE_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
-
-interface CacheData<T> {
-  data: T;
-  timestamp: number;
-}
-
-// Cache utilities
-const setCache = <T,>(key: string, data: T): void => {
-  try {
-    const cacheData: CacheData<T> = {
-      data,
-      timestamp: Date.now(),
-    };
-    localStorage.setItem(key, JSON.stringify(cacheData));
-  } catch (error) {
-    console.error('Error setting cache:', error);
-  }
-};
-
-const getCache = <T,>(key: string): T | null => {
-  try {
-    const cached = localStorage.getItem(key);
-    if (!cached) return null;
-
-    const cacheData: CacheData<T> = JSON.parse(cached);
-    const age = Date.now() - cacheData.timestamp;
-
-    if (age > CACHE_EXPIRY_MS) {
-      localStorage.removeItem(key);
-      return null;
-    }
-
-    return cacheData.data;
-  } catch (error) {
-    console.error('Error reading cache:', error);
-    return null;
-  }
-};
-
-const clearCache = (key: string): void => {
-  try {
-    localStorage.removeItem(key);
-  } catch (error) {
-    console.error('Error clearing cache:', error);
-  }
-};
 
 export const useAssets = () => {
   const [allAssets, setAllAssets] = useState<Asset[]>([]);
@@ -83,7 +33,7 @@ export const useAssets = () => {
   const fetchAllMetadataPages = useCallback(async (useCache = true) => {
     // Try to get from cache first
     if (useCache) {
-      const cachedMetadata = getCache<any[]>(CACHE_KEY_PINATA_METADATA);
+      const cachedMetadata = getCache<any[]>(CACHE_KEYS.PINATA_METADATA);
       if (cachedMetadata && cachedMetadata.length > 0) {
         console.log(`✅ Using cached Pinata metadata (${cachedMetadata.length} files)`);
         return cachedMetadata;
@@ -106,7 +56,7 @@ export const useAssets = () => {
       
       // Cache the fetched metadata
       if (allFiles.length > 0) {
-        setCache(CACHE_KEY_PINATA_METADATA, allFiles);
+        setCache(CACHE_KEYS.PINATA_METADATA, allFiles);
         console.log(`✅ Cached ${allFiles.length} Pinata metadata files`);
       }
       
@@ -199,7 +149,7 @@ export const useAssets = () => {
 
       // Cache the enriched and filtered assets
       if (enrichedAssets.length > 0) {
-        setCache(CACHE_KEY_ASSETS, enrichedAssets);
+        setCache(CACHE_KEYS.ASSETS, enrichedAssets);
         console.log(`💾 Cached ${enrichedAssets.length} enriched assets`);
       }
 
@@ -216,7 +166,7 @@ export const useAssets = () => {
   // Effect to load contract data and trigger background enrichment
   useEffect(() => {
     // Check cache first before processing contract data
-    const cachedAssets = getCache<Asset[]>(CACHE_KEY_ASSETS);
+    const cachedAssets = getCache<Asset[]>(CACHE_KEYS.ASSETS);
     
     if (cachedAssets && cachedAssets.length > 0 && isAllAssetInfoLoading) {
       console.log(`✅ Using cached assets (${cachedAssets.length} posts)`);
@@ -264,9 +214,7 @@ export const useAssets = () => {
 
   const refetchAssets = useCallback(() => {
     // Clear cache and refetch
-    clearCache(CACHE_KEY_ASSETS);
-    clearCache(CACHE_KEY_PINATA_METADATA);
-    console.log('🔄 Cache cleared, refetching assets...');
+    clearAssetsCache();
     refetchTotalAssets();
   }, [refetchTotalAssets]);
 
@@ -274,8 +222,7 @@ export const useAssets = () => {
   useEffect(() => {
     return () => {
       // Optionally clear cache on unmount during development
-      // clearCache(CACHE_KEY_ASSETS);
-      // clearCache(CACHE_KEY_PINATA_METADATA);
+      // clearAssetsCache();
     };
   }, []);
 
@@ -285,9 +232,6 @@ export const useAssets = () => {
     refetchAssets, 
     isEnrichmentInProgress,
     isUsingCache,
-    clearAssetsCache: () => {
-      clearCache(CACHE_KEY_ASSETS);
-      clearCache(CACHE_KEY_PINATA_METADATA);
-    }
+    clearAssetsCache
   };
 };

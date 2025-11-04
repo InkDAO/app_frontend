@@ -11,6 +11,7 @@ import { useEditor } from '@/context/EditorContext';
 import { useSidebar } from '@/context/SidebarContext';
 import { PublishData } from '@/components/PublishOverlay';
 import PublishProgressModal, { PublishStep } from '@/components/PublishProgressModal';
+import { clearAssetsCache } from '@/utils/cacheUtils';
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -318,30 +319,36 @@ const EditorPage = () => {
 						args: [cid],
 					}) as bigint;
 
-					if (tokenId && tokenId > 0n) {
-						setPublishedAssetAddress(tokenId.toString());
-						setPublishStep('completed');
-						setIsPublishing(false);
-						// Clear stored data on success
-						setUploadedThumbnailCid('');
-						setFailedStep(null);
-						setLastPublishData(null);
-					} else {
-						setPublishStep('completed');
-						setIsPublishing(false);
-						setUploadedThumbnailCid('');
-						setFailedStep(null);
-						setLastPublishData(null);
-					}
-				} catch (error) {
-					// Still show success even if we couldn't get the address
+				if (tokenId && tokenId > 0n) {
+					setPublishedAssetAddress(tokenId.toString());
 					setPublishStep('completed');
 					setIsPublishing(false);
 					// Clear stored data on success
 					setUploadedThumbnailCid('');
 					setFailedStep(null);
 					setLastPublishData(null);
+					// Clear assets cache to show new post immediately
+					clearAssetsCache();
+				} else {
+					setPublishStep('completed');
+					setIsPublishing(false);
+					setUploadedThumbnailCid('');
+					setFailedStep(null);
+					setLastPublishData(null);
+					// Clear assets cache to show new post immediately
+					clearAssetsCache();
 				}
+			} catch (error) {
+				// Still show success even if we couldn't get the address
+				setPublishStep('completed');
+				setIsPublishing(false);
+				// Clear stored data on success
+				setUploadedThumbnailCid('');
+				setFailedStep(null);
+				setLastPublishData(null);
+				// Clear assets cache to show new post immediately
+				clearAssetsCache();
+			}
 			}
 		};
 
@@ -380,18 +387,20 @@ const EditorPage = () => {
 						}
 					}
 
-					setPublishStep('completed');
-					setIsPublishing(false);
-					setUploadedThumbnailCid('');
-					setFailedStep(null);
-					setLastPublishData(null);
-				} else {
-					console.error('❌ Fallback: Transaction failed on blockchain');
-					setPublishStep('error');
-					setFailedStep('confirming');
-					setPublishError('Transaction failed on the blockchain.');
-					setIsPublishing(false);
-				}
+				setPublishStep('completed');
+				setIsPublishing(false);
+				setUploadedThumbnailCid('');
+				setFailedStep(null);
+				setLastPublishData(null);
+				// Clear assets cache to show new post immediately
+				clearAssetsCache();
+			} else {
+				console.error('❌ Fallback: Transaction failed on blockchain');
+				setPublishStep('error');
+				setFailedStep('confirming');
+				setPublishError('Transaction failed on the blockchain.');
+				setIsPublishing(false);
+			}
 			}
 		};
 

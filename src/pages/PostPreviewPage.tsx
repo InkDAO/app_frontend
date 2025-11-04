@@ -294,10 +294,10 @@ export const PostPreviewPage = () => {
   // Loading state - show while fetching initial data
   if (isPostInfoLoading || isOwnershipLoading) {
     return (
-      <div className="bg-transparent py-8 px-2 sm:px-4 md:px-6 lg:px-8 min-h-screen overflow-x-hidden">
+      <div className="bg-transparent py-8 px-0 sm:px-4 md:px-6 lg:px-8 min-h-screen overflow-x-hidden">
         <div className="w-full max-w-7xl mx-auto">
           {/* Share Banner Container - matches editor page banner width */}
-          <div className="mb-6 sm:mb-8 max-w-5xl mx-auto">
+          <div className="mb-6 sm:mb-8 max-w-5xl mx-auto px-2 sm:px-0">
             <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-950/40 dark:via-indigo-950/40 dark:to-purple-950/40 p-4 sm:p-6 lg:p-8 border-0 shadow-2xl dark:shadow-blue-500/10">
               {/* Animated Background Blobs */}
               <div className="absolute top-0 left-0 w-48 h-48 sm:w-72 sm:h-72 bg-gradient-to-br from-blue-400/30 to-indigo-400/30 rounded-full blur-3xl animate-pulse" />
@@ -343,7 +343,7 @@ export const PostPreviewPage = () => {
         </div>
 
           {/* Modern Glassy Container - Loading State */}
-          <div className="max-w-5xl mx-auto">
+          <div className="max-w-5xl mx-auto px-2 sm:px-0">
             {/* Glowing border effect */}
             <div className="relative group">
               <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-3xl blur opacity-20 transition duration-500"></div>
@@ -358,7 +358,7 @@ export const PostPreviewPage = () => {
                 <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(180deg,transparent,white,white,transparent)] dark:bg-grid-slate-400/5 opacity-30 pointer-events-none"></div>
                 
                 {/* Content Container */}
-                <div className="relative z-10 px-4 pt-6 pb-16 sm:px-8 sm:pb-20 md:px-12 lg:px-16 lg:pb-24 xl:px-20 xl:pb-28">
+                <div className="relative z-10 px-3 pt-6 pb-16 sm:px-8 sm:pb-20 md:px-12 lg:px-16 lg:pb-24 xl:px-20 xl:pb-28">
                   {/* Loading Title Skeleton */}
                   <div className="mb-6 mt-8 sm:mt-12 md:mt-16">
                     <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-lg w-3/4 animate-pulse"></div>
@@ -398,10 +398,10 @@ export const PostPreviewPage = () => {
     if (pricePerAsset === 0) {
       // For free posts, just show loading or wait for content to load
       return (
-        <div className="bg-transparent py-8 px-2 sm:px-4 md:px-6 lg:px-8 min-h-screen overflow-x-hidden">
+        <div className="bg-transparent py-8 px-0 sm:px-4 md:px-6 lg:px-8 min-h-screen overflow-x-hidden">
           <div className="w-full max-w-7xl mx-auto">
             {/* Modern Glassy Container - Loading State */}
-            <div className="max-w-5xl mx-auto">
+            <div className="max-w-5xl mx-auto px-2 sm:px-0">
               {/* Glowing border effect */}
               <div className="relative group">
                 <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-3xl blur opacity-20 transition duration-500"></div>
@@ -918,7 +918,7 @@ export const PostPreviewPage = () => {
                 <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(180deg,transparent,white,white,transparent)] dark:bg-grid-slate-400/5 opacity-30 pointer-events-none"></div>
                 
                 {/* Content Container */}
-                <div className="relative z-10 px-4 pt-6 pb-16 sm:px-8 sm:pb-20 md:px-12 lg:px-16 lg:pb-24 xl:px-20 xl:pb-28">
+                <div className="relative z-10 px-3 pt-6 pb-16 sm:px-8 sm:pb-20 md:px-12 lg:px-16 lg:pb-24 xl:px-20 xl:pb-28">
                   {/* Loading Title Skeleton */}
                   <div className="mb-6 mt-8 sm:mt-12 md:mt-16">
                     <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-lg w-3/4 animate-pulse"></div>
@@ -946,10 +946,10 @@ export const PostPreviewPage = () => {
   }
 
   return (
-    <div className="bg-transparent py-8 px-2 sm:px-4 md:px-6 lg:px-8 min-h-screen overflow-x-hidden">
+    <div className="bg-transparent py-8 px-0 sm:px-4 md:px-6 lg:px-8 min-h-screen overflow-x-hidden">
       <div className="w-full max-w-7xl mx-auto">
         {/* Share Banner Container - matches editor page banner width */}
-        <div className="mb-6 sm:mb-8 max-w-5xl mx-auto">
+        <div className="mb-6 sm:mb-8 max-w-5xl mx-auto px-2 sm:px-0">
           <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-950/40 dark:via-indigo-950/40 dark:to-purple-950/40 p-4 sm:p-6 lg:p-8 border-0 shadow-2xl dark:shadow-blue-500/10">
             {/* Animated Background Blobs */}
             <div className="absolute top-0 left-0 w-48 h-48 sm:w-72 sm:h-72 bg-gradient-to-br from-blue-400/30 to-indigo-400/30 rounded-full blur-3xl animate-pulse" />
@@ -995,7 +995,7 @@ export const PostPreviewPage = () => {
         </div>
 
         {/* Modern Glassy Container */}
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-5xl mx-auto px-2 sm:px-0">
           {/* Glowing border effect */}
           <div className="relative group">
             <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-3xl blur opacity-20 group-hover:opacity-30 transition duration-500"></div>
@@ -1010,7 +1010,7 @@ export const PostPreviewPage = () => {
               <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(180deg,transparent,white,white,transparent)] dark:bg-grid-slate-400/5 opacity-30 pointer-events-none"></div>
               
               {/* Content Container */}
-              <div className="relative z-10 px-4 pt-6 pb-16 sm:px-8 sm:pb-20 md:px-12 lg:px-16 lg:pb-24 xl:px-20 xl:pb-28">
+              <div className="relative z-10 px-3 pt-6 pb-16 sm:px-8 sm:pb-20 md:px-12 lg:px-16 lg:pb-24 xl:px-20 xl:pb-28">
                 {/* Max-width content wrapper for large screens - improves readability */}
                 <div className="w-full lg:max-w-3xl lg:mx-auto">
                   {/* Title */}

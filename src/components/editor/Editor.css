@@ -1024,6 +1024,9 @@ body.dark .ce-popover__item--focused {
   overflow-wrap: break-word;
   word-wrap: break-word;
   max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  box-sizing: border-box;
 }
 
 .latex-block .katex-display {
@@ -1031,6 +1034,8 @@ body.dark .ce-popover__item--focused {
   overflow-wrap: break-word;
   word-wrap: break-word;
   max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 .latex-block .katex {
@@ -1052,6 +1057,28 @@ body.dark .ce-popover__item--focused {
   white-space: normal;
 }
 
+/* Mobile LaTeX preview styles */
+@media (max-width: 640px) {
+  .latex-block {
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding-right: 0 !important;
+  }
+  
+  .latex-block .katex {
+    font-size: 1em !important;
+    max-width: 100% !important;
+  }
+  
+  .latex-block .katex-display {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    max-width: 100% !important;
+    padding: 0.5em 0 !important;
+  }
+}
+
 /* Theme compatibility for LaTeX */
 .dark .latex-block .katex {
   color: inherit;
@@ -1064,10 +1091,13 @@ body.dark .ce-popover__item--focused {
 /* Editor LaTeX Tool Styles */
 .ce-block__content .editorjs-latex {
   margin: 0.5em 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .ce-block__content .editorjs-latex .editorjs-latex__input {
   width: 100%;
+  max-width: 100%;
   padding: 0.5em;
   border: 1px solid var(--color-border, #e0e0e0);
   border-radius: 4px;
@@ -1075,6 +1105,8 @@ body.dark .ce-popover__item--focused {
   font-size: 0.9em;
   background: var(--color-background, #ffffff);
   color: var(--color-text, #000000);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .ce-block__content .editorjs-latex .editorjs-latex__output {
@@ -1084,4 +1116,205 @@ body.dark .ce-popover__item--focused {
   border-radius: 4px;
   min-height: 40px;
   overflow-x: auto;
+  max-width: 100%;
+}
+
+/* LaTeX block wrapper - Force width constraints at ALL levels similar to code and link blocks */
+.ce-block--Math,
+.ce-block.ce-block--Math,
+.cdx-block.ce-block--Math,
+div.ce-block--Math {
+  max-width: 100% !important;
+  overflow: hidden !important;
+}
+
+.ce-block--Math .ce-block__content,
+.ce-block.ce-block--Math .ce-block__content,
+div.ce-block--Math .ce-block__content {
+  max-width: 100% !important;
+  overflow: hidden !important;
+}
+
+/* Ensure ALL children of Math block are constrained */
+.ce-block--Math *,
+.ce-block.ce-block--Math *,
+.ce-block--Math .ce-block__content *,
+.ce-block.ce-block--Math .ce-block__content * {
+  max-width: 100% !important;
+}
+
+/* LaTeX tool container itself */
+.editorjs-latex {
+  max-width: 100% !important;
+  overflow: hidden !important;
+}
+
+.editorjs-latex__input {
+  max-width: 100% !important;
+}
+
+.editorjs-latex__output {
+  max-width: 100% !important;
+  overflow-x: auto !important;
+}
+
+/* Ensure the math preview wrapper is also constrained */
+.math-preview,
+.editorjs-latex .math-preview {
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+}
+
+/* KaTeX rendered output constraints */
+.editorjs-latex__output .katex,
+.editorjs-latex__output .katex-display,
+.editorjs-latex__output .katex-html {
+  max-width: 100% !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+}
+
+/* Mobile LaTeX styles */
+@media (max-width: 640px) {
+  /* Block level constraints */
+  .ce-block--Math,
+  .ce-block.ce-block--Math,
+  .cdx-block.ce-block--Math,
+  div.ce-block--Math {
+    max-width: 100% !important;
+    overflow: hidden !important;
+  }
+  
+  .ce-block--Math .ce-block__content,
+  .ce-block.ce-block--Math .ce-block__content,
+  div.ce-block--Math .ce-block__content {
+    max-width: 100% !important;
+    overflow: hidden !important;
+  }
+  
+  /* Ensure ALL children of Math block are constrained on mobile */
+  .ce-block--Math *,
+  .ce-block.ce-block--Math *,
+  .ce-block--Math .ce-block__content *,
+  .ce-block.ce-block--Math .ce-block__content * {
+    max-width: 100% !important;
+  }
+  
+  /* LaTeX tool container */
+  .editorjs-latex {
+    max-width: 100% !important;
+    overflow: hidden !important;
+  }
+  
+  .ce-block__content .editorjs-latex {
+    max-width: 100% !important;
+    overflow: hidden !important;
+  }
+  
+  /* Input field */
+  .editorjs-latex__input,
+  .ce-block__content .editorjs-latex .editorjs-latex__input {
+    max-width: 100% !important;
+    font-size: 0.85em !important;
+    padding: 0.4em !important;
+  }
+  
+  /* Output/preview area */
+  .editorjs-latex__output,
+  .ce-block__content .editorjs-latex .editorjs-latex__output {
+    max-width: 100% !important;
+    padding: 0.75em !important;
+    overflow-x: auto !important;
+  }
+  
+  /* Math preview */
+  .math-preview,
+  .editorjs-latex .math-preview {
+    max-width: 100% !important;
+    overflow-x: auto !important;
+  }
+  
+  /* KaTeX rendered elements */
+  .editorjs-latex__output .katex,
+  .math-preview .katex {
+    font-size: 0.95em !important;
+    max-width: 100% !important;
+  }
+  
+  .editorjs-latex__output .katex-display,
+  .math-preview .katex-display {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    max-width: 100% !important;
+    padding: 0.5em 0 !important;
+  }
+}
+
+/* Link Tool Styles - Fix overflow on mobile */
+.link-tool,
+.cdx-link,
+.link-tool__content,
+.link-tool__input,
+.ce-block--link {
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+.link-tool__content,
+.link-tool__content-rendered {
+  max-width: 100% !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.link-tool__title,
+.link-tool__description,
+.link-tool__anchor {
+  max-width: 100% !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  word-break: break-word !important;
+  white-space: normal !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  box-sizing: border-box !important;
+}
+
+.link-tool__image {
+  max-width: 100% !important;
+  height: auto !important;
+  flex-shrink: 0 !important;
+}
+
+/* Fix for mobile */
+@media (max-width: 640px) {
+  .link-tool,
+  .cdx-link,
+  .link-tool__content,
+  .ce-block--link {
+    max-width: 100% !important;
+    width: 100% !important;
+    overflow: hidden !important;
+  }
+  
+  .link-tool__content-rendered {
+    display: flex !important;
+    flex-direction: column !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+  
+  .link-tool__image-container {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin-bottom: 0.5em !important;
+  }
+  
+  .link-tool__image {
+    max-width: 100% !important;
+    width: 100% !important;
+    height: auto !important;
+  }
 }

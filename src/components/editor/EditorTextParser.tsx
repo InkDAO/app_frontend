@@ -79,16 +79,69 @@ export default function EditorTextParser({ data }: EditorTextParserProps) {
         return <p key={key} dangerouslySetInnerHTML={{ __html: finalText }} style={linkedText.trim() === '' ? { minHeight: '1.5em' } : undefined} />;
 
       case 'list':
-        const ListTag = block.data.style === 'ordered' ? 'ol' : 'ul';
+        // Helper function to render list items recursively
+        const renderListItems = (items: any[], style: string): JSX.Element[] => {
+          return items.map((item: any, i: number) => {
+            let content = typeof item === 'string' ? item : (item.content || item.text || '');
+            // Convert newline characters to <br /> tags for proper line break display in lists
+            content = content.replace(/\n/g, '<br />');
+            const linkedContent = linkifyText(content);
+            
+            // For checklists, render with checkbox
+            if (style === 'checklist') {
+              const isChecked = item.meta?.checked || item.checked || false;
+              return (
+                <li key={i} style={{ listStyle: 'none', display: 'flex', alignItems: 'flex-start', margin: '0.5em 0' }}>
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    readOnly
+                    style={{ marginRight: '0.5em', marginTop: '0.3em', flexShrink: 0 }}
+                  />
+                  <span dangerouslySetInnerHTML={{ __html: linkedContent }} />
+                  {item.items && item.items.length > 0 && (
+                    <ul style={{ paddingLeft: '1.5em', marginTop: '0.5em', width: '100%' }}>
+                      {renderListItems(item.items, style)}
+                    </ul>
+                  )}
+                </li>
+              );
+            }
+            
+            // For regular lists (ordered or unordered)
+            return (
+              <li key={i}>
+                <span dangerouslySetInnerHTML={{ __html: linkedContent }} />
+                {item.items && item.items.length > 0 && (
+                  style === 'ordered' ? (
+                    <ol style={{ paddingLeft: '1.5em', marginTop: '0.5em' }}>
+                      {renderListItems(item.items, style)}
+                    </ol>
+                  ) : (
+                    <ul style={{ paddingLeft: '1.5em', marginTop: '0.5em' }}>
+                      {renderListItems(item.items, style)}
+                    </ul>
+                  )
+                )}
+              </li>
+            );
+          });
+        };
+
+        const listStyle = block.data.style || 'unordered';
+        
+        if (listStyle === 'checklist') {
+          return (
+            <ul key={key} className="cdx-checklist" style={{ listStyle: 'none', paddingLeft: 0 }}>
+              {renderListItems(block.data.items, listStyle)}
+            </ul>
+          );
+        }
+        
+        const ListTag = listStyle === 'ordered' ? 'ol' : 'ul';
         return (
           <ListTag key={key}>
-            {block.data.items.map((item: any, i: number) => {
-              let content = typeof item === 'string' ? item : (item.content || item.text || '');
-              // Convert newline characters to <br /> tags for proper line break display in lists
-              content = content.replace(/\n/g, '<br />');
-              const linkedContent = linkifyText(content);
-              return <li key={i} dangerouslySetInnerHTML={{ __html: linkedContent }} />;
-            })}
+            {renderListItems(block.data.items, listStyle)}
           </ListTag>
         );
 

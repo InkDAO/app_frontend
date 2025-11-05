@@ -24,6 +24,18 @@ export default class CustomImageTool extends Image {
     this._wrapper = null;
     this._imageElement = null;
     this._customData = data;
+    
+    // Listen for window resize to reapply dimensions
+    window.addEventListener('resize', () => {
+      if (this._imageElement) {
+        const isMobile = window.innerWidth <= 768;
+        if (isMobile) {
+          this._imageElement.style.setProperty('width', 'auto', 'important');
+          this._imageElement.style.setProperty('height', 'auto', 'important');
+          this._imageElement.style.setProperty('max-width', '100%', 'important');
+        }
+      }
+    });
   }
 
   render() {
@@ -36,11 +48,22 @@ export default class CustomImageTool extends Image {
       if (imageElement) {
         this._imageElement = imageElement;
         
+        // Check if we're on mobile
+        const isMobile = window.innerWidth <= 768;
+        
         // Apply stored dimensions if they exist (check multiple sources)
         const width = this._customData.customWidth || this._customData.width || this._customData.file?.width;
         const height = this._customData.customHeight || this._customData.height || this._customData.file?.height;
         
-        if (width && height) {
+        if (isMobile) {
+          // On mobile, always use responsive sizing
+          imageElement.style.setProperty('width', 'auto', 'important');
+          imageElement.style.setProperty('height', 'auto', 'important');
+          imageElement.style.setProperty('max-width', '100%', 'important');
+          imageElement.style.setProperty('object-fit', 'contain', 'important');
+          imageElement.removeAttribute('width');
+          imageElement.removeAttribute('height');
+        } else if (width && height) {
           // Apply both dimensions with !important to override any existing styles
           imageElement.style.setProperty('width', `${width}px`, 'important');
           imageElement.style.setProperty('height', `${height}px`, 'important');

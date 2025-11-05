@@ -257,12 +257,26 @@ export default function EditorTextParser({ data }: EditorTextParserProps) {
       case 'image':
         const imageData = block.data;
         const url = imageData.file?.url || imageData.url;
-        const caption = imageData.caption || '';
+        
+        // Check multiple possible caption locations and ensure it's a string
+        let caption = '';
+        if (imageData.caption !== undefined && imageData.caption !== null) {
+          caption = String(imageData.caption);
+        } else if (imageData.file?.caption !== undefined && imageData.file?.caption !== null) {
+          caption = String(imageData.file.caption);
+        }
+        
         const stretched = imageData.stretched || false;
         const withBorder = imageData.withBorder || false;
         const withBackground = imageData.withBackground || false;
         const customWidth = imageData.customWidth;
         const customHeight = imageData.customHeight;
+
+        // Process caption with newlines and linkify
+        if (caption && caption.trim()) {
+          caption = caption.replace(/\n/g, '<br />');
+          caption = linkifyText(caption);
+        }
 
         // Build class list
         const classList = [];
@@ -289,18 +303,32 @@ export default function EditorTextParser({ data }: EditorTextParserProps) {
         if (withBackground) dataAttrs['data-background'] = 'true';
 
         return (
-          <div key={key} className={classList.join(' ')}>
-            <img
-              src={url}
-              alt={caption}
-              style={Object.keys(styles).length > 0 ? styles : undefined}
-              {...dataAttrs}
-            />
-            {caption && (
-              <div className="image-tool__caption" style={{ textAlign: 'center', fontStyle: 'italic', color: '#666', marginTop: '8px' }}>
-                {caption}
-              </div>
-            )}
+          <div key={key} style={{ marginBottom: '0.75em', width: '100%' }}>
+            <div className={classList.join(' ')} style={{ display: 'inline-block', width: '100%' }}>
+              <img
+                src={url}
+                alt={imageData.caption || ''}
+                style={Object.keys(styles).length > 0 ? styles : undefined}
+                {...dataAttrs}
+              />
+              {caption && caption.trim() && (
+                <div 
+                  className="image-tool__caption"
+                  style={{
+                    textAlign: 'center',
+                    fontStyle: 'italic',
+                    fontSize: '14px',
+                    marginTop: '12px',
+                    marginBottom: '4px',
+                    display: 'block',
+                    width: '100%',
+                    position: 'relative',
+                    clear: 'both'
+                  }}
+                  dangerouslySetInnerHTML={{ __html: caption }}
+                />
+              )}
+            </div>
           </div>
         );
 
@@ -318,13 +346,16 @@ export default function EditorTextParser({ data }: EditorTextParserProps) {
         );
 
       case 'simpleImage':
+        let simpleImageCaption = block.data.caption || '';
+        if (simpleImageCaption) {
+          simpleImageCaption = simpleImageCaption.replace(/\n/g, '<br />');
+          simpleImageCaption = linkifyText(simpleImageCaption);
+        }
         return (
           <div key={key} style={{ maxWidth: '100%', overflow: 'hidden' }}>
             <img src={block.data.url} alt={block.data.caption || ''} style={{ maxWidth: '100%', height: 'auto' }} />
-            {block.data.caption && (
-              <div style={{ textAlign: 'center', fontStyle: 'italic', color: '#666', marginTop: '8px', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
-                {block.data.caption}
-              </div>
+            {simpleImageCaption && (
+              <div style={{ textAlign: 'center', fontStyle: 'italic', color: '#666', marginTop: '8px', wordBreak: 'break-word', overflowWrap: 'break-word' }} dangerouslySetInnerHTML={{ __html: simpleImageCaption }} />
             )}
           </div>
         );

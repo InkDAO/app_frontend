@@ -974,6 +974,7 @@ body.dark .ce-popover__item--focused {
 	box-sizing: border-box;
 	word-wrap: break-word;
 	overflow-wrap: break-word;
+	background-image: none !important; /* Remove native EditorJS warning icon */
 }
 
 .text-container .cdx-warning::before {
@@ -984,6 +985,10 @@ body.dark .ce-popover__item--focused {
 	font-size: 1.5em;
 	line-height: 1;
 	color: rgb(234 179 8); /* yellow-500 */
+	background-image: none !important; /* Remove native EditorJS background icon */
+	width: auto !important; /* Reset native EditorJS width */
+	height: auto !important; /* Reset native EditorJS height */
+	margin-top: 0 !important; /* Reset native EditorJS margin */
 }
 
 .dark .text-container .cdx-warning {

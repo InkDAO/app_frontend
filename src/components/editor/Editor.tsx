@@ -38,7 +38,14 @@ export default function Editor({ data, setData, editorInstanceRef }: EditorProps
         target.tagName === 'TEXTAREA' || 
         target.tagName === 'INPUT' ||
         target.closest('.editorjs-latex') ||
-        target.closest('.ce-code')
+        target.closest('.ce-code') ||
+        target.closest('.cdx-warning') ||
+        target.closest('.cdx-list') ||
+        target.classList.contains('cdx-warning__title') ||
+        target.classList.contains('cdx-warning__message') ||
+        target.classList.contains('cdx-list__item-content') ||
+        (target.isContentEditable && target.closest('.cdx-warning')) ||
+        (target.isContentEditable && target.closest('.cdx-list'))
       )) {
         // Let the native element or block handle the paste
         return;
@@ -56,7 +63,7 @@ export default function Editor({ data, setData, editorInstanceRef }: EditorProps
         const currentBlock = blocks.getBlockByIndex(currentIndex);
         
         // Don't intercept paste for blocks that handle multiline content natively
-        const blockTypesToSkip = ['code', 'raw', 'quote', 'table', 'warning', 'embed', 'Math', 'math'];
+        const blockTypesToSkip = ['code', 'raw', 'quote', 'table', 'warning', 'embed', 'Math', 'math', 'list'];
         if (currentBlock && blockTypesToSkip.includes(currentBlock.name)) {
           // Let the block handle its own paste event
           return;

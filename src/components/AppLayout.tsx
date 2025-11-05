@@ -130,7 +130,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
             {/* Main content area - natural flex layout */}
             <div className={`flex-1 flex flex-col transition-all duration-300 ease-in-out ${showSidebar && sidebarOpen ? 'lg:ml-72' : ''} min-h-0 max-h-full`}>
               {/* Main content - scrollable only when needed */}
-              <main className={`flex-1 w-full bg-background overflow-y-auto min-h-0 max-h-full`}>
+              <main className={`flex-1 w-full bg-background overflow-y-auto overflow-x-hidden min-h-0 max-h-full`}>
                 {children}
               </main>
             </div>

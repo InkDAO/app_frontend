@@ -3,6 +3,7 @@ import { useAccount } from "wagmi";
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { ActivityHeatmap } from "@/components/ActivityHeatmap";
 
 interface UserMetrics {
   creator: {
@@ -97,8 +98,9 @@ export const DashboardPage = () => {
   }
 
   return (
-    <div className="px-4 sm:px-8 py-6 lg:px-12 xl:px-16 max-w-7xl mx-auto w-full">
-      <div className="mb-8 sm:mb-10 lg:mb-12">
+    <>
+      <div className="px-4 sm:px-8 py-6 lg:px-12 xl:px-16 max-w-7xl mx-auto w-full">
+        <div className="mb-4 sm:mb-6 lg:mb-8">
         {/* Hero Section */}
         <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-950/40 dark:via-indigo-950/40 dark:to-purple-950/40 p-4 sm:p-6 lg:p-8 border-0 shadow-2xl dark:shadow-blue-500/10">
           {/* Animated Background Blobs */}
@@ -156,7 +158,10 @@ export const DashboardPage = () => {
             </div>
           </div>
         </div>
+        </div>
       </div>
+      
+      <div className="px-4 sm:px-8 py-0 lg:px-12 xl:px-16 max-w-7xl mx-auto w-full">
 
         {/* User Analytics */}
         <div className="space-y-8">
@@ -355,6 +360,22 @@ export const DashboardPage = () => {
             </div>
         </div>
       </div>
+      
+      {/* Activity Heatmap - Full Width - Moved to Bottom */}
+      <div className="mt-8 sm:mt-10 lg:mt-12 mb-8 sm:mb-10 w-full">
+        <div className="px-4 sm:px-8 lg:px-12 xl:px-16 max-w-7xl mx-auto">
+          <div className="flex items-center gap-3 mb-3 sm:mb-4">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg shadow-green-500/50">
+              <BarChart3 className="h-5 w-5 text-white" />
+            </div>
+            <h3 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 dark:from-green-400 dark:to-emerald-400 bg-clip-text text-transparent">
+              Activity Overview
+            </h3>
+          </div>
+        </div>
+        <ActivityHeatmap userAddress={dashboardAddress} />
+      </div>
+    </>
   );
 };
 

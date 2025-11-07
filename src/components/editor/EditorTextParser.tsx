@@ -260,10 +260,11 @@ export default function EditorTextParser({ data }: EditorTextParserProps) {
         
         // Check multiple possible caption locations and ensure it's a string
         let caption = '';
-        if (imageData.caption !== undefined && imageData.caption !== null) {
-          caption = String(imageData.caption);
-        } else if (imageData.file?.caption !== undefined && imageData.file?.caption !== null) {
-          caption = String(imageData.file.caption);
+        // Standard EditorJS Image tool saves caption at the block data level
+        if (imageData.caption !== undefined && imageData.caption !== null && String(imageData.caption).trim() !== '') {
+          caption = String(imageData.caption).trim();
+        } else if (imageData.file?.caption !== undefined && imageData.file?.caption !== null && String(imageData.file.caption).trim() !== '') {
+          caption = String(imageData.file.caption).trim();
         }
         
         const stretched = imageData.stretched || false;
@@ -272,8 +273,8 @@ export default function EditorTextParser({ data }: EditorTextParserProps) {
         const customWidth = imageData.customWidth;
         const customHeight = imageData.customHeight;
 
-        // Process caption with newlines and linkify
-        if (caption && caption.trim()) {
+        // Process caption with newlines and linkify (only if we have a caption)
+        if (caption) {
           caption = caption.replace(/\n/g, '<br />');
           caption = linkifyText(caption);
         }
@@ -303,7 +304,7 @@ export default function EditorTextParser({ data }: EditorTextParserProps) {
         if (withBackground) dataAttrs['data-background'] = 'true';
 
         return (
-          <div key={key} style={{ marginBottom: '0.75em', width: '100%' }}>
+          <div key={key} style={{ marginBottom: '0.5em', width: '100%' }}>
             <div className={classList.join(' ')} style={{ display: 'inline-block', width: '100%' }}>
               <img
                 src={url}
@@ -311,15 +312,15 @@ export default function EditorTextParser({ data }: EditorTextParserProps) {
                 style={Object.keys(styles).length > 0 ? styles : undefined}
                 {...dataAttrs}
               />
-              {caption && caption.trim() && (
+              {caption && (
                 <div 
                   className="image-tool__caption"
                   style={{
                     textAlign: 'center',
                     fontStyle: 'italic',
                     fontSize: '14px',
-                    marginTop: '12px',
-                    marginBottom: '4px',
+                    marginTop: '8px',
+                    marginBottom: '0',
                     display: 'block',
                     width: '100%',
                     position: 'relative',
@@ -346,16 +347,16 @@ export default function EditorTextParser({ data }: EditorTextParserProps) {
         );
 
       case 'simpleImage':
-        let simpleImageCaption = block.data.caption || '';
+        let simpleImageCaption = block.data.caption ? String(block.data.caption).trim() : '';
         if (simpleImageCaption) {
           simpleImageCaption = simpleImageCaption.replace(/\n/g, '<br />');
           simpleImageCaption = linkifyText(simpleImageCaption);
         }
         return (
-          <div key={key} style={{ maxWidth: '100%', overflow: 'hidden' }}>
-            <img src={block.data.url} alt={block.data.caption || ''} style={{ maxWidth: '100%', height: 'auto' }} />
+          <div key={key} style={{ maxWidth: '100%', overflow: 'hidden', marginBottom: '0.5em' }}>
+            <img src={block.data.url} alt={block.data.caption || ''} style={{ maxWidth: '100%', height: 'auto', marginBottom: '0' }} />
             {simpleImageCaption && (
-              <div style={{ textAlign: 'center', fontStyle: 'italic', color: '#666', marginTop: '8px', wordBreak: 'break-word', overflowWrap: 'break-word' }} dangerouslySetInnerHTML={{ __html: simpleImageCaption }} />
+              <div style={{ textAlign: 'center', fontStyle: 'italic', color: 'hsl(var(--muted-foreground))', marginTop: '8px', marginBottom: '0', wordBreak: 'break-word', overflowWrap: 'break-word' }} dangerouslySetInnerHTML={{ __html: simpleImageCaption }} />
             )}
           </div>
         );

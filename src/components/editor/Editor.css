@@ -536,7 +536,7 @@ table {
 	max-width: 100%;
 	height: auto !important; /* Force auto height to maintain aspect ratio */
 	display: block;
-	margin: 1em 0;
+	margin: 0.5em 0;
 }
 
 /* Images in editor mode - responsive sizing */
@@ -655,7 +655,7 @@ table {
 .text-container .stretched,
 .text-container .withBorder,
 .text-container .withBackground {
-	margin: 1em 0;
+	margin: 0.5em 0;
 }
 
 /* Center images in their containers */
@@ -676,8 +676,8 @@ table {
 	font-size: 14px !important;
 	font-style: italic !important;
 	color: hsl(var(--muted-foreground)) !important;
-	margin-top: 12px !important;
-	margin-bottom: 8px !important;
+	margin-top: 8px !important;
+	margin-bottom: 0 !important;
 	display: block !important;
 	width: 100% !important;
 	line-height: 1.5 !important;
@@ -687,6 +687,38 @@ table {
 	position: relative !important;
 	clear: both !important;
 	float: none !important;
+}
+
+/* Reduce spacing after image blocks in EDITOR mode */
+.ce-block.ce-block--image {
+	margin-bottom: 0.5em !important;
+	padding-bottom: 0 !important;
+}
+
+/* Image tool wrapper in editor - reduce bottom padding/margin */
+.ce-block__content .image-tool,
+.image-tool,
+.image-tool__image,
+.image-tool__image-picture {
+	margin-bottom: 0 !important;
+	padding-bottom: 0 !important;
+}
+
+/* Caption in editor mode - no bottom margin */
+.ce-block--image .cdx-input.image-tool__caption {
+	margin-bottom: 0 !important;
+	padding-bottom: 0 !important;
+}
+
+/* Override default EditorJS block spacing after images */
+.codex-editor .ce-block:has(.image-tool) {
+	margin-bottom: 0.5em !important;
+}
+
+/* Ensure caption is the last element with no extra spacing */
+.ce-block--image .image-tool__caption:last-child {
+	margin-bottom: 0 !important;
+	padding-bottom: 0 !important;
 }
 
 /* EditorJS toolbar icons - Light mode */

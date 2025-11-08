@@ -1,5 +1,10 @@
 [[redirects]]
-
 from = "/*"
 to = "/index.html"
 status = 200
+
+[[redirects]]
+  from = "https://decentralizedx.tech/*"
+  to = "https://inkdao.tech/:splat"
+  status = 301
+  force = true

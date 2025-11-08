@@ -64,6 +64,10 @@ export const PostPreviewPage = () => {
   const [isTransactionPending, setIsTransactionPending] = useState(false);
   const [hashtags, setHashtags] = useState<string | undefined>(undefined);
   const [publishDate, setPublishDate] = useState<string | undefined>(undefined);
+  const [showFreePostDialog, setShowFreePostDialog] = useState(false);
+  const [hasViewedFreePostDialog, setHasViewedFreePostDialog] = useState(false);
+  const [shouldLoadContent, setShouldLoadContent] = useState(false);
+  const [showCongratulations, setShowCongratulations] = useState(false);
 
   // Update post title when asset data is loaded
   useEffect(() => {
@@ -109,6 +113,25 @@ export const PostPreviewPage = () => {
     fetchMetadata();
   }, [postCid]);
 
+  // Show free post dialog when landing on a free post
+  useEffect(() => {
+    if (!postInfo || isPostInfoLoading || isOwnershipLoading) return;
+    
+    const isFreePost = postInfo?.priceInNative !== undefined ? parseFloat(postInfo.priceInNative.toString()) === 0 : false;
+    
+    // For paid posts or if user already owns the free post, allow content to load immediately
+    if (!isFreePost || isOwned) {
+      setShouldLoadContent(true);
+      return;
+    }
+    
+    // Show dialog only for free posts and if user hasn't already seen it for this session
+    // Don't show if user already owns the post (already subscribed)
+    if (isFreePost && !hasViewedFreePostDialog && !isLoading && !isOwned) {
+      setShowFreePostDialog(true);
+    }
+  }, [postInfo, isPostInfoLoading, hasViewedFreePostDialog, isLoading, isOwned, isOwnershipLoading]);
+
   // Set access denied when user doesn't own the asset (but not for free posts)
   useEffect(() => {
     if (!isOwnershipLoading && !isOwned && postInfo) {
@@ -147,7 +170,12 @@ export const PostPreviewPage = () => {
       // Check if the post is free (cost is 0)
       const isFreePost = postInfo?.priceInNative !== undefined ? parseFloat(postInfo.priceInNative.toString()) === 0 : false;
 
-      // For free posts, allow access without authentication
+      // For free posts, wait until user makes a choice (shouldLoadContent is true)
+      if (isFreePost && !shouldLoadContent) {
+        setIsLoading(false);
+        return;
+      }
+
       // For paid posts, require authentication and ownership
       if (!isFreePost) {
         // For paid posts, require authentication
@@ -221,7 +249,7 @@ export const PostPreviewPage = () => {
     };
 
     fetchContent();
-  }, [postCid, isPostInfoError, isOwned, isOwnershipLoading, postInfo, postId, address, isPostInfoLoading, isAuthenticated]);
+  }, [postCid, isPostInfoError, isOwned, isOwnershipLoading, postInfo, postId, address, isPostInfoLoading, isAuthenticated, shouldLoadContent]);
 
   const handleCopyAsset = async () => {
     if (postId) {
@@ -273,14 +301,47 @@ export const PostPreviewPage = () => {
     }
   };
 
+  const handleRecordAccessOnChain = async () => {
+    if (!postId || !postInfo) return;
+
+    try {
+      setShowFreePostDialog(false);
+      setIsTransactionPending(true);
+      // For free posts, the price is 0
+      await buyAsset({
+        postId: postId,
+        amount: "1",
+        priceInNativeInWei: "0"
+      });
+      
+      setHasViewedFreePostDialog(true);
+    } catch (error) {
+      console.error('Error recording access on chain:', error);
+      setIsTransactionPending(false);
+      setHasViewedFreePostDialog(true);
+      // Allow loading content even if transaction fails
+      setShouldLoadContent(true);
+    }
+  };
+
+  const handleSkipFreePostDialog = () => {
+    setShowFreePostDialog(false);
+    setHasViewedFreePostDialog(true);
+    // Immediately allow content to load
+    setShouldLoadContent(true);
+  };
+
   // Handle transaction confirmation
   useEffect(() => {
     if (isBuyConfirmed) {
       setIsTransactionPending(false);
-      // Reload the page to show the content
+      // Show congratulations message
+      setShowCongratulations(true);
+      // After 2 seconds, hide congratulations and load content
       setTimeout(() => {
-        window.location.reload();
-      }, 1500);
+        setShowCongratulations(false);
+        setShouldLoadContent(true);
+      }, 2000);
     }
   }, [isBuyConfirmed]);
 
@@ -841,6 +902,107 @@ export const PostPreviewPage = () => {
     );
   }
 
+  // Free Post Access Dialog - Show when landing on a free post
+  const renderFreePostDialog = () => (
+    <Dialog open={showFreePostDialog} onOpenChange={setShowFreePostDialog}>
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-[400px] sm:max-w-md bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-0 shadow-2xl p-4 sm:p-6">
+        <DialogHeader className="pb-2 sm:pb-3 space-y-2">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="p-2 sm:p-2.5 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-900/40 dark:to-emerald-900/40 backdrop-blur-sm shadow-lg flex-shrink-0">
+              <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 dark:text-green-400" />
+            </div>
+            <DialogTitle className="text-base sm:text-lg md:text-xl font-extrabold text-left leading-tight">Free Content Access</DialogTitle>
+          </div>
+          <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm font-medium text-left">
+            This content is free to access. Choose how you'd like to proceed:
+          </p>
+        </DialogHeader>
+        
+        <div className="py-3 sm:py-4 space-y-2.5 sm:space-y-3">
+          {/* Option 1: Record on-chain */}
+          <div className="relative overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/40 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-blue-200/50 dark:border-blue-700/50 backdrop-blur-sm shadow-md">
+            <div className="absolute top-0 right-0 w-16 h-16 sm:w-24 sm:h-24 bg-gradient-to-br from-blue-400/20 to-indigo-400/20 rounded-full blur-2xl"></div>
+            <div className="relative space-y-2">
+              <div className="flex items-center gap-2">
+                <Shield className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200">Record Access On-Chain</h4>
+              </div>
+              <p className="text-xs text-slate-600 dark:text-slate-400">
+                Subscribe to this token and record your access on the blockchain. This shows your support for the creator!
+              </p>
+            </div>
+          </div>
+
+          {/* Option 2: Skip */}
+          <div className="relative overflow-hidden bg-gradient-to-br from-slate-50 to-gray-50 dark:from-slate-950/40 dark:to-gray-950/40 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-slate-200/50 dark:border-slate-700/50 backdrop-blur-sm shadow-md">
+            <div className="absolute top-0 right-0 w-16 h-16 sm:w-24 sm:h-24 bg-gradient-to-br from-slate-400/20 to-gray-400/20 rounded-full blur-2xl"></div>
+            <div className="relative space-y-2">
+              <div className="flex items-center gap-2">
+                <Eye className="h-4 w-4 text-slate-600 dark:text-slate-400" />
+                <h4 className="font-bold text-sm text-slate-800 dark:text-slate-200">Skip</h4>
+              </div>
+              <p className="text-xs text-slate-600 dark:text-slate-400">
+                Just view the content without recording on-chain. You can always subscribe later.
+              </p>
+            </div>
+          </div>
+
+          {/* Benefits of recording on-chain */}
+          <div className="pt-2 space-y-1.5 text-xs text-slate-600 dark:text-slate-400">
+            <p className="font-semibold text-slate-700 dark:text-slate-300">Why record on-chain?</p>
+            <div className="flex items-start gap-2">
+              <Check className="h-3 w-3 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+              <span>Show support for the creator</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <Check className="h-3 w-3 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+              <span>Get listed as a subscriber</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <Check className="h-3 w-3 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+              <span>Blockchain-verified proof of access</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2 pt-2">
+          <Button 
+            onClick={handleRecordAccessOnChain}
+            disabled={!isConnected || isTransactionPending}
+            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold h-10 text-sm shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isTransactionPending ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              <>
+                <Shield className="h-4 w-4 mr-2" />
+                Record on Chain (Free)
+              </>
+            )}
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={handleSkipFreePostDialog}
+            disabled={isTransactionPending}
+            className="w-full border-2 h-10 text-sm font-semibold bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm hover:bg-white/80 dark:hover:bg-slate-800/80 shadow-sm hover:shadow-md transition-all"
+          >
+            <Eye className="h-4 w-4 mr-2" />
+            Skip & View Content
+          </Button>
+        </div>
+
+        {!isConnected && (
+          <p className="text-xs text-center text-amber-600 dark:text-amber-400 pt-2">
+            Connect your wallet to record access on-chain
+          </p>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+
   // If user has access (paid post they own) but is not authenticated, show sign-in card
   // Free posts don't require authentication
   if (hasAccess && !isAuthenticated && !isFreePost) {
@@ -849,6 +1011,159 @@ export const PostPreviewPage = () => {
 
   if (contentError && !isFreePost) {
     return <AuthGuard>{null}</AuthGuard>;
+  }
+
+  // Show free post dialog screen (before showing content) for free posts
+  if (showFreePostDialog && isFreePost) {
+    return (
+      <div className="bg-transparent py-8 px-0 sm:px-4 md:px-6 lg:px-8 min-h-screen overflow-x-hidden flex items-center justify-center">
+        <div className="w-full max-w-7xl mx-auto flex items-center justify-center min-h-[calc(100vh-8rem)]">
+          <div className="max-w-5xl mx-auto px-2 sm:px-0 w-full">
+            {/* Welcome Message Card */}
+            <div className="mb-6 relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:from-green-950/40 dark:via-emerald-950/40 dark:to-teal-950/40 p-6 sm:p-8 lg:p-10 border-0 shadow-2xl dark:shadow-green-500/10">
+              {/* Animated Background Blobs */}
+              <div className="absolute top-0 left-0 w-48 h-48 sm:w-72 sm:h-72 bg-gradient-to-br from-green-400/30 to-emerald-400/30 rounded-full blur-3xl animate-pulse" />
+              <div className="absolute bottom-0 right-0 w-64 h-64 sm:w-96 sm:h-96 bg-gradient-to-br from-emerald-400/20 to-teal-400/20 rounded-full blur-3xl animate-pulse delay-1000" />
+              {/* Background Pattern */}
+              <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))] dark:bg-grid-slate-400/5" />
+              
+              <div className="relative z-10 text-center">
+                <div className="flex justify-center mb-4">
+                  <div className="p-3 sm:p-4 rounded-2xl bg-gradient-to-br from-green-500 via-emerald-600 to-teal-600 shadow-lg shadow-green-500/50">
+                    <Sparkles className="h-8 w-8 sm:h-10 sm:w-10 text-white" />
+                  </div>
+                </div>
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight mb-3 bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 dark:from-green-300 dark:via-emerald-300 dark:to-teal-300 bg-clip-text text-transparent drop-shadow-sm">
+                  Free Content Available!
+                </h1>
+                <p className="text-base sm:text-lg lg:text-xl text-muted-foreground font-semibold mb-2">
+                  This content is <span className="text-foreground font-bold">completely free</span> to access
+                </p>
+                {postTitle && (
+                  <p className="text-sm sm:text-base text-muted-foreground/80 font-medium max-w-2xl mx-auto">
+                    "{postTitle}"
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Render the dialog */}
+            {renderFreePostDialog()}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show waiting screen while transaction is being confirmed
+  if (isTransactionPending && isFreePost && !showCongratulations) {
+    return (
+      <div className="bg-transparent py-8 px-0 sm:px-4 md:px-6 lg:px-8 min-h-screen overflow-x-hidden flex items-center justify-center">
+        <div className="w-full max-w-7xl mx-auto flex items-center justify-center min-h-[calc(100vh-8rem)]">
+          <div className="max-w-5xl mx-auto px-2 sm:px-0 w-full">
+            {/* Waiting Card */}
+            <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-950/40 dark:via-indigo-950/40 dark:to-purple-950/40 p-8 sm:p-12 lg:p-16 border-0 shadow-2xl dark:shadow-blue-500/10">
+              {/* Animated Background Blobs */}
+              <div className="absolute top-0 left-0 w-48 h-48 sm:w-72 sm:h-72 bg-gradient-to-br from-blue-400/30 to-indigo-400/30 rounded-full blur-3xl animate-pulse" />
+              <div className="absolute bottom-0 right-0 w-64 h-64 sm:w-96 sm:h-96 bg-gradient-to-br from-indigo-400/20 to-purple-400/20 rounded-full blur-3xl animate-pulse delay-1000" />
+              {/* Background Pattern */}
+              <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))] dark:bg-grid-slate-400/5" />
+              
+              <div className="relative z-10 text-center space-y-6">
+                {/* Loading Icon */}
+                <div className="flex justify-center">
+                  <div className="p-4 sm:p-6 rounded-full bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 shadow-2xl shadow-blue-500/50">
+                    <Loader2 className="h-12 w-12 sm:h-16 sm:w-16 text-white animate-spin" />
+                  </div>
+                </div>
+
+                {/* Waiting Message */}
+                <div className="space-y-3">
+                  <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-300 dark:via-indigo-300 dark:to-purple-300 bg-clip-text text-transparent drop-shadow-sm">
+                    Confirming Transaction...
+                  </h1>
+                  <p className="text-lg sm:text-xl lg:text-2xl text-foreground font-bold">
+                    Please wait while we record your access on-chain
+                  </p>
+                  <p className="text-base sm:text-lg text-muted-foreground font-semibold max-w-2xl mx-auto">
+                    This may take a few moments. Please don't close this page.
+                  </p>
+                </div>
+
+                {/* Progress Steps */}
+                <div className="pt-6 space-y-3 max-w-md mx-auto">
+                  <div className="flex items-center gap-3 text-left">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg">
+                      <Check className="h-5 w-5 text-white" />
+                    </div>
+                    <span className="text-sm sm:text-base text-muted-foreground font-semibold">Transaction sent to blockchain</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-left">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg animate-pulse">
+                      <Loader2 className="h-5 w-5 text-white animate-spin" />
+                    </div>
+                    <span className="text-sm sm:text-base text-foreground font-bold">Waiting for confirmation...</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-left opacity-50">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-slate-400 to-slate-500 flex items-center justify-center">
+                      <Shield className="h-5 w-5 text-white" />
+                    </div>
+                    <span className="text-sm sm:text-base text-muted-foreground font-medium">Access recorded & content loaded</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show congratulations screen after transaction confirmation
+  if (showCongratulations && isFreePost) {
+    return (
+      <div className="bg-transparent py-8 px-0 sm:px-4 md:px-6 lg:px-8 min-h-screen overflow-x-hidden flex items-center justify-center">
+        <div className="w-full max-w-7xl mx-auto flex items-center justify-center min-h-[calc(100vh-8rem)]">
+          <div className="max-w-5xl mx-auto px-2 sm:px-0 w-full">
+            {/* Congratulations Card */}
+            <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:from-green-950/40 dark:via-emerald-950/40 dark:to-teal-950/40 p-8 sm:p-12 lg:p-16 border-0 shadow-2xl dark:shadow-green-500/10">
+              {/* Animated Background Blobs */}
+              <div className="absolute top-0 left-0 w-48 h-48 sm:w-72 sm:h-72 bg-gradient-to-br from-green-400/30 to-emerald-400/30 rounded-full blur-3xl animate-pulse" />
+              <div className="absolute bottom-0 right-0 w-64 h-64 sm:w-96 sm:h-96 bg-gradient-to-br from-emerald-400/20 to-teal-400/20 rounded-full blur-3xl animate-pulse delay-1000" />
+              {/* Background Pattern */}
+              <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))] dark:bg-grid-slate-400/5" />
+              
+              <div className="relative z-10 text-center space-y-6">
+                {/* Success Icon */}
+                <div className="flex justify-center">
+                  <div className="p-4 sm:p-6 rounded-full bg-gradient-to-br from-green-500 via-emerald-600 to-teal-600 shadow-2xl shadow-green-500/50 animate-bounce">
+                    <Check className="h-12 w-12 sm:h-16 sm:w-16 text-white" />
+                  </div>
+                </div>
+
+                {/* Congratulations Message */}
+                <div className="space-y-3">
+                  <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 dark:from-green-300 dark:via-emerald-300 dark:to-teal-300 bg-clip-text text-transparent drop-shadow-sm">
+                    🎉 Congratulations! 🎉
+                  </h1>
+                  <p className="text-lg sm:text-xl lg:text-2xl text-foreground font-bold">
+                    Access Recorded On-Chain!
+                  </p>
+                  <p className="text-base sm:text-lg text-muted-foreground font-semibold max-w-2xl mx-auto">
+                    Your subscription has been confirmed on the blockchain. Loading your content now...
+                  </p>
+                </div>
+
+                {/* Loading indicator */}
+                <div className="flex justify-center pt-4">
+                  <Loader2 className="h-8 w-8 animate-spin text-green-600 dark:text-green-400" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Show loading state while fetching content

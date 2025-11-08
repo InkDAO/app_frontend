@@ -411,13 +411,13 @@ const Landing = () => {
                 </div>
               </div>
 
-              {/* TheGraph - Glassy */}
+              {/* Goldsky - Glassy */}
               <div className="group relative">
                 <div className="absolute -inset-0.5 bg-gradient-to-r from-slate-600 to-slate-400 rounded-xl blur opacity-10 group-hover:opacity-30 transition duration-500"></div>
                 <div className="relative flex items-center justify-center p-4 md:p-5 lg:p-6 rounded-xl bg-white/60 dark:bg-gray-900/60 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl transition-all duration-300">
                   <div className="flex items-center gap-2">
                     <Network className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 lg:h-8 lg:w-8 flex-shrink-0 text-muted-foreground/70" />
-                    <span className="font-bold text-xs sm:text-sm md:text-base lg:text-base text-muted-foreground break-words text-center">TheGraph</span>
+                    <span className="font-bold text-xs sm:text-sm md:text-base lg:text-base text-muted-foreground break-words text-center">Goldsky</span>
                   </div>
                 </div>
               </div>

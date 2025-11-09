@@ -21,7 +21,7 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
   const navigate = useNavigate();
   const { address } = useAccount();
   const { buyAsset, isPending, isConfirmed, isError } = useBuyAsset();
-  const { isOwned, isLoading: isOwnershipLoading } = useAssetOwnership(asset.postId, asset);
+  const { isOwned, isLoading: isOwnershipLoading, refetch: refetchOwnership } = useAssetOwnership(asset.postId, asset);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isBuying, setIsBuying] = useState(false);
   const [thumbnailImage, setThumbnailImage] = useState<string>("");
@@ -50,8 +50,10 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
     if (isConfirmed && isBuying) {
       setIsBuying(false);
       setIsDialogOpen(false);
+      // Refetch ownership to update the UI immediately
+      refetchOwnership();
     }
-  }, [isConfirmed, isBuying]);
+  }, [isConfirmed, isBuying, refetchOwnership]);
 
   // Monitor transaction errors
   useEffect(() => {

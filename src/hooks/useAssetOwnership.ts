@@ -7,7 +7,7 @@ export const useAssetOwnership = (postId: string, assetData?: any) => {
   const [isOwned, setIsOwned] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  const { data: userAssetInfo, isLoading: isUserAssetInfoLoading } = useReadContract({
+  const { data: userAssetInfo, isLoading: isUserAssetInfoLoading, refetch } = useReadContract({
     address: marketPlaceContract.address as `0x${string}`,
     abi: marketPlaceContract.abi,
     functionName: "getUserPosts",
@@ -42,5 +42,5 @@ export const useAssetOwnership = (postId: string, assetData?: any) => {
     }
   }, [isUserAssetInfoLoading, userAssetInfo, postId, assetData, address]);
 
-  return { isOwned, isLoading };
+  return { isOwned, isLoading, refetch };
 };

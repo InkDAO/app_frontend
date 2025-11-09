@@ -36,7 +36,7 @@ export const PostPreviewPage = () => {
   const postCid = postInfo?.postCid;
   
   const { buyAsset, isPending: isBuying, isConfirmed: isBuyConfirmed, isError: isBuyError } = useBuyAsset();
-  const { isOwned, isLoading: isOwnershipLoading } = useAssetOwnership(postId || '', postInfo);
+  const { isOwned, isLoading: isOwnershipLoading, refetch: refetchOwnership } = useAssetOwnership(postId || '', postInfo);
   
   // Fetch total supply (number of subscribers)
   const { data: totalSupply } = useReadContract({
@@ -335,6 +335,11 @@ export const PostPreviewPage = () => {
   useEffect(() => {
     if (isBuyConfirmed) {
       setIsTransactionPending(false);
+      // Refetch ownership to update the UI immediately
+      // Add a small delay to ensure transaction is fully confirmed on-chain
+      setTimeout(() => {
+        refetchOwnership();
+      }, 1000);
       // Show congratulations message
       setShowCongratulations(true);
       // After 2 seconds, hide congratulations and load content
@@ -343,7 +348,7 @@ export const PostPreviewPage = () => {
         setShouldLoadContent(true);
       }, 2000);
     }
-  }, [isBuyConfirmed]);
+  }, [isBuyConfirmed, refetchOwnership]);
 
   // Handle transaction error
   useEffect(() => {
@@ -702,15 +707,19 @@ export const PostPreviewPage = () => {
                  {isOwned ? (
                    <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-3">
                      <p className="text-sm text-slate-600 dark:text-slate-400 font-semibold">
-                       You own this content. Click to read it.
+                       You own this content. Content is loading...
                      </p>
                      <Button 
-                       onClick={() => window.location.reload()}
+                       onClick={() => {
+                         // Refetch ownership and trigger content load
+                         refetchOwnership();
+                         setShouldLoadContent(true);
+                       }}
                        size="default"
                        className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-6 py-2 text-sm font-bold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex-shrink-0"
                      >
                        <Eye className="h-4 w-4 mr-2" />
-                       Read Now
+                       Refresh
                      </Button>
                    </div>
                  ) : (

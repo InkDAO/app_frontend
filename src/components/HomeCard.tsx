@@ -21,7 +21,7 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
   const navigate = useNavigate();
   const { address } = useAccount();
   const { buyAsset, isPending, isConfirmed, isError } = useBuyAsset();
-  const { isOwned, isLoading: isOwnershipLoading } = useAssetOwnership(asset.postId, asset);
+  const { isOwned, isLoading: isOwnershipLoading, refetch: refetchOwnership } = useAssetOwnership(asset.postId, asset);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isBuying, setIsBuying] = useState(false);
   const [thumbnailImage, setThumbnailImage] = useState<string>("");
@@ -50,8 +50,10 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
     if (isConfirmed && isBuying) {
       setIsBuying(false);
       setIsDialogOpen(false);
+      // Refetch ownership to update the UI immediately
+      refetchOwnership();
     }
-  }, [isConfirmed, isBuying]);
+  }, [isConfirmed, isBuying, refetchOwnership]);
 
   // Monitor transaction errors
   useEffect(() => {
@@ -68,9 +70,10 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
         setThumbnailError(null);
         
         try {
-          // Use the Vite gateway URL to fetch the thumbnail
+          // Use the Vite gateway URL to fetch the thumbnail with Pinata image optimization
+          // Thumbnail size: 192px height × 384px width (max-w-sm card)
           const gatewayUrl = import.meta.env.VITE_GATEWAY_URL || 'gateway.pinata.cloud';
-          const thumbnailUrl = `https://${gatewayUrl}/ipfs/${asset.thumbnailCid}`;
+          const thumbnailUrl = `https://${gatewayUrl}/ipfs/${asset.thumbnailCid}?img-width=384&img-height=192&img-fit=cover&img-format=webp&img-quality=85`;
           
           // Test if the image loads
           const img = new Image();

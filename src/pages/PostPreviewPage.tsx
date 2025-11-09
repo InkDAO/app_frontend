@@ -560,7 +560,7 @@ export const PostPreviewPage = () => {
                   {(postImage || postInfo?.thumbnailCid) ? (
                     <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden shadow-lg bg-slate-100 dark:bg-slate-800 ring-2 ring-slate-200/50 dark:ring-slate-700/50">
                       <img 
-                        src={postImage || `https://${import.meta.env.VITE_GATEWAY_URL}/ipfs/${postInfo?.thumbnailCid}`}
+                        src={postImage || `https://${import.meta.env.VITE_GATEWAY_URL}/ipfs/${postInfo?.thumbnailCid}?img-width=320&img-height=320&img-fit=cover&img-format=webp&img-quality=85`}
                         alt={postInfo?.postTitle || 'Post thumbnail'}
                         className="w-full h-full object-cover"
                       />

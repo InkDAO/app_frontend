@@ -70,9 +70,10 @@ export const HomeCard = ({ asset }: HomeCardProps) => {
         setThumbnailError(null);
         
         try {
-          // Use the Vite gateway URL to fetch the thumbnail
+          // Use the Vite gateway URL to fetch the thumbnail with Pinata image optimization
+          // Thumbnail size: 192px height × 384px width (max-w-sm card)
           const gatewayUrl = import.meta.env.VITE_GATEWAY_URL || 'gateway.pinata.cloud';
-          const thumbnailUrl = `https://${gatewayUrl}/ipfs/${asset.thumbnailCid}`;
+          const thumbnailUrl = `https://${gatewayUrl}/ipfs/${asset.thumbnailCid}?img-width=384&img-height=192&img-fit=cover&img-format=webp&img-quality=85`;
           
           // Test if the image loads
           const img = new Image();
